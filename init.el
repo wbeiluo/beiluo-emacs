@@ -13,7 +13,7 @@
 ;;; Code:
 
 ;; Load configuration path
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/lisp"))
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
 ;;----------------------------------------------------------------------------
 ;; Adjust garbage collection thresholds during startup, and thereafter
@@ -70,10 +70,12 @@
 (require 'init-projectile)
 ;; (require 'init-session)
 
-(require 'init-lsp)
+;(require 'init-lsp)
 (require 'init-elisp)
 (require 'init-slime)
 (require 'init-c)
+
+(require 'init-misc)
 
 ;; change custom file location
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
