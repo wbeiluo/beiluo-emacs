@@ -88,6 +88,10 @@
       :hook (global-linum-mode . hlinum-activate)
       :init (setq linum-highlight-in-all-buffersp t))))
 
+(defconst sys/win32p
+  (eq system-type 'windows-nt)
+  "Are we running on a WinTel system?")
+
 (provide 'init-basic)
 
 ;;; init-basic.el ends here

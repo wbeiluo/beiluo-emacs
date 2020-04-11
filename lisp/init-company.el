@@ -34,11 +34,11 @@
   (setq-default company-dabbrev-other-buffers 'all
                 company-tooltip-align-annotations t)
   ;; set the completion menu pop-up delay
-  (setq company-idle-delay 0.2)
+  (setq company-idle-delay 0)
   ;; pop up a completion menu by tapping a character
   (setq company-minimum-prefix-length 1)
   ;; do not display numbers on the left
-  (setq company-show-numbers nil)
+  (setq company-show-numbers t)
   ;; allow input string that do not match candidate words
   (setq company-require-match nil)
   ;; Don't downcase the returned candidates.
