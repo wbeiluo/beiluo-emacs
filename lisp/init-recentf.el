@@ -16,7 +16,7 @@
   :bind ([f5] . recentf-open-files)
   :hook (after-init . recentf-mode)
   :init
-  (setq recentf-max-saved-items 100)
+  (setq recentf-max-saved-items 50)
   (setq recentf-exclude '((expand-file-name package-user-dir)
                           ".cache"
                           ".cask"

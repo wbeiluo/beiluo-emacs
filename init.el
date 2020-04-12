@@ -62,15 +62,15 @@
 (require 'init-edit)
 (require 'init-ivy)
 (require 'init-company)
+(require 'init-yasnippet)
 (require 'init-awesome-pair)
 (require 'init-highlight)
 (require 'init-window)
 (require 'init-treemacs)
 (require 'init-git)
 (require 'init-projectile)
-;; (require 'init-session)
 
-;(require 'init-lsp)
+;;(require 'init-lsp)
 (require 'init-elisp)
 (require 'init-slime)
 (require 'init-c)
@@ -84,8 +84,9 @@
 
 ;; Full screen display
 (fullscreen)
-;; Restore session at last.
-;; (emacs-session-restore)
+
+(when (fboundp 'global-eldoc-mode)
+  (add-hook 'after-init-hook 'global-eldoc-mode))
 
 (use-package auto-package-update
   :ensure t

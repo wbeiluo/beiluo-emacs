@@ -12,8 +12,8 @@
 
 ;;; Code:
 
-(setq tab-always-indent 'complete)
-(add-to-list 'completion-styles 'initials t)
+;(setq tab-always-indent 'complete)
+;(add-to-list 'completion-styles 'initials t)
 
 (use-package company-tabnine :ensure t)
 (use-package company-yasnippet :ensure nil)
@@ -27,7 +27,7 @@
   :hook (after-init . global-company-mode)
   :bind (("M-/" . company-complete)
          :map company-active-map
-         ("M-/" . company-other-backend)
+         ;;("M-/" . company-other-backend)
          ("M-n" . company-select-next)
          ("M-p" . company-select-previous))
   :config
@@ -54,8 +54,8 @@
   (setq company-backends (delete 'company-oddmuse company-backends))
 
   (add-to-list 'company-backends #'company-tabnine)
-  (add-to-list 'company-backends #'company-files)
   (add-to-list 'company-backends #'company-yasnippet)
+  (add-to-list 'company-backends #'company-files)
 
   ;; Use the tab-and-go frontend.
   ;; Allows TAB to select and complete at the same time.
