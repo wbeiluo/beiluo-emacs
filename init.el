@@ -71,6 +71,7 @@
 (require 'init-projectile)
 
 ;;(require 'init-lsp)
+(require 'init-org)
 (require 'init-elisp)
 (require 'init-slime)
 (require 'init-c)

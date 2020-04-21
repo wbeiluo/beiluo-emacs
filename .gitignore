@@ -16,3 +16,7 @@ history
 amx-items
 projectile-bookmarks.eld
 forge-database.sqlite
+.emacs.desktop
+bookmarks
+org-clock-save.el
+
