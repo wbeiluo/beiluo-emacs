@@ -1,0 +1,13 @@
+* beiluo-emacs
+** Org-mode 快捷键
+- C-c a  打开org-agenda
+- C-c c  打开org-capture
+- C-c C-c  Finish
+- C-c C-w  Refile
+- C-c C-k  Abort
+- C-c C-s  添加起始时间
+- C-c C-d  添加结束时间
+- S-up/down  调整任务优先级
+- C-c C-x C-i  开始一个任务
+- C-c C-x C-o  结束一个任务
+- C-c C-x C-r  生成动态报表

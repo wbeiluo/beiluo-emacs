@@ -21,11 +21,12 @@
   :ensure t
   :hook (org-mode . org-bullets-mode)
   :config
-  ;; ("☰" "☷" "☯" "☭")
   (setq org-bullets-bullet-list '("✿" "❁" "❃" "☸" "❉" "✲")))
 
-(setq org-agenda-files (list "~/Org/Inbox.org"
+(setq org-agenda-files (list "~/Org/Life-2020.org"
                              "~/Org/Notes.org"
+                             "~/Org/Project.org"
+                             "~/Org/Reading.org"
                              "~/Org/Work.org"
                              ))
 
@@ -52,20 +53,22 @@
               ("DONE" ("WAITING") ("CANCELLED") ("SOMEDAY")))))
 
 (setq org-capture-templates
-      `(("t" "todo" entry (file "~/Org/Inbox.org")
+      `(("t" "todo" entry (file "~/Org/Life-2020.org")
          "* TODO %?\n%U\n" :clock-resume t)
         ("n" "note" entry (file "~/Org/Notes.org")
          "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
+        ("p" "proj" entry (file "~/Org/Project.org")
+         "* TODO %?\n%U\n" :clock-resume t)
+        ("r" "read" entry (file "~/Org/Reading.org")
+         "* TODO %?\n%U\n" :clock-resume t)
         ))
 
 ;; Pomodoro
 (use-package org-pomodoro
-  :custom-face
-  (org-pomodoro-mode-line ((t (:inherit warning))))
-  (org-pomodoro-mode-line-overtime ((t (:inherit error))))
-  (org-pomodoro-mode-line-break ((t (:inherit success))))
   :bind (:map org-agenda-mode-map
-              ("P" . org-pomodoro)))
+              ("P" . org-pomodoro))
+  :config
+  (setq org-pomodoro-keep-killed-pomodoro-time t))
 
 
 (provide 'init-org)
