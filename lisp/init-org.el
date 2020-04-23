@@ -23,11 +23,16 @@
   :config
   (setq org-bullets-bullet-list '("✿" "❁" "❃" "☸" "❉" "✲")))
 
+;; Pomodoro
+(use-package org-pomodoro
+  :bind (:map org-agenda-mode-map
+              ("P" . org-pomodoro))
+  :config
+  (setq org-pomodoro-keep-killed-pomodoro-time t))
+
 (setq org-agenda-files (list "~/Org/Life-2020.org"
-                             "~/Org/Notes.org"
                              "~/Org/Project.org"
-                             "~/Org/Reading.org"
-                             "~/Org/Work.org"
+                             "~/Org/Notes.org"
                              ))
 
 ;; org todo keywords
@@ -35,7 +40,7 @@
                                 (sequence "WAITING(w@/!)" "HOLD(h@/!)" "SOMEDAY(s)" "|" "CANCELLED(c@/!)"))))
 
 (setq org-todo-keyword-faces
-      (quote (("TODO" :foreground "red" :weight bold)
+      (quote (("TODO" :foreground "magenta" :weight bold)
               ;;("DOING" :foreground "Black" :weight bold)
               ("NEXT" :foreground "green" :weight bold)
               ("DONE" :foreground "forest green" :weight bold)
@@ -55,20 +60,15 @@
 (setq org-capture-templates
       `(("t" "todo" entry (file "~/Org/Life-2020.org")
          "* TODO %?\n%U\n" :clock-resume t)
-        ("n" "note" entry (file "~/Org/Notes.org")
-         "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
         ("p" "proj" entry (file "~/Org/Project.org")
          "* TODO %?\n%U\n" :clock-resume t)
-        ("r" "read" entry (file "~/Org/Reading.org")
-         "* TODO %?\n%U\n" :clock-resume t)
+        ("n" "note" entry (file "~/Org/Notes.org")
+         "* %? :NOTE:\n%U\n%a\n" :clock-resume t)
         ))
 
-;; Pomodoro
-(use-package org-pomodoro
-  :bind (:map org-agenda-mode-map
-              ("P" . org-pomodoro))
-  :config
-  (setq org-pomodoro-keep-killed-pomodoro-time t))
+;; tags
+(setq org-tag-alist '(("@work" . ?w) ("@read" . ?r) ("@learn" . ?l)
+                      ("@prog" . ?p)))
 
 
 (provide 'init-org)
