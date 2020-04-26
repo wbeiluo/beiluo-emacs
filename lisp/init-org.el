@@ -31,6 +31,7 @@
   (setq org-pomodoro-keep-killed-pomodoro-time t))
 
 (setq org-agenda-files (list "~/Org/Life-2020.org"
+                             "~/Org/Work-2020.org"
                              "~/Org/Project.org"
                              "~/Org/Notes.org"
                              ))
