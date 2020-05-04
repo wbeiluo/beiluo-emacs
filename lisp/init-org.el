@@ -31,7 +31,8 @@
   (setq org-pomodoro-keep-killed-pomodoro-time t))
 
 (setq org-agenda-files (list "~/Org/Life-2020.org"
-                             "~/Org/Work-2020.org"
+                             "~/Org/Learning.org"
+                             "~/Org/Reading.org"
                              "~/Org/Project.org"
                              "~/Org/Notes.org"
                              ))
@@ -69,7 +70,7 @@
 
 ;; tags
 (setq org-tag-alist '(("@work" . ?w) ("@read" . ?r) ("@learn" . ?l)
-                      ("@prog" . ?p)))
+                      ("@prog" . ?p) ("@play" . ?y)))
 
 
 (provide 'init-org)
