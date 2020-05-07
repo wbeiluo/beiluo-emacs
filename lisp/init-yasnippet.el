@@ -16,8 +16,8 @@
   :ensure t
   :hook (prog-mode . yas-global-mode)
   :config
-  (use-package yasnippet-snippets)
-  
+  (use-package yasnippet-snippets :ensure t)
+
   ;; Disable yasnippet mode on some mode.
   (dolist (hook (list
                  'term-mode-hook

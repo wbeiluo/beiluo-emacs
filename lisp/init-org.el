@@ -15,6 +15,7 @@
 
 ;; org-indent mode
 (setq org-startup-indented t)
+(setq truncate-lines nil) ;自动折行
 
 ;; bullet list
 (use-package org-bullets

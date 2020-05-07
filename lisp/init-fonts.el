@@ -9,25 +9,19 @@
 ;;; Code:
 
 (let ((emacs-font-size 14)
-      emacs-font-name)
-  (cond
-   ((featurep 'cocoa)
-    (setq emacs-font-name "Monaco"))
-   ((string-equal system-type "gnu/linux")
-    (setq emacs-font-name "WenQuanYi Micro Hei Mono"))
-   ((string-equal system-type "windows-nt")
-    (setq emacs-font-name "Consolas")))
-  (when (display-grayscale-p)
-    (set-frame-font (format "%s-%s" (eval emacs-font-name) (eval emacs-font-size)))
-    (set-fontset-font (frame-parameter nil 'font) 'unicode (eval emacs-font-name))))
+      (emacs-font-name "WenQuanYi Micro Hei Mono"))
+  (set-frame-font (format "%s-%s" (eval emacs-font-name) (eval emacs-font-size)))
+  (set-fontset-font (frame-parameter nil 'font) 'unicode (eval emacs-font-name)))
 
-(when sys/win32p
-    ;;Chinese Font
-    (dolist (charset '(kana han symbol cjk-misc bopomofo))
-    (set-fontset-font (frame-parameter nil 'font)
-                        charset (font-spec :family "Microsoft YaHei UI"
-                                        :size 18))))
+(with-eval-after-load 'org
+  (defun org-buffer-face-mode-variable ()
+    (interactive)
+    (make-face 'width-font-face)
+    (set-face-attribute 'width-font-face nil :font "等距更纱黑体 SC 15")
+    (setq buffer-face-mode-face 'width-font-face)
+    (buffer-face-mode))
 
+  (add-hook 'org-mode-hook 'org-buffer-face-mode-variable))
 
 
 (provide 'init-fonts)
