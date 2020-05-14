@@ -66,6 +66,73 @@ Includes support for Qt code (signal, slots and alikes)."
       (c-mode-style-setup))))
 
 
+;; 文件注释
+(defun comment/header-c ()
+  "Add header and footer to an .c buffer."
+  (interactive)
+  (let ((fname (if (buffer-file-name)
+                   (file-name-nondirectory (buffer-file-name))
+                 (error "This buffer is not visiting a file")))
+        (fdate (current-time-string)))
+    (save-excursion
+      (goto-char (point-min))
+      (insert
+       "/**\n"
+       "  ******************************************************************************\n"
+       "  * @File    " fname "\n"
+       "  * @Author  王北洛 <beiluo.wang@139.com>\n"
+       "  * @Date    " fdate "\n"
+       "  * @Brief   简介...\n"
+       "  *\n  *\n  *\n"
+       "  ******************************************************************************\n"
+       "  *                         Copyright (C) 2020 王北洛\n"
+       "  ******************************************************************************\n"
+       "  */\n\n"
+       "/* Includes ------------------------------------------------------------------*/\n"
+       "#include \"" (substring fname 0 -1) "h\"\n\n"
+       "/* Private typedef -----------------------------------------------------------*/\n\n"
+       "/* Private define ------------------------------------------------------------*/\n\n"
+       "/* Private macro -------------------------------------------------------------*/\n\n"
+       "/* Private variables----------------------------------------------------------*/\n\n"
+       "/* Private function prototypes -----------------------------------------------*/\n\n"
+       "/* Private functions----------------------------------------------------------*/\n\n"
+       "/* Public functions --------------------------- -------------------------------*/\n\n")
+      (goto-char (point-max))
+      (insert "/***********************************END OF FILE********************************/\n"))))
+
+(defun comment/header-h ()
+  "Add header and footer to an .h buffer."
+  (interactive)
+  (let ((fname (if (buffer-file-name)
+                   (file-name-nondirectory (buffer-file-name))
+                 (error "This buffer is not visiting a file")))
+        (fdate (current-time-string)))
+    (save-excursion
+      (goto-char (point-min))
+      (insert
+       "/**\n"
+       "  ******************************************************************************\n"
+       "  * @File    " fname "\n"
+       "  * @Author  王北洛 <beiluo.wang@139.com>\n"
+       "  * @Date    " fdate "\n"
+       "  * @Brief   简介...\n"
+       "  *\n  *\n  *\n"
+       "  ******************************************************************************\n"
+       "  *                         Copyright (C) 2020 王北洛\n"
+       "  ******************************************************************************\n"
+       "  */\n\n"
+       "#ifndef __" (upcase (substring fname 0 -2)) "_H\n"
+       "#define __" (upcase (substring fname 0 -2)) "_H\n\n"
+       "/* Includes ------------------------------------------------------------------*/\n\n"
+       "/* Exported typedef ----------------------------------------------------------*/\n\n"
+       "/* Exported types ------------------------------------------------------------*/\n\n"
+       "/* Exported macro ------------------------------------------------------------*/\n\n"
+       "/* Exported functions---------------------------------------------------------*/\n\n")
+      (goto-char (point-max))
+      (insert
+       "#endif /* __" (upcase (substring fname 0 -2)) "_H */\n\n"
+       "/***********************************END OF FILE********************************/\n"))))
+
 (provide 'init-c)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

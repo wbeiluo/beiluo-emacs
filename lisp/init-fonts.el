@@ -8,7 +8,7 @@
 ;;; Commentary:
 ;;; Code:
 
-(let ((emacs-font-size 14)
+(let ((emacs-font-size 12)
       (emacs-font-name "WenQuanYi Micro Hei Mono"))
   (set-frame-font (format "%s-%s" (eval emacs-font-name) (eval emacs-font-size)))
   (set-fontset-font (frame-parameter nil 'font) 'unicode (eval emacs-font-name)))
@@ -17,7 +17,7 @@
   (defun org-buffer-face-mode-variable ()
     (interactive)
     (make-face 'width-font-face)
-    (set-face-attribute 'width-font-face nil :font "等距更纱黑体 SC 15")
+    (set-face-attribute 'width-font-face nil :font "等距更纱黑体 SC 14")
     (setq buffer-face-mode-face 'width-font-face)
     (buffer-face-mode))
 

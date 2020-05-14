@@ -15,8 +15,8 @@ history
 .last-package-update-day
 amx-items
 projectile-bookmarks.eld
+projectile.cache
 forge-database.sqlite
 .emacs.desktop
 bookmarks
 org-clock-save.el
-
