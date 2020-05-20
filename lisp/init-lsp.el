@@ -12,25 +12,18 @@
 
 ;;; Code:
 
-(use-package lsp-mode
-  :hook ((python-mode . lsp)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp
-  :config
-  (setq read-process-output-max (* 1024 1024))
-  (setq lsp-auto-guess-root nil)
-  (setq lsp-prefer-capf t)
-  (setq lsp-keymap-prefix "C-c l"))
+(use-package lsp-mode :commands lsp)
+;;(use-package lsp-ui :commands lsp-ui-mode)
+(use-package company-lsp :commands company-lsp)
 
-;; optionally
-;(use-package lsp-ui :commands lsp-ui-mode)
-
-(use-package company-lsp
-  :commands company-lsp
+(use-package ccls
+  :hook ((c-mode c++-mode objc-mode cuda-mode) .
+         (lambda () (require 'ccls) (lsp)))
   :init
-  (setq company-minimum-prefix-length 1
-        company-idle-delay 0.0))
+  (setq ccls-executable "/usr/bin/ccls"))
+
+;; Use flycheck
+(setq lsp-prefer-flymake nil)
 
 ;; if you are ivy user
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)

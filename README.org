@@ -8,6 +8,10 @@ sudo pacman -S wqy-microhei ttf-sarasa-gothic
 #+BEGIN_SRC shell
 sudo pacman -S riggrep
 #+END_SRC
+*** ccls
+#+BEGIN_SRC shell
+sudo pacman -S ccls-git
+#+END_SRC
 *** SBCL
 #+BEGIN_SRC shell
 sudo pacman -S sbcl

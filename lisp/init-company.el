@@ -15,16 +15,18 @@
 (use-package company
   :diminish
   :hook (after-init . global-company-mode)
-  :bind (:map company-active-map
-         ("C-<tab>" . company-complete-common-or-cycle)
-         ;("M-/" . company-complete-selection)
+  :bind (:map company-mode-map
+         ("M-/" . company-complete)
+         :map company-active-map
+         ("<tab>" . company-complete-selection)
          ("M-/" . company-other-backend)
          ("M-n" . company-select-next)
          ("M-p" . company-select-previous))
   :config
-  (require 'company-yasnippet)
   (require 'company-dabbrev)
   (require 'company-files)
+  (use-package company-c-headers :ensure t)
+  (use-package company-lsp :ensure t)
 
   (setq-default company-dabbrev-other-buffers 'all
                 company-tooltip-align-annotations t)
@@ -40,6 +42,16 @@
   (setq company-dabbrev-downcase nil)
   (setq company-dabbrev-ignore-case t)
 
+  (setq company-global-modes '(not erc-mode message-mode help-mode
+                                   gud-mode eshell-mode shell-mode))
+
+  (setq company-frontends '(company-tng-frontend
+                            company-pseudo-tooltip-frontend
+                            company-echo-metadata-frontend))
+
+  ;; Allows TAB to select and complete at the same time.
+  (company-tng-configure-default)
+
   ;; Customize company backends.
   (setq company-backends (delete 'company-xcode company-backends))
   (setq company-backends (delete 'company-bbdb company-backends))
@@ -47,7 +59,11 @@
   (setq company-backends (delete 'company-gtags company-backends))
   (setq company-backends (delete 'company-etags company-backends))
   (setq company-backends (delete 'company-oddmuse company-backends))
+
+
   (add-to-list 'company-backends #'company-files)
+  (add-to-list 'company-backends #'company-c-headers)
+  (add-to-list 'company-backends #'company-lsp)
 
   ;; Add `company-elisp' backend for elisp.
   (add-hook 'emacs-lisp-mode-hook
@@ -55,17 +71,12 @@
               (require 'company-elisp)
               (push 'company-elisp company-backends)))
 
-  ;; Add yasnippet support for all company backends.
-  (defvar company-mode/enable-yas t
-    "Enable yasnippet for all backends.")
+  (use-package company-quickhelp
+    :hook (after-init . company-quickhelp-mode))
 
-  (defun company-mode/backend-with-yas (backend)
-    (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
-        backend
-      (append (if (consp backend) backend (list backend))
-              '(:with company-yasnippet))))
-
-  (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends))
+  ;; Better sorting and filtering
+  (use-package company-prescient
+    :init (company-prescient-mode 1))
   )
 
 
