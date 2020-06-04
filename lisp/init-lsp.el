@@ -12,22 +12,37 @@
 
 ;;; Code:
 
-(use-package lsp-mode :commands lsp)
-;;(use-package lsp-ui :commands lsp-ui-mode)
+;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+(setq lsp-keymap-prefix "M-l")
+;; use flycheck
+(setq lsp-prefer-flymake nil)
+
+(use-package lsp-mode
+  :hook ((c-mode . lsp)
+         (c++-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp)
+
 (use-package company-lsp :commands company-lsp)
 
+;; optionally
+;; if you are ivy user
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+;; C/C++
 (use-package ccls
   :hook ((c-mode c++-mode objc-mode cuda-mode) .
          (lambda () (require 'ccls) (lsp)))
   :init
   (setq ccls-executable "/usr/bin/ccls"))
 
-;; Use flycheck
-(setq lsp-prefer-flymake nil)
 
-;; if you are ivy user
-(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+(use-package lsp-mode :commands lsp)
+;;(use-package lsp-ui :commands lsp-ui-mode)
+(use-package company-lsp :commands company-lsp)
+
 
 ;; optionally if you want to use debugger
 ;(use-package dap-mode)
