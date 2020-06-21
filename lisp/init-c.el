@@ -100,6 +100,7 @@ Includes support for Qt code (signal, slots and alikes)."
       (goto-char (point-max))
       (insert "/***********************************END OF FILE********************************/\n\n"))))
 
+
 (defun comment/header-h ()
   "Add header and footer to an .h buffer."
   (interactive)
@@ -131,6 +132,63 @@ Includes support for Qt code (signal, slots and alikes)."
       (goto-char (point-max))
       (insert
        "#endif /* __" (upcase (substring fname 0 -2)) "_H */\n\n"
+       "/***********************************END OF FILE********************************/\n\n"))))
+
+(defun comment/header-cpp ()
+  "Add header and footer to an .cpp buffer."
+  (interactive)
+  (let ((fname (if (buffer-file-name)
+                   (file-name-nondirectory (buffer-file-name))
+                 (error "This buffer is not visiting a file")))
+        (fdate (current-time-string)))
+    (save-excursion
+      (goto-char (point-min))
+      (insert
+       "/**\n"
+       "  ******************************************************************************\n"
+       "  * Copyright (C) " (substring fdate -4 nil) " 王北洛.\n"
+       "  *\n"
+       "  * Author  王北洛 <beiluo.wang@139.com>\n"
+       "  * Date    " fdate "\n"
+       "  *\n"
+       "  * Brief   简介...\n"
+       "  *\n  *\n  *\n"
+       "  ******************************************************************************\n"
+       "  */\n\n"
+       "// Includes\n"
+       "#include \"" (substring fname 0 -3) "h\"\n\n"
+       "// Code... \n\n")
+      (goto-char (point-max))
+      (insert "/***********************************END OF FILE********************************/\n\n"))))
+
+(defun comment/header-hpp ()
+  "Add header and footer to an .h buffer."
+  (interactive)
+  (let ((fname (if (buffer-file-name)
+                   (file-name-nondirectory (buffer-file-name))
+                 (error "This buffer is not visiting a file")))
+        (fdate (current-time-string)))
+    (save-excursion
+      (goto-char (point-min))
+      (insert
+       "/**\n"
+       "  ******************************************************************************\n"
+       "  * Copyright (C) " (substring fdate -4 nil) " 王北洛.\n"
+       "  *\n"
+       "  * Author  王北洛 <beiluo.wang@139.com>\n"
+       "  * Date    " fdate "\n"
+       "  *\n"
+       "  * Brief   简介...\n"
+       "  *\n  *\n  *\n"
+       "  ******************************************************************************\n"
+       "  */\n\n"
+       "#ifndef __" (upcase (substring fname 0 -2)) "_H\n"
+       "#define __" (upcase (substring fname 0 -2)) "_H\n\n"
+       "// Includes\n\n"
+       "// Code... \n\n")
+      (goto-char (point-max))
+      (insert
+       "#endif // __" (upcase (substring fname 0 -2)) "_H\n\n"
        "/***********************************END OF FILE********************************/\n\n"))))
 
 (provide 'init-c)

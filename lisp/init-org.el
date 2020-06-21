@@ -34,7 +34,7 @@
   :ensure t
   :hook (org-mode . org-bullets-mode)
   :config
-  (setq org-bullets-bullet-list '("✿" "❁" "❃" "☸" "❉" "✲")))
+  (setq org-bullets-bullet-list '("✿" "❁" "☸" "❃" "❉" "✲")))
 
 ;; Pomodoro
 (use-package org-pomodoro
@@ -55,8 +55,7 @@
                                 (sequence "WAITING(w@/!)" "HOLD(h@/!)" "SOMEDAY(s)" "|" "CANCELLED(c@/!)"))))
 
 (setq org-todo-keyword-faces
-      (quote (("TODO" :foreground "magenta" :weight bold)
-              ;;("DOING" :foreground "Black" :weight bold)
+      (quote (("TODO" :foreground "red" :weight bold)
               ("NEXT" :foreground "green" :weight bold)
               ("DONE" :foreground "forest green" :weight bold)
               ("WAITING" :foreground "orange" :weight bold)

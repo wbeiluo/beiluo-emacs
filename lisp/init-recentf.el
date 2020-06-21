@@ -13,7 +13,7 @@
 
 (use-package recentf
   :ensure nil
-  :bind ([f5] . recentf-open-files)
+  :bind ([f6] . recentf-open-files)
   :hook (after-init . recentf-mode)
   :init
   (setq recentf-max-saved-items 50)
