@@ -4,9 +4,9 @@
 sudo pacman -S wqy-microhei ttf-sarasa-gothic
 #+END_SRC
 ** 安装第三方软件
-*** riggrep
+*** ripgrep
 #+BEGIN_SRC shell
-sudo pacman -S riggrep
+sudo pacman -S ripgrep
 #+END_SRC
 *** ccls
 #+BEGIN_SRC shell
