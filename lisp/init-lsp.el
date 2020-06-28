@@ -36,7 +36,10 @@
   :hook ((c-mode c++-mode objc-mode cuda-mode) .
          (lambda () (require 'ccls) (lsp)))
   :init
-  (setq ccls-executable "/usr/bin/ccls"))
+  (when (eq system-type 'gnu/linux)
+    (setq ccls-executable "/usr/bin/ccls"))
+  (when (eq system-type 'windows-nt)
+    (setq ccls-executable "~/bin/ccls.exe")))
 
 
 (use-package lsp-mode :commands lsp)

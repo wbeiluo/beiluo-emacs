@@ -12,6 +12,7 @@
 
 ;;; Code:
 
+(setq default-directory "~/")
 ;; Load configuration path
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
