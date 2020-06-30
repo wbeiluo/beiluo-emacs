@@ -1,7 +1,7 @@
 * 安装
 ** 安装字体
 #+BEGIN_SRC shell
-sudo pacman -S wqy-microhei ttf-sarasa-gothic
+sudo pacman -S wqy-microhei wqy-zenhei
 #+END_SRC
 ** 安装第三方软件
 *** ripgrep

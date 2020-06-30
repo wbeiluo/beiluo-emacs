@@ -18,7 +18,7 @@
   (defun org-buffer-face-mode-variable ()
     (interactive)
     (make-face 'width-font-face)
-    (set-face-attribute 'width-font-face nil :font "Sarasa Fixed SC 12")
+    (set-face-attribute 'width-font-face nil :font "WenQuanYi Zen Hei Mono 12")
     (setq buffer-face-mode-face 'width-font-face)
     (buffer-face-mode))
   (add-hook 'org-mode-hook 'org-buffer-face-mode-variable))
