@@ -30,11 +30,11 @@
 (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
 
 ;; bullet list
-(use-package org-bullets
-  :ensure t
-  :hook (org-mode . org-bullets-mode)
-  :config
-  (setq org-bullets-bullet-list '("✿" "❁" "☸" "❃" "❉" "✲")))
+;(use-package org-bullets
+;  :ensure t
+;  :hook (org-mode . org-bullets-mode)
+;  :config
+;  (setq org-bullets-bullet-list '("✿" "❁" "☸" "❃" "❉" "✲")))
 
 ;; Pomodoro
 (use-package org-pomodoro
