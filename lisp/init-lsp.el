@@ -39,7 +39,7 @@
   (when (eq system-type 'gnu/linux)
     (setq ccls-executable "/usr/bin/ccls"))
   (when (eq system-type 'windows-nt)
-    (setq ccls-executable "~/bin/ccls.exe")))
+    (setq ccls-executable "~/ccls/Release/ccls.exe")))
 
 
 (use-package lsp-mode :commands lsp)
