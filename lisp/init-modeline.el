@@ -98,7 +98,7 @@
   (setq doom-modeline-lsp t)
 
   ;; Whether display the GitHub notifications. It requires `ghub' package.
-  (setq doom-modeline-github nil)
+  (setq doom-modeline-github t)
 
   ;; The interval of checking GitHub.
   (setq doom-modeline-github-interval (* 30 60))
