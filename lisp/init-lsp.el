@@ -24,7 +24,7 @@
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
-(use-package company-lsp :commands company-lsp)
+;;(use-package company-lsp :commands company-lsp)
 
 ;; optionally
 ;; if you are ivy user
@@ -40,16 +40,6 @@
     (setq ccls-executable "/usr/bin/ccls"))
   (when (eq system-type 'windows-nt)
     (setq ccls-executable "~/bin/ccls.exe")))
-
-
-(use-package lsp-mode :commands lsp)
-;;(use-package lsp-ui :commands lsp-ui-mode)
-(use-package company-lsp :commands company-lsp)
-
-
-;; optionally if you want to use debugger
-;(use-package dap-mode)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
 
 (provide 'init-lsp)

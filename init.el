@@ -77,7 +77,7 @@
 (require 'init-elisp)
 (require 'init-slime)
 (require 'init-c)
-
+(require 'init-cpp)
 (require 'init-misc)
 
 ;; change custom file location

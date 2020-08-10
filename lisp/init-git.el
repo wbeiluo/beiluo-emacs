@@ -24,17 +24,7 @@
   (when (fboundp 'transient-append-suffix)
     ;; Add switch: --tags
     (transient-append-suffix 'magit-fetch
-      "-p" '("-t" "Fetch all tags" ("-t" "--tags"))))
-
-  ;; Access Git forges from Magit
-  (when (executable-find "cc")
-    (use-package forge
-      :demand
-      :init (setq forge-topic-list-columns
-                  '(("#" 5 t (:right-align t) number nil)
-                    ("Title" 60 t nil title  nil)
-                    ("State" 6 t nil state nil)
-                    ("Updated" 10 t nill updated nil))))))
+      "-p" '("-t" "Fetch all tags" ("-t" "--tags")))))
 
 
 (provide 'init-git)

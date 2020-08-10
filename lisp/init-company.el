@@ -38,9 +38,6 @@
   (setq company-show-numbers t)
   ;; allow input string that do not match candidate words
   (setq company-require-match nil)
-  ;; Don't downcase the returned candidates.
-  (setq company-dabbrev-downcase nil)
-  (setq company-dabbrev-ignore-case t)
 
   (setq company-global-modes '(not erc-mode message-mode help-mode
                                    gud-mode eshell-mode shell-mode))
