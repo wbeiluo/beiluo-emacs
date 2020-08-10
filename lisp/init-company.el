@@ -26,7 +26,6 @@
   (require 'company-dabbrev)
   (require 'company-files)
   (use-package company-c-headers :ensure t)
-  (use-package company-lsp :ensure t)
 
   (setq-default company-dabbrev-other-buffers 'all
                 company-tooltip-align-annotations t)
@@ -60,7 +59,7 @@
 
   (add-to-list 'company-backends #'company-files)
   (add-to-list 'company-backends #'company-c-headers)
-  (add-to-list 'company-backends #'company-lsp)
+  (add-to-list 'company-backends #'company-capf)
 
   ;; Add `company-elisp' backend for elisp.
   (add-hook 'emacs-lisp-mode-hook

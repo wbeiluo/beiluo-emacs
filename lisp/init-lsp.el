@@ -24,8 +24,6 @@
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
-;;(use-package company-lsp :commands company-lsp)
-
 ;; optionally
 ;; if you are ivy user
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)

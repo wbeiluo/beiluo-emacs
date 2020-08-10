@@ -63,6 +63,7 @@
 (require 'init-edit)
 (require 'init-ivy)
 (require 'init-yasnippet)
+(require 'init-lsp)
 (require 'init-company)
 ;;(require 'init-tabnine)
 (require 'init-awesome-pair)
@@ -72,7 +73,6 @@
 (require 'init-git)
 (require 'init-projectile)
 
-(require 'init-lsp)
 (require 'init-org)
 (require 'init-elisp)
 (require 'init-slime)
