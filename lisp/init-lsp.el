@@ -25,6 +25,7 @@
   :commands lsp)
 
 ;; optionally
+(use-package lsp-ui :commands lsp-ui-mode)
 ;; if you are ivy user
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
@@ -37,7 +38,7 @@
   (when (eq system-type 'gnu/linux)
     (setq ccls-executable "/usr/bin/ccls"))
   (when (eq system-type 'windows-nt)
-    (setq ccls-executable "~/bin/ccls.exe")))
+    (setq ccls-executable "~/opt/ccls/Release/ccls.exe")))
 
 
 (provide 'init-lsp)
