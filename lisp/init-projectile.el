@@ -13,7 +13,7 @@
 (use-package projectile
   :diminish
   :bind (:map projectile-mode-map
-              ("M-p" . projectile-command-map)
+              ([f9] . projectile-command-map)
               ("C-c p" . projectile-command-map))
   :hook (after-init . projectile-mode)
   :init

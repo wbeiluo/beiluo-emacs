@@ -17,6 +17,7 @@
   :config
   (which-key-mode))
 
+(global-set-key [f8] 'shell)
 
 (provide 'init-key)
 ;;; init-key.el ends here
