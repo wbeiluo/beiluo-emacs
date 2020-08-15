@@ -76,6 +76,7 @@
 (require 'init-slime)
 (require 'init-c)
 (require 'init-cpp)
+(require 'init-windows)
 (require 'init-misc)
 
 ;; change custom file location
