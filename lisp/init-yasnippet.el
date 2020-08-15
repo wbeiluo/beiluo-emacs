@@ -16,7 +16,6 @@
   :ensure t
   :hook (prog-mode . yas-global-mode)
   :config
-  (use-package yasnippet-snippets :ensure t)
 
   ;; Disable yasnippet mode on some mode.
   (dolist (hook (list
@@ -24,6 +23,7 @@
                  ))
     (add-hook hook '(lambda () (yas-minor-mode -1)))))
 
+;(use-package yasnippet-snippets)
 
 (provide 'init-yasnippet)
 ;;; init-yasnippet.el ends here

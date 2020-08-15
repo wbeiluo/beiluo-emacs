@@ -1,4 +1,4 @@
-;;; init-misc.el --- misc configurations -*- lexical-binding: t -*-
+;;; init-key.el --- misc configurations -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2020 王北洛
 
@@ -18,5 +18,5 @@
   (which-key-mode))
 
 
-(provide 'init-misc)
-;;; init-misc.el ends here
+(provide 'init-key)
+;;; init-key.el ends here

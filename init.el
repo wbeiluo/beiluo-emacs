@@ -58,11 +58,11 @@
 (require 'init-dired)
 (require 'init-fonts)
 (require 'init-recentf)
+(require 'init-key)
 (require 'init-flycheck)
 (require 'init-ibuffer)
 (require 'init-edit)
 (require 'init-ivy)
-(require 'init-yasnippet)
 (require 'init-company)
 (require 'init-projectile)
 (require 'init-awesome-pair)
@@ -77,7 +77,7 @@
 (require 'init-c)
 (require 'init-cpp)
 (require 'init-windows)
-(require 'init-misc)
+(require 'init-yasnippet)
 
 ;; change custom file location
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))

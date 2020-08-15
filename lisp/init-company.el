@@ -25,7 +25,7 @@
   :config
   (require 'company-dabbrev)
   (require 'company-files)
-  (use-package company-c-headers :ensure t)
+  (use-package company-c-headers)
 
   (setq-default company-dabbrev-other-buffers 'all
                 company-tooltip-align-annotations t)
@@ -55,7 +55,6 @@
   (setq company-backends (delete 'company-gtags company-backends))
   (setq company-backends (delete 'company-etags company-backends))
   (setq company-backends (delete 'company-oddmuse company-backends))
-
 
   (add-to-list 'company-backends #'company-files)
   (add-to-list 'company-backends #'company-c-headers)
