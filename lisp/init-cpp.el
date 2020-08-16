@@ -21,10 +21,10 @@ Includes support for Qt code (signal, slots and alikes)."
       ;; cpp font lock.
       (modern-c++-font-lock-global-mode t)
 
+      (use-package cc-mode)
       ;; base-style
       (c-set-style "stroustrup")
       (setq c-basic-offset 4)
-      (imenu-add-menubar-index)
 
       ;; qt keywords and stuff ...
       ;; set up indenting correctly for new qt kewords
@@ -62,22 +62,12 @@ Includes support for Qt code (signal, slots and alikes)."
     (save-excursion
       (goto-char (point-min))
       (insert
-       "/**\n"
-       "  ******************************************************************************\n"
-       "  * Copyright (C) " (substring fdate -4 nil) " 王北洛.\n"
-       "  *\n"
-       "  * Author  王北洛 <beiluo.wang@139.com>\n"
-       "  * Date    " fdate "\n"
-       "  *\n"
-       "  * Brief   简介...\n"
-       "  *\n  *\n  *\n"
-       "  ******************************************************************************\n"
-       "  */\n\n"
+       "// Copyright (C) " (substring fdate -4 nil) " 王北洛.\n"
+       "// Author:  王北洛 <beiluo.wang@139.com>\n"
+       "// Brief :  简介...\n\n\n"
        "// Includes\n"
-       "#include \"" (substring fname 0 -3) "h\"\n\n"
-       "// Code... \n\n")
+       "#include \"" (substring fname 0 -3) "h\"\n\n\n")
       (goto-char (point-max))
-      (insert "/***********************************END OF FILE********************************/\n\n")
       (insert ""))))
 
 (defun comment/header-hpp ()
@@ -90,25 +80,14 @@ Includes support for Qt code (signal, slots and alikes)."
     (save-excursion
       (goto-char (point-min))
       (insert
-       "/**\n"
-       "  ******************************************************************************\n"
-       "  * Copyright (C) " (substring fdate -4 nil) " 王北洛.\n"
-       "  *\n"
-       "  * Author  王北洛 <beiluo.wang@139.com>\n"
-       "  * Date    " fdate "\n"
-       "  *\n"
-       "  * Brief   简介...\n"
-       "  *\n  *\n  *\n"
-       "  ******************************************************************************\n"
-       "  */\n\n"
+       "// Copyright (C) " (substring fdate -4 nil) " 王北洛.\n"
+       "// Author: 王北洛 <beiluo.wang@139.com>\n"
+       "// Brief:  简介...\n\n"
        "#ifndef __" (upcase (substring fname 0 -2)) "_H\n"
-       "#define __" (upcase (substring fname 0 -2)) "_H\n\n"
-       "// Includes\n\n"
-       "// Code... \n\n")
+       "#define __" (upcase (substring fname 0 -2)) "_H\n\n")
       (goto-char (point-max))
       (insert
-       "#endif // __" (upcase (substring fname 0 -2)) "_H\n\n"
-       "/***********************************END OF FILE********************************/\n\n")
+       "#endif // __" (upcase (substring fname 0 -2)) "_H\n\n")
       (insert ""))))
 
 (provide 'init-cpp)
