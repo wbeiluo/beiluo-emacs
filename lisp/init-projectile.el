@@ -13,7 +13,7 @@
 (use-package projectile
   :diminish
   :bind (:map projectile-mode-map
-              ([f9] . projectile-command-map)
+              ([f12] . projectile-command-map)
               ("C-c p" . projectile-command-map))
   :hook (after-init . projectile-mode)
   :init
@@ -32,13 +32,10 @@
             (concat "rg -0 --files --color=never --hidden" rg-cmd))))
 
   ;; Faster searching on Windows
-  (when sys/win32p
+  (when (eq system-type 'windows-nt)
     (when (or (executable-find "fd") (executable-find "rg"))
       (setq projectile-indexing-method 'alien
-            projectile-enable-caching nil))
-
-    ;; too slow while getting submodule files on Windows
-    (setq projectile-git-submodule-command nil))
+            projectile-enable-caching nil)))
 
   )
 
