@@ -52,6 +52,7 @@
 ;; (require 'init-hydra)
 (require 'init-theme)
 (require 'init-modeline)
+(require 'init-windows)
 (require 'init-exec-path)
 (require 'init-eshell)
 (require 'init-auto-save)
@@ -76,7 +77,6 @@
 (require 'init-slime)
 (require 'init-c)
 (require 'init-cpp)
-(require 'init-windows)
 (require 'init-yasnippet)
 
 ;; change custom file location
