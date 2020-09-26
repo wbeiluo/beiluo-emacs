@@ -18,13 +18,12 @@
   :bind (:map company-mode-map
          ("M-/" . company-complete)
          :map company-active-map
-         ("<tab>" . company-complete-selection)
-         ("M-/" . company-other-backend)
          ("M-n" . company-select-next)
          ("M-p" . company-select-previous))
   :config
   (require 'company-dabbrev)
   (require 'company-files)
+  (require 'company-capf)
   (use-package company-c-headers)
 
   (setq-default company-dabbrev-other-buffers 'all
@@ -46,7 +45,7 @@
                             company-echo-metadata-frontend))
 
   ;; Allows TAB to select and complete at the same time.
-  (company-tng-configure-default)
+  (company-tng-mode 1)
 
   ;; Customize company backends.
   (setq company-backends (delete 'company-xcode company-backends))
