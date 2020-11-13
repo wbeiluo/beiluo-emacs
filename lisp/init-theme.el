@@ -16,7 +16,7 @@
   ;; (vertical-bar   (doom-darken base5 0.4))
   ;; (doom-darken bg 0.4)
   :config
-  (load-theme 'doom-one t)
+  (load-theme 'doom-solarized-light t)
   (doom-themes-neotree-config)
   (doom-themes-org-config)
   )

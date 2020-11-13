@@ -8,7 +8,7 @@
 ;;; Commentary:
 ;;; Code:
 
-(let ((emacs-font-size 10)
+(let ((emacs-font-size 12)
       (emacs-font-name "WenQuanYi Micro Hei Mono"))
   (when (display-grayscale-p)
   (set-frame-font (format "%s-%s" (eval emacs-font-name) (eval emacs-font-size)))
