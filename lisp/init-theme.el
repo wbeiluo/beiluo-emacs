@@ -8,12 +8,15 @@
 ;;; Commentary:
 ;;; Code:
 
+;; Install additinal themes from melpa
+;; make sure to use :defer keyword
 (use-package doom-themes
+  :ensure
+  :defer
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one-light t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -26,6 +29,14 @@
 
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
+
+;; Switching themes on time of day
+(use-package circadian
+  :ensure t
+  :config
+  (setq circadian-themes '(("8:00" . doom-solarized-light)
+                           ("19:30" . doom-solarized-dark)))
+  (circadian-setup))
 
 
 (provide 'init-theme)
