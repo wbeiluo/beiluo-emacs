@@ -34,8 +34,8 @@
 (use-package circadian
   :ensure t
   :config
-  (setq circadian-themes '(("8:00" . doom-solarized-light)
-                           ("19:30" . doom-solarized-dark)))
+  (setq circadian-themes '(("8:00" . doom-one-light)
+                           ("19:30" . doom-one-dark)))
   (circadian-setup))
 
 
