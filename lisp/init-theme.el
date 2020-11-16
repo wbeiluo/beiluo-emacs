@@ -35,7 +35,7 @@
   :ensure t
   :config
   (setq circadian-themes '(("8:00" . doom-one-light)
-                           ("19:30" . doom-one-dark)))
+                           ("19:30" . doom-one)))
   (circadian-setup))
 
 
