@@ -31,13 +31,25 @@
   (doom-themes-org-config))
 
 ;; Switching themes on time of day
-(use-package circadian
+;; (use-package circadian
+;;   :ensure t
+;;   :config
+;;   (setq circadian-themes '(("8:00" . solarized-light)
+;;                            ("19:30" . solarized-dark)))
+;;   (circadian-setup))
+
+
+(use-package solarized-theme
   :ensure t
   :config
-  (setq circadian-themes '(("8:00" . doom-one-light)
-                           ("19:30" . doom-one)))
-  (circadian-setup))
-
+  ;;(setq x-underline-at-descent-line nil)
+  (load-theme 'solarized-dark t)
+  (set-face-attribute 'mode-line          nil :overline   nil)
+  (set-face-attribute 'mode-line-inactive nil :overline   nil)
+  (set-face-attribute 'mode-line          nil :underline  nil)
+  (set-face-attribute 'mode-line-inactive nil :underline  nil)
+  (set-face-attribute 'mode-line          nil :box        nil)
+  (set-face-attribute 'mode-line-inactive nil :box        nil))
 
 (provide 'init-theme)
 ;;; init-theme.el ends here
