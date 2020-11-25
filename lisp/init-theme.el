@@ -12,11 +12,11 @@
 ;; make sure to use :defer keyword
 (use-package doom-themes
   :ensure
-  :defer
   :config
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  ;; (load-theme 'doom-solarized-dark t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -43,13 +43,16 @@
   :ensure t
   :config
   ;;(setq x-underline-at-descent-line nil)
-  (load-theme 'solarized-dark t)
-  (set-face-attribute 'mode-line          nil :overline   nil)
-  (set-face-attribute 'mode-line-inactive nil :overline   nil)
-  (set-face-attribute 'mode-line          nil :underline  nil)
-  (set-face-attribute 'mode-line-inactive nil :underline  nil)
-  (set-face-attribute 'mode-line          nil :box        nil)
-  (set-face-attribute 'mode-line-inactive nil :box        nil))
+  (if (display-graphic-p)
+      (progn
+        (load-theme 'solarized-dark t)
+        (set-face-attribute 'mode-line          nil :overline   nil)
+        (set-face-attribute 'mode-line-inactive nil :overline   nil)
+        (set-face-attribute 'mode-line          nil :underline  nil)
+        (set-face-attribute 'mode-line-inactive nil :underline  nil)
+        (set-face-attribute 'mode-line          nil :box        nil)
+        (set-face-attribute 'mode-line-inactive nil :box        nil))
+    (load-theme 'doom-one t)))
 
 (provide 'init-theme)
 ;;; init-theme.el ends here
