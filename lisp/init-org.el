@@ -43,7 +43,7 @@
   :config
   (setq org-pomodoro-keep-killed-pomodoro-time t))
 
-(setq org-agenda-files (list "~/Org/Life-2020.org"
+(setq org-agenda-files (list "~/Org/Life.org"
                              "~/Org/Learning.org"
                              "~/Org/Reading.org"
                              "~/Org/Project.org"
