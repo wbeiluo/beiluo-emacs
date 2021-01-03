@@ -50,8 +50,8 @@
 ;;----------------------------------------------------------------------------
 (require 'init-basic)
 ;; (require 'init-hydra)
-(require 'init-theme)
 (require 'init-modeline)
+(require 'init-theme)
 (require 'init-windows)
 (require 'init-exec-path)
 (require 'init-eshell)

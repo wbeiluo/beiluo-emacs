@@ -62,7 +62,7 @@
 
   ;; Whether display icons in the mode-line.
   ;; While using the server mode in GUI, should set the value explicitly.
-  (setq doom-modeline-icon nil);;(display-graphic-p))
+  (setq doom-modeline-icon (display-graphic-p))
 
   ;; Whether display the icon for `major-mode'. It respects `doom-modeline-icon'.
   (setq doom-modeline-major-mode-icon t)
