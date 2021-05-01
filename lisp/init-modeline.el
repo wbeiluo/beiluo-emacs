@@ -21,10 +21,10 @@
   :config
   ;; How tall the mode-line should be. It's only respected in GUI.
   ;; If the actual char height is larger, it respects the actual height.
-  (setq doom-modeline-height 24)
+  ;; (setq doom-modeline-height 24)
 
   ;; How wide the mode-line bar should be. It's only respected in GUI.
-  (setq doom-modeline-bar-width 1)
+  (setq doom-modeline-bar-width 2)
 
   ;; The limit of the window width.
   ;; If `window-width' is smaller than the limit, some information won't be displayed.
