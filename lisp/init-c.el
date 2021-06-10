@@ -29,8 +29,9 @@
         (c-turn-on-eldoc-mode)
 
         ;; base-style
+        (setq c-default-style "k&r")
         (c-set-style "k&r")
-        (setq c-basic-offset 2)
+        (setq c-basic-offset 4)
         (imenu-add-menubar-index))
       (c-mode-style-setup))))
 

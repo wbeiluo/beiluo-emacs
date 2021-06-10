@@ -13,8 +13,8 @@
 (use-package projectile
   :diminish
   :bind (:map projectile-mode-map
-              ([f12] . projectile-command-map)
-              ("C-c p" . projectile-command-map))
+              ;;("M-p" . projectile-command-map)
+              ("C-x p" . projectile-command-map))
   :hook (after-init . projectile-mode)
   :init
   (setq projectile-mode-line-prefix ""

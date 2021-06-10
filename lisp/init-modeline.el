@@ -21,10 +21,10 @@
   :config
   ;; How tall the mode-line should be. It's only respected in GUI.
   ;; If the actual char height is larger, it respects the actual height.
-  ;; (setq doom-modeline-height 24)
+  (setq doom-modeline-height 32)
 
   ;; How wide the mode-line bar should be. It's only respected in GUI.
-  (setq doom-modeline-bar-width 2)
+  (setq doom-modeline-bar-width 1)
 
   ;; The limit of the window width.
   ;; If `window-width' is smaller than the limit, some information won't be displayed.
@@ -62,7 +62,8 @@
 
   ;; Whether display icons in the mode-line.
   ;; While using the server mode in GUI, should set the value explicitly.
-  (setq doom-modeline-icon (display-graphic-p))
+  ;;(setq doom-modeline-icon (display-graphic-p))
+  (setq doom-modeline-icon nil)
 
   ;; Whether display the icon for `major-mode'. It respects `doom-modeline-icon'.
   (setq doom-modeline-major-mode-icon t)

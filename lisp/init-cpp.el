@@ -24,7 +24,7 @@ Includes support for Qt code (signal, slots and alikes)."
       (use-package cc-mode)
       ;; base-style
       (c-set-style "stroustrup")
-      (setq c-basic-offset 2)
+      (setq c-basic-offset 4)
 
       ;; qt keywords and stuff ...
       ;; set up indenting correctly for new qt kewords

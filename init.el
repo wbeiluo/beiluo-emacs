@@ -85,7 +85,8 @@
   (load custom-file))
 
 ;; Full screen display
-(fullscreen)
+;;(fullscreen)
+(toggle-frame-maximized)
 
 (when (fboundp 'global-eldoc-mode)
   (add-hook 'after-init-hook 'global-eldoc-mode))
