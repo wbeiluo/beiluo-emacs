@@ -1,0 +1,6 @@
+[submodule "extensions/awesome-tab"]
+	path = extensions/awesome-tab
+	url = https://github.com/manateelazycat/awesome-tab.git
+[submodule "extensions/netease-cloud-music.el"]
+	path = extensions/netease-cloud-music.el
+	url = https://github.com/SpringHan/netease-cloud-music.el.git

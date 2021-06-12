@@ -44,18 +44,14 @@
 
 ;;; Installation:
 ;;
-;; Put auto-save.el to your load-path.
-;; The load-path is usually ~/elisp/.
-;; It's set in your ~/.emacs like this:
-;; (add-to-list 'load-path (expand-file-name "~/elisp"))
-;;
-;; And the following to your ~/.emacs startup file.
-;;
-;; (require 'init-auto-save)
+;; Clone or download this repository (path of the folder is the `<path-to-auto-save>` used below).
+;; In your `~/.emacs`, add the following three lines:
+;; (add-to-list 'load-path "<path-to-auto-save>") ; add auto-save to your load-path
+;; (require 'auto-save)
 ;; (auto-save-enable)
 ;;
-;; Set `auto-save-silent' with non-nil if want emacs save files slient:
-;; (setq auto-save-silent t)
+;; (setq auto-save-silent t)   ; quietly save
+;; (setq auto-save-delete-trailing-whitespace t)  ; automatically delete spaces at the end of the line when saving
 ;;
 ;; No need more.
 
@@ -96,7 +92,6 @@
 
 ;;; Require
 
-
 ;;; Code:
 
 (defgroup auto-save nil
@@ -120,8 +115,12 @@ avoid delete current indent space when you programming."
   :type 'boolean
   :group 'auto-save)
 
+(defvar auto-save-disable-predicates
+  nil "disable auto save in these case.")
+
 ;; Emacs' default auto-save is stupid to generate #foo# files!
 (setq auto-save-default nil)
+(setq create-lockfiles nil)
 
 (defun auto-save-buffers ()
   (interactive)
@@ -140,12 +139,18 @@ avoid delete current indent space when you programming."
                      (not yas--active-snippets))
                  ;; Company is not active?
                  (or (not (boundp 'company-candidates))
-                     (not company-candidates)))
+                     (not company-candidates))
+                 ;; tell auto-save don't save
+                 (not (seq-some (lambda (predicate)
+                                  (funcall predicate))
+                                auto-save-disable-predicates)))
             (push (buffer-name) autosave-buffer-list)
             (if auto-save-silent
-                (with-temp-message
-                    (with-current-buffer " *Minibuf-0*" (buffer-string))
-                  (basic-save-buffer))
+                ;; `inhibit-message' can shut up Emacs, but we want
+                ;; it doesn't clean up echo area during saving
+                (with-temp-message ""
+                  (let ((inhibit-message t))
+                    (basic-save-buffer)))
               (basic-save-buffer))
             ))
         ;; Tell user when auto save files.
@@ -164,7 +169,7 @@ avoid delete current indent space when you programming."
   (interactive)
   (when auto-save-delete-trailing-whitespace
     (let ((begin (line-beginning-position))
-          (end (line-end-position)))
+          (end (point)))
       (save-excursion
         (when (< (point-min) begin)
           (save-restriction
@@ -172,14 +177,35 @@ avoid delete current indent space when you programming."
             (delete-trailing-whitespace)))
         (when (> (point-max) end)
           (save-restriction
-            (narrow-to-region (1+ end) (point-max))
+            (narrow-to-region end (point-max))
             (delete-trailing-whitespace)))))))
+
+(defvar auto-save-timer nil)
+
+(defun auto-save-set-timer ()
+  "Set the auto-save timer.
+Cancel any previous timer."
+  (auto-save-cancel-timer)
+  (setq auto-save-timer
+        (run-with-idle-timer auto-save-idle t 'auto-save-buffers)))
+
+(defun auto-save-cancel-timer ()
+  (when auto-save-timer
+    (cancel-timer auto-save-timer)
+    (setq auto-save-timer nil)))
 
 (defun auto-save-enable ()
   (interactive)
-  (run-with-idle-timer auto-save-idle t #'auto-save-buffers)
+  (auto-save-set-timer)
   (add-hook 'before-save-hook 'auto-save-delete-trailing-whitespace-except-current-line)
   (add-hook 'before-save-hook 'font-lock-flush)
+  )
+
+(defun auto-save-disable ()
+  (interactive)
+  (auto-save-cancel-timer)
+  (remove-hook 'before-save-hook 'auto-save-delete-trailing-whitespace-except-current-line)
+  (remove-hook 'before-save-hook 'font-lock-flush)
   )
 
 (provide 'auto-save)

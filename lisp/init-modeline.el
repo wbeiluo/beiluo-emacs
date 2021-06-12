@@ -37,7 +37,7 @@
   ;; e.g. `projectile' doesn't handle symlink folders well, while `project' is unable
   ;; to hanle sub-projects.
   ;; You can specify one if you encounter the issue.
-  (setq doom-modeline-project-detection 'project)
+  (setq doom-modeline-project-detection 'projectile)
 
   ;; Determines the style used by `doom-modeline-buffer-file-name'.
   ;;
@@ -58,7 +58,7 @@
   ;; If you are experiencing the laggy issue, especially while editing remote files
   ;; with tramp, please try `file-name' style.
   ;; Please refer to https://github.com/bbatsov/projectile/issues/657.
-  (setq doom-modeline-buffer-file-name-style 'auto)
+  (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
 
   ;; Whether display icons in the mode-line.
   ;; While using the server mode in GUI, should set the value explicitly.
@@ -177,7 +177,6 @@
   (setq doom-modeline-before-update-env-hook nil)
   (setq doom-modeline-after-update-env-hook nil)
   )
-
 
 (provide 'init-modeline)
 

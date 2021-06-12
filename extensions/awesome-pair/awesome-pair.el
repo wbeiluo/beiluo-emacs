@@ -190,10 +190,11 @@
 (defvar awesome-pair-mode-map (make-sparse-keymap)
   "Keymap for the awesome-pair minor mode.")
 
+;;;###autoload
 (define-minor-mode awesome-pair-mode
   "Minor mode for auto parenthesis pairing with syntax table.
 \\<awesome-pair-mode-map>"
-  )
+  :group 'awesome-pair)
 
 (defmacro awesome-pair-ignore-errors (body)
   `(ignore-errors
@@ -1030,6 +1031,18 @@ When in comment, kill to the beginning of the line."
      ((and (looking-at "<%")
            (save-excursion (search-forward-regexp "%>" nil t)))
       (kill-region (point) (search-forward-regexp "%>" nil t)))
+     ;; Kill content in {{ }} if left is {{.
+     ((and (looking-back "{{\\s-?")
+           (save-excursion (search-forward-regexp "\\s-?}}")))
+      (let ((start (save-excursion
+                     (search-backward-regexp "{{\\s-?" nil t)
+                     (forward-char 2)
+                     (point)))
+            (end (save-excursion
+                   (search-forward-regexp "\\s-?}}" nil t)
+                   (backward-char 2)
+                   (point))))
+        (kill-region start end)))
      ;; Kill content in <% ... %> if left is <% or <%=
      ((and (looking-back "<%=?\\s-?")
            (save-excursion (search-forward-regexp "%>" nil t)))
@@ -1311,6 +1324,8 @@ A and B are strings."
 (defun awesome-pair-current-parse-state ()
   (let ((point (point)))
     (beginning-of-defun)
+    (when (equal point (point))
+      (beginning-of-line))
     (parse-partial-sexp (point) point)))
 
 (defun awesome-pair-string-start+end-points (&optional state)

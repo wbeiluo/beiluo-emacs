@@ -12,18 +12,37 @@
 
 ;;; Code:
 
+
+(use-package yasnippet-snippets)
 (use-package yasnippet
   :ensure t
   :hook (prog-mode . yas-global-mode)
+  :bind (("C-x y" . 'hydra-yasnippet/body))
   :config
+  (defhydra hydra-yasnippet (:color "deep sky blue" :hint nil)
+    "
+              ^YASnippets^
+--------------------------------------------
+  Modes:    Load/Visit:    Actions:
 
-  ;; Disable yasnippet mode on some mode.
-  (dolist (hook (list
-                 'term-mode-hook
-                 ))
-    (add-hook hook '(lambda () (yas-minor-mode -1)))))
+ _g_lobal  _d_irectory    _i_nsert
+ _m_inor   _f_ile         _t_ryout
+ _e_xtra   _l_ist         _n_ew
+         _a_ll
+"
+    ("d" yas-load-directory)
+    ("e" yas-activate-extra-mode)
+    ("i" yas-insert-snippet)
+    ("f" yas-visit-snippet-file :color blue)
+    ("n" yas-new-snippet)
+    ("t" yas-tryout-snippet)
+    ("l" yas-describe-tables)
+    ("g" yas-global-mode)
+    ("m" yas-minor-mode)
+    ("a" yas-reload-all)
+    ("q"   nil "cancel" :color blue))
+  )
 
-;(use-package yasnippet-snippets)
 
 (provide 'init-yasnippet)
 ;;; init-yasnippet.el ends here
