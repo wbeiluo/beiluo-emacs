@@ -4,3 +4,9 @@
 [submodule "extensions/netease-cloud-music.el"]
 	path = extensions/netease-cloud-music.el
 	url = https://github.com/SpringHan/netease-cloud-music.el.git
+[submodule "extensions/awesome-pair"]
+	path = extensions/awesome-pair
+	url = https://github.com/manateelazycat/awesome-pair.git
+[submodule "extensions/auto-save"]
+	path = extensions/auto-save
+	url = https://github.com/manateelazycat/auto-save.git
