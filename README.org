@@ -18,7 +18,7 @@ sudo pacman -S sbcl
 #+END_SRC
 * 快捷键
 ** Org-mode 快捷键
-| 快捷键      | 说明                     |
+| 快捷键       | 说明                     |
 |-------------+--------------------------|
 | C-c a       | 打开org-agenda           |
 | C-c c       | 打开org-capture          |

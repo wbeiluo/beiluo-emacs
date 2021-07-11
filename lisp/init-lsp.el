@@ -18,14 +18,14 @@
 
 (defhydra hydra-lsp (:exit t :hint nil)
   "
-                                                                               ╭───────────┐
-    Buffer^^            Server^^                   Symbol                      │ LSP MODE  │
-  ╭────────────────────────────────────────────────────────────────────────────┴───────────╯
-    [_f_] format        [_M-r_] restart            [_d_] declaration    [_o_] documentation
-    [_m_] imenu         [_S_]   shutdown           [_D_] definition     [_t_] type
-    [_x_] exec action   [_M-s_] describe session   [_R_] references     [_s_] signature
-       ^ ^                   ^ ^                   [_i_] implementation [_r_] rename
-   ────────────────────────────────────────────────────────────────────────────────────────╯
+          ^^                  ^^                         ^^^^                  ╭───────────┐
+    Buffer^^            Server^^                   Symbol^^^^                  │ LSP MODE  │
+  ╭───────^^──────────────────^^─────────────────────────^^^^──────────────────┴───────────╯
+    [_f_] format        [_M-r_] restart            [_D_] declaration    [_o_] documentation
+    [_m_] imenu         [_S_]   shutdown           [_d_] definition     [_t_] type
+    [_x_] exec action   [_M-s_] describe session   [_r_] references     [_s_] signature
+          ^^                  ^^                   [_i_] implementation [_R_] rename
+   ───────^^──────────────────^^─────────────────────────^^^^──────────────────────────────╯
         "
   ("D" lsp-find-declaration)
   ("d" lsp-ui-peek-find-definitions)
@@ -58,8 +58,11 @@
   :init
   ;; Disable headerline
   (setq lsp-headerline-breadcrumb-enable nil)
+  :config
   ;; use flycheck
   (setq lsp-prefer-flymake nil)
+  ;; ;; C/C++
+  ;; (require 'lsp-clangd)
   )
 
 (use-package lsp-ui
@@ -98,15 +101,14 @@
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
 ;; C/C++
-(use-package ccls
-  :hook ((c-mode c++-mode objc-mode cuda-mode) .
-         (lambda () (require 'ccls) (lsp)))
-  :init
-  (when (eq system-type 'gnu/linux)
-    (setq ccls-executable "/usr/bin/ccls"))
-  (when (eq system-type 'windows-nt)
-    (setq ccls-executable "~/opt/ccls/Release/ccls.exe")))
-
+;; (use-package ccls
+;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
+;;          (lambda () (require 'ccls) (lsp)))
+;;   :init
+;;   (when (eq system-type 'gnu/linux)
+;;     (setq ccls-executable "/usr/bin/ccls"))
+;;   (when (eq system-type 'windows-nt)
+;;     (setq ccls-executable "~/opt/ccls/Release/ccls.exe")))
 
 (provide 'init-lsp)
 

@@ -1,4 +1,4 @@
-;;; init-tab.el --- Insert description here -*- lexical-binding: t -*-
+;;; init-tab.el --- Awesome-tab config -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2021 王北洛
 

@@ -12,6 +12,8 @@
 
 ;;; Code:
 
+(use-package ghub :ensure t)
+
 (use-package magit
   :ensure t
   :mode (("\\COMMIT_EDITMSG\\'" . text-mode)

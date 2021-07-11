@@ -12,6 +12,8 @@
 
 ;;; Code:
 
+(display-battery-mode)
+
 (use-package all-the-icons)
 
 (use-package doom-modeline
@@ -62,8 +64,8 @@
 
   ;; Whether display icons in the mode-line.
   ;; While using the server mode in GUI, should set the value explicitly.
-  ;;(setq doom-modeline-icon (display-graphic-p))
-  (setq doom-modeline-icon nil)
+  (setq doom-modeline-icon (display-graphic-p))
+  ;; (setq doom-modeline-icon nil)
 
   ;; Whether display the icon for `major-mode'. It respects `doom-modeline-icon'.
   (setq doom-modeline-major-mode-icon t)
@@ -125,7 +127,7 @@
   (setq doom-modeline-lsp t)
 
   ;; Whether display the GitHub notifications. It requires `ghub' package.
-  (setq doom-modeline-github nil)
+  (setq doom-modeline-github t)
 
   ;; The interval of checking GitHub.
   (setq doom-modeline-github-interval (* 30 60))

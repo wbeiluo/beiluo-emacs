@@ -19,8 +19,8 @@
   (after-init . global-hl-line-mode))
 
 (use-package highlight-parentheses
- :config
- (global-highlight-parentheses-mode 1))
+  :config
+  (global-highlight-parentheses-mode 1))
 
 ;; Beacon 当滚动时高亮光标所在行
 (use-package beacon

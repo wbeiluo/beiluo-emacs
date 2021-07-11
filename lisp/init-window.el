@@ -112,7 +112,7 @@ _d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window
     (when (and (<= frame-alpha-lower-limit newalpha) (>= 100 newalpha))
       (modify-frame-parameters frame (list (cons 'alpha newalpha))))))
 
-(sanityinc/adjust-opacity nil -4)
+(sanityinc/adjust-opacity nil -3)
 
 (global-set-key (kbd "M-C-8") (lambda () (interactive) (sanityinc/adjust-opacity nil -2)))
 (global-set-key (kbd "M-C-9") (lambda () (interactive) (sanityinc/adjust-opacity nil 2)))

@@ -32,6 +32,8 @@
 ;; (add-to-list 'default-frame-alist '(drag-internal-border . 1))
 ;; (add-to-list 'default-frame-alist '(internal-border-width . 1))
 
+(toggle-frame-maximized)
+
 ;; Quiet Startup
 (tool-bar-mode -1)                      ;禁用工具栏
 (menu-bar-mode -1)                      ;禁用菜单栏
@@ -58,7 +60,7 @@
 (setq vc-handled-backends nil)          ;禁止版本控制工具，加速启动
 (setq initial-buffer-choice t)          ;Restore emacs session
 (setq mouse-yank-at-point t)            ;粘贴于光标处,而不是鼠标指针处
-(setq select-enable-clipboard t)      ;支持emacs和外部程序的粘贴
+(setq select-enable-clipboard t)        ;支持emacs和外部程序的粘贴
 (setq ring-bell-function 'ignore)
 (setq uniquify-buffer-name-style 'post-forward-angle-brackets) ; Show path if names are same
 (setq delete-by-moving-to-trash t)    ; Deleting files go to OS's trash folder
