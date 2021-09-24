@@ -19,30 +19,28 @@
   :hook (prog-mode . yas-global-mode)
   :bind (("C-x y" . 'hydra-yasnippet/body))
   :config
-  (defhydra hydra-yasnippet (:color "deep sky blue" :hint nil)
-    "
-              ^YASnippets^
---------------------------------------------
-  Modes:    Load/Visit:    Actions:
-
- _g_lobal  _d_irectory    _i_nsert
- _m_inor   _f_ile         _t_ryout
- _e_xtra   _l_ist         _n_ew
-         _a_ll
-"
-    ("d" yas-load-directory)
-    ("e" yas-activate-extra-mode)
-    ("i" yas-insert-snippet)
-    ("f" yas-visit-snippet-file :color blue)
-    ("n" yas-new-snippet)
-    ("t" yas-tryout-snippet)
-    ("l" yas-describe-tables)
-    ("g" yas-global-mode)
-    ("m" yas-minor-mode)
-    ("a" yas-reload-all)
-    ("q"   nil "cancel" :color blue))
   )
 
+(defhydra hydra-yasnippet (:hint nil)
+  "
+    Load/Visit^^          Actions^^
+  ------------^^-----------------^^----------
+    _d_: directory        _i_: ivy insert
+    _f_: file             _s_: insert
+    _l_: list             _t_: tryout
+    _a_: all              _n_: new
+        "
+  ("d" yas-load-directory)
+  ("f" yas-visit-snippet-file)
+  ("l" yas-describe-tables)
+  ("a" yas-reload-all)
+
+  ("i" ivy-yasnippet)
+  ("s" yas-insert-snippet)
+  ("t" yas-tryout-snippet)
+  ("n" yas-new-snippet)
+
+  ("q"   nil "cancel" :color "deep sky blue"))
 
 (provide 'init-yasnippet)
 ;;; init-yasnippet.el ends here

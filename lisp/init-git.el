@@ -18,9 +18,9 @@
   :ensure t
   :mode (("\\COMMIT_EDITMSG\\'" . text-mode)
          ("\\MERGE_MSG\\'" . text-mode))
-  :bind (("C-x g" . magit-status)
-         ("C-x M-g" . magit-dispatch)
-         ("C-c M-g" . magit-file-popup))
+  ;; :bind (("C-x g" . magit-status)
+  ;;        ("C-x M-g" . magit-dispatch)
+  ;;        ("C-c M-g" . magit-file-popup))
 
   :config
   (when (fboundp 'transient-append-suffix)

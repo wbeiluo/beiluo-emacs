@@ -8,18 +8,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(use-package request :ensure t)
-
-;; Add it to load path
-;(add-to-list 'load-path "~/.emacs.d/extensions/netease-cloud-music.el/")
-
-(use-package netease-cloud-music
-  :load-path "extensions/netease-cloud-music.el/"
-  :bind ("C-c m" . netease-cloud-music))
-
-;; Require it
-;(require 'netease-cloud-music)
-
 
 (provide 'init-music)
 

@@ -21,7 +21,7 @@
     (save-excursion
       (goto-char (point-min))
       (insert ";;; " fname " --- Insert description here -*- lexical-binding: t -*-\n\n"
-              ";; Copyright (C) 2020 王北洛\n\n"
+              ";; Copyright (C) 2021 王北洛\n\n"
               ";; Author: 王北洛 <wbeiluo@139.com>\n"
               ";; URL: https://github.com/wbeiluo/beiluo-emacs\n\n"
               ";;; Commentary:\n"

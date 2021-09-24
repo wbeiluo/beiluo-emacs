@@ -56,7 +56,6 @@
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 (require 'init-basic)
-(require 'init-hydra)
 (require 'init-modeline)
 (require 'init-theme)
 (require 'init-window)
@@ -69,7 +68,6 @@
 (require 'init-tab)
 (require 'init-dired)
 (require 'init-recentf)
-(require 'init-key)
 (require 'init-flycheck)
 (require 'init-ibuffer)
 (require 'init-edit)
@@ -91,6 +89,7 @@
 (require 'init-yasnippet)
 (require 'init-pdf)
 (require 'init-music)
+(require 'init-key)
 
 ;; change custom file location
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
@@ -98,7 +97,7 @@
   (load custom-file))
 
 ;; Full screen display
-;;(fullscreen)
+(fullscreen)
 ;; (toggle-frame-maximized)
 
 (when (fboundp 'global-eldoc-mode)

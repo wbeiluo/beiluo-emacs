@@ -45,7 +45,7 @@
 
 (use-package awesome-tab
   :load-path "extensions/awesome-tab"
-  :bind(("C-=" . 'awesome-fast-switch/body))
+  ;;:bind(("C-=" . 'awesome-fast-switch/body))e-package flycheck-posframe
   :config
   (awesome-tab-mode t))
 

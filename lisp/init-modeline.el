@@ -12,15 +12,14 @@
 
 ;;; Code:
 
-(display-battery-mode)
-
 (use-package all-the-icons)
 
 (use-package doom-modeline
   :ensure t
-  :init
+  :init  
   (doom-modeline-mode 1)
   :config
+
   ;; How tall the mode-line should be. It's only respected in GUI.
   ;; If the actual char height is larger, it respects the actual height.
   (setq doom-modeline-height 32)

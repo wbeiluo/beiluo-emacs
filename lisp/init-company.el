@@ -15,9 +15,7 @@
 (use-package company
   :diminish
   :hook (after-init . global-company-mode)
-  :bind (:map company-mode-map
-         ("M-/" . company-complete)
-         :map company-active-map
+  :bind (:map company-active-map
          ("M-n" . company-select-next)
          ("M-p" . company-select-previous))
   :config
@@ -29,13 +27,13 @@
   (setq-default company-dabbrev-other-buffers 'all
                 company-tooltip-align-annotations t)
   ;; set the completion menu pop-up delay
-  (setq company-idle-delay 0)
+  (setq company-idle-delay 0.5)
   ;; pop up a completion menu by tapping a character
   (setq company-minimum-prefix-length 1)
   ;; do not display numbers on the left
-  (setq company-show-numbers t)
+  (setq company-show-quick-access t)
   ;; allow input string that do not match candidate words
-  (setq company-require-match nil)
+  (setq company-require-match t)
 
   (setq company-global-modes '(not erc-mode message-mode help-mode
                                    gud-mode eshell-mode shell-mode))

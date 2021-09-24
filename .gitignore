@@ -22,3 +22,4 @@ forge-database.sqlite
 bookmarks
 org-clock-save.el
 .lsp-session-v1
+.dap-breakpoints

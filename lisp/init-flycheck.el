@@ -12,28 +12,6 @@
 
 ;;; Code:
 
-(defhydra hydra-flycheck
-  (:pre (flycheck-list-errors)
-        :post (quit-windows-on "*Flycheck errors*")
-        :hint nil)
-  "Errors"
-  ;; "
-  ;;         ^^                  ^^                         ^^^^                  ╭───────────┐
-  ;;   Buffer^^            Server^^                   Symbol^^^^                  │ Flycheck  │
-  ;; ╭───────^^──────────────────^^─────────────────────────^^^^──────────────────┴───────────╯
-  ;;   [_f_] format        [_M-r_] restart            [_d_] declaration    [_o_] documentation
-  ;;   [_m_] imenu         [_S_]   shutdown           [_D_] definition     [_t_] type
-  ;;   [_x_] exec action   [_M-s_] describe session   [_R_] references     [_s_] signature
-  ;;         ^^                  ^^                   [_i_] implementation [_r_] rename
-  ;;  ───────^^──────────────────^^─────────────────────────^^^^──────────────────────────────╯
-  ;;       "
-  ("f" flycheck-error-list-set-filter "Filter")
-  ("j" flycheck-next-error "Next")
-  ("k" flycheck-previous-error "Previous")
-  ("gg" flycheck-first-error "First")
-  ("G" (progn (goto-char (point-max)) (flycheck-previous-error)) "Last")
-  ("q" nil))
-
 
 (use-package flycheck
   :ensure t
@@ -54,6 +32,25 @@
 
 (use-package flycheck-color-mode-line
   :hook (flycheck-mode-hook . flycheck-color-mode-line-mode))
+
+(defhydra hydra-flycheck (:color: "deep sky blue" :hint nil)
+  "
+    Errors^^              Action^^
+  --------^^------------------^^---------------
+    _a_: list errors        _c_: check buffer
+    _p_: previous error     _C_: clear errors
+    _n_: next error         _w_: copy message
+      "
+  ("a" flycheck-list-errors)
+  ("n" flycheck-next-error)
+  ("p" flycheck-previous-error)
+
+  ("c" flycheck-buffer)
+  ("C" flycheck-clear)
+  ("w" flycheck-copy-errors-as-kill)
+
+  ("q" nil "quit")
+  )
 
 (provide 'init-flycheck)
 

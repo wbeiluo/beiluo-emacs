@@ -18,14 +18,12 @@
 
 (defhydra hydra-lsp (:exit t :hint nil)
   "
-          ^^                  ^^                         ^^^^                  ╭───────────┐
-    Buffer^^            Server^^                   Symbol^^^^                  │ LSP MODE  │
-  ╭───────^^──────────────────^^─────────────────────────^^^^──────────────────┴───────────╯
-    [_f_] format        [_M-r_] restart            [_D_] declaration    [_o_] documentation
-    [_m_] imenu         [_S_]   shutdown           [_d_] definition     [_t_] type
-    [_x_] exec action   [_M-s_] describe session   [_r_] references     [_s_] signature
-          ^^                  ^^                   [_i_] implementation [_R_] rename
-   ───────^^──────────────────^^─────────────────────────^^^^──────────────────────────────╯
+    Buffer^^            Server^^                   Symbol^^^^
+  --------^^------------------^^-------------------------^^^^-------------------------------
+    _f_: format        _M-r_: restart            _D_: declaration     _o_: documentation
+    _m_: imenu           _S_: shutdown           _d_: definition      _t_: type
+    _x_: exec action   _M-s_: describe session   _r_: references      _s_: signature
+          ^^                  ^^                 _i_: implementation  _R_: rename
         "
   ("D" lsp-find-declaration)
   ("d" lsp-ui-peek-find-definitions)
@@ -54,7 +52,7 @@
          ;; (lsp-mode . lsp-enable-which-key-integration)
          )
   :commands lsp
-  :bind (("C-/" . 'hydra-lsp/body))
+  :bind (("M-l" . 'hydra-lsp/body))
   :init
   ;; Disable headerline
   (setq lsp-headerline-breadcrumb-enable nil)

@@ -19,12 +19,12 @@
   :config
   ;; `org-agenda-files'
   (setq org-agenda-files
-        '("~/Documents/Org/Agenda/agenda.org"
-          "~/Documents/Org/Agenda/project.org"
-          "~/Documents/Org/Agenda/books.org"
-          "~/Documents/Org/Agenda/learning.org"
-          "~/Documents/Org/Agenda/habit.org"
-          "~/Documents/Org/Agenda/shopping.org"
+        '("~/Documents/Agenda/agenda.org"
+          "~/Documents/Agenda/project.org"
+          "~/Documents/Agenda/books.org"
+          "~/Documents/Agenda/learning.org"
+          "~/Documents/Agenda/habit.org"
+          "~/Documents/Agenda/shopping.org"
           ))
 
 

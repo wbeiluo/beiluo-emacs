@@ -17,6 +17,7 @@
   :hook (after-init . ivy-mode)
   :init
 
+  (setq ivy-use-virtual-buffers t)
   (setq enable-recursive-minibuffers t) ; Allow commands in minibuffers
 
   (setq ivy-height 12
@@ -27,8 +28,7 @@
         ivy-on-del-error-function #'ignore
         ivy-initial-inputs-alist nil)
   ;; Integrate yasnippet
-  (use-package ivy-yasnippet
-    :bind ("C-c C-y" . ivy-yasnippet))
+  (use-package ivy-yasnippet)
 
   ;; Select from xref candidates with Ivy
   (use-package ivy-xref
@@ -42,7 +42,6 @@
   :hook (ivy-mode . counsel-mode)
   :bind (("M-x" . counsel-M-x)
          ("C-x C-f" . counsel-find-file)
-
          ("C-c C-r" . ivy-resume)
          ("C-c r" . counsel-rg)
          ("C-c g" . counsel-grep)
@@ -114,12 +113,12 @@ This is for use in `ivy-re-builders-alist'."
   ;; Ivy integration for Projectile
   (use-package counsel-projectile
     :hook (counsel-mode . counsel-projectile-mode)
-    :init (setq counsel-projectile-grep-initial-input '(ivy-thing-at-point)))
+    :init (setq counsel-projectile-grep-initial-input '(ivy-thing-at-point))))
 
   ;; Display world clock using Ivy
-  (use-package counsel-world-clock
-    :bind (:map counsel-mode-map
-                ("C-c c k" . counsel-world-clock))))
+  ;; (use-package counsel-world-clock
+  ;;   :bind (:map counsel-mode-map
+  ;;               ("C-c c k" . counsel-world-clock))))
 
 
 ;; Better experience with icons
@@ -149,8 +148,7 @@ This is for use in `ivy-re-builders-alist'."
 (use-package swiper
   :bind (("C-s" . swiper)
          ;;:map ivy-mode-map
-         ("M-s /" . swiper-thing-at-point)))
-
+         ("M-s" . swiper-thing-at-point)))
 
 (provide 'init-ivy)
 

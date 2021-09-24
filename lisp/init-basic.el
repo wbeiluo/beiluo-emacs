@@ -32,8 +32,6 @@
 ;; (add-to-list 'default-frame-alist '(drag-internal-border . 1))
 ;; (add-to-list 'default-frame-alist '(internal-border-width . 1))
 
-(toggle-frame-maximized)
-
 ;; Quiet Startup
 (tool-bar-mode -1)                      ;禁用工具栏
 (menu-bar-mode -1)                      ;禁用菜单栏
@@ -43,7 +41,7 @@
 (size-indication-mode t)
 (blink-cursor-mode -1)                ;指针不闪动
 (transient-mark-mode 1)               ;标记高亮
-(setq-default comment-style 'indent)  ;设定自动缩进的注释风格
+;;(setq-default comment-style 'indent)  ;设定自动缩进的注释风格
 (global-hl-line-mode 1)               ;高亮当前行
 
 (setq-default major-mode 'text-mode
@@ -90,6 +88,8 @@
       :custom-face (linum-highlight-face ((t (:inherit default :background nil :foreground nil))))
       :hook (global-linum-mode . hlinum-activate)
       :init (setq linum-highlight-in-all-buffersp t))))
+
+(use-package hydra)
 
 (provide 'init-basic)
 

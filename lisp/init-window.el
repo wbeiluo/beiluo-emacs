@@ -65,12 +65,13 @@
 
     (defhydra hydra-frame-window (:hint nil :color "deep sky blue")
       "
-^Delete^                       ^Frame resize^             ^Window^                Window Size^^^^^^   ^Text^
-_0_: delete-frame              _g_: resize-frame-right    _t_: toggle               ^ ^ _k_ ^ ^        _K_
-_1_: delete-other-frames       _H_: resize-frame-left     _e_: ace-swap-win         _h_ ^+^ _l_        ^+^
-_2_: make-frame                _F_: fullscreen            ^ ^                       ^ ^ _j_ ^ ^        _J_
-_d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window    _b_alance^^^^      ^ ^
-"
+  ^Delete^                       ^Frame resize^             ^Window^                Window Size^^^^^^   ^Text^
+  -------^^-----------------------------------^^-------------------^^--------------------------^^^^^^--------^^--
+  _0_: delete-frame              _g_: resize-frame-right    _t_: toggle               ^ ^ _k_ ^ ^        _K_
+  _1_: delete-other-frames       _H_: resize-frame-left     _e_: ace-swap-win         _h_ ^+^ _l_        ^+^
+  _2_: make-frame                _F_: fullscreen            ^ ^                       ^ ^ _j_ ^ ^        _J_
+  _d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window    _b_alance^^^^      ^ ^
+    "
       ("0" delete-frame :exit t)
       ("1" delete-other-frames :exit t)
       ("2" make-frame  :exit t)
@@ -112,7 +113,7 @@ _d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window
     (when (and (<= frame-alpha-lower-limit newalpha) (>= 100 newalpha))
       (modify-frame-parameters frame (list (cons 'alpha newalpha))))))
 
-(sanityinc/adjust-opacity nil -3)
+;; (sanityinc/adjust-opacity nil -3)
 
 (global-set-key (kbd "M-C-8") (lambda () (interactive) (sanityinc/adjust-opacity nil -2)))
 (global-set-key (kbd "M-C-9") (lambda () (interactive) (sanityinc/adjust-opacity nil 2)))

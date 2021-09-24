@@ -10,13 +10,11 @@
 
 (defhydra origami-hydra (:hint nil :color "#66ccff")
   "
-        ^^^^                                        ^^^^         ╭───────────┐
-    Node^^^^                                 Actions^^^^         │  Origami  │
-  ╭─────^^^^────────────────────────────────────────^^^^─────────┴───────────╯
-    [_o_] open node    [_a_] toggle all      [_n_] next fold      [_r_] redo
-    [_c_] close node   [_t_] toggle current  [_p_] previous fold
-    [_s_] show current [_f_] toggle forword  [_u_] undo
-   ─────^^^^────────────────────────────────────────^^^^─────────────────────╯
+    Node^^^^                               Actions^^^^
+  ------^^^^--------------------------------------^^^^---------------------
+    _o_: open node    _a_: toggle all      _n_: next fold      _r_: redo
+    _c_: close node   _t_: toggle current  _p_: previous fold
+    _s_: show current _f_: toggle forword  _u_: undo
         "
   ("o" origami-open-node)
   ("c" origami-close-node)
@@ -33,7 +31,7 @@
 
 ;; Flexible text folding
 (use-package origami
-  :bind (("C-`" . origami-hydra/body))
+  ;;:bind (("C-`" . origami-hydra/body))
   :hook (prog-mode . origami-mode)
   :config
   (face-spec-reset-face 'origami-fold-header-face))

@@ -12,9 +12,14 @@
 
 ;;; Code:
 
+(use-package ace-jump-mode
+  :diminish
+  ;;:bind ("C-c SPC" . ace-jump-mode)
+  )
+
 ;; Jump to things in Emacs tree-style
 (use-package avy
-  :bind (("C-'" . 'hydra-avy/body))
+  ;;:bind (("C-'" . 'hydra-avy/body))
   :hook (after-init . avy-setup-default)
   :config
   (setq avy-all-windows nil
@@ -24,7 +29,7 @@
   (defhydra hydra-avy (:exit t :hint nil)
     "
  Line^^       Region^^        Goto
-----------------------------------------------------------
+---------------------------------------------------------------------
  [_y_] yank   [_Y_] yank      [_c_] timed char  [_C_] char
  [_m_] move   [_M_] move      [_w_] word        [_W_] any word
  [_k_] kill   [_K_] kill      [_l_] line        [_L_] end of line"
@@ -39,7 +44,8 @@
     ("k" avy-kill-whole-line)
     ("K" avy-kill-region)
     ("y" avy-copy-line)
-    ("Y" avy-copy-region))
+    ("Y" avy-copy-region)
+    ("q" nil "quit"))
   )
 
 ;; Drag stuff (lines, words, region, etc...) around
@@ -54,12 +60,12 @@
 
 ;; Multiple cursors
 (use-package multiple-cursors
-  :bind (("C-S-c" . hydra-multiple-cursors/body))
+  ;;:bind (("C-S-c" . hydra-multiple-cursors/body))
   :config
   (defhydra hydra-multiple-cursors (:hint nil)
     "
  Up^^             Down^^           Miscellaneous           % 2(mc/num-cursors) cursor%s(if (> (mc/num-cursors) 1) \"s\" \"\")
-------------------------------------------------------------------
+-----------------------------------------------------------------------------
  [_p_]   Next     [_n_]   Next     [_l_] Edit lines  [_0_] Insert numbers
  [_P_]   Skip     [_N_]   Skip     [_a_] Mark all    [_A_] Insert letters
  [_M-p_] Unmark   [_M-n_] Unmark   [_s_] Search      [_q_] Quit
@@ -83,13 +89,11 @@
     ("q" nil)))
 
 ;; Goto last change
-(use-package goto-chg
-  :bind ("C-," . goto-last-change))
+(use-package goto-chg)
 
 ;; Record and jump to the last point in the buffer
 (use-package goto-last-point
   :diminish
-  :bind ("C-M-," . goto-last-point)
   :hook (after-init . goto-last-point-mode))
 
 (provide 'init-edit)

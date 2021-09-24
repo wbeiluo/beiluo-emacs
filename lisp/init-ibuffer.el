@@ -14,9 +14,6 @@
 
 (use-package ibuffer
   :ensure nil
-  :bind (("C-x C-b" . ibuffer)
-         ([f5] . ibuffer))
-  :init (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
   :config
 
   (with-eval-after-load 'counsel

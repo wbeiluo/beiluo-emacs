@@ -12,9 +12,7 @@
 ;; Manage and navigate projects
 (use-package projectile
   :diminish
-  :bind (("C-\\" . 'hydra-projectile/body)
-         :map projectile-mode-map
-              ("C-x p" . projectile-command-map))
+  :bind (("M-p" . hydra-projectile/body))
   :hook (after-init . projectile-mode)
   :init
   (setq projectile-mode-line-prefix ""
@@ -52,14 +50,14 @@
     "
      PROJECTILE: %(projectile-project-root)
 
-Project            Find File            Search/Edit          Buffers              Cache
-^^^^^^^^------------------------------------------------------------------------------------------
-_p_: switch prj    _f_: file            _s_: search          _i_: Ibuffer         _c_: cache clear
-_q_: switch open   _g_: file dwim       _o_: multi-occur     _b_: switch to buf   _x_: remove known project
-_d_: find dir      _a_: find other file _r_: replace         _k_: Kill all bufs   _X_: cleanup non-existing
-  ^ ^              _e_: recent file       ^ ^                  ^ ^                _z_: cache current
+  Project            Find File            Search/Edit          Buffers              Cache
+  ^^^^^^^^------------------------------------------------------------------------------------------
+  _p_: switch prj    _f_: file            _s_: search          _i_: Ibuffer         _c_: cache clear
+  _q_: switch open   _g_: file dwim       _o_: multi-occur     _b_: switch to buf   _x_: remove known project
+  _d_: find dir      _a_: find other file _r_: replace         _k_: Kill all bufs   _X_: cleanup non-existing
+  ^ ^                _e_: recent file       ^ ^                  ^ ^                _z_: cache current
 
-"
+    "
     ("a"   projectile-find-other-file)
     ("b"   projectile-switch-to-buffer)
     ("c"   projectile-invalidate-cache)
