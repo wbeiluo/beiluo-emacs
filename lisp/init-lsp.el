@@ -99,14 +99,9 @@
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
 ;; C/C++
-;; (use-package ccls
-;;   :hook ((c-mode c++-mode objc-mode cuda-mode) .
-;;          (lambda () (require 'ccls) (lsp)))
-;;   :init
-;;   (when (eq system-type 'gnu/linux)
-;;     (setq ccls-executable "/usr/bin/ccls"))
-;;   (when (eq system-type 'windows-nt)
-;;     (setq ccls-executable "~/opt/ccls/Release/ccls.exe")))
+(use-package ccls
+  :hook ((c-mode c++-mode objc-mode cuda-mode) .
+         (lambda () (require 'ccls) (lsp))))
 
 (provide 'init-lsp)
 
