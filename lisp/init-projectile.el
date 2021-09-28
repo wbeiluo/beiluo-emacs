@@ -30,12 +30,6 @@
               (setq rg-cmd (format "%s --glob '!%s'" rg-cmd dir)))
             (concat "rg -0 --files --color=never --hidden" rg-cmd))))
 
-  ;; Faster searching on Windows
-  (when (eq system-type 'windows-nt)
-    (when (or (executable-find "fd") (executable-find "rg"))
-      (setq projectile-indexing-method 'alien
-            projectile-enable-caching nil)))
-
   ;; Hydra config
   (defhydra hydra-projectile-other-window (:color teal)
     "projectile-other-window"
