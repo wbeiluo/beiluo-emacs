@@ -46,6 +46,8 @@
 (use-package awesome-tab
   :load-path "extensions/awesome-tab"
   ;;:bind(("C-=" . 'awesome-fast-switch/body))e-package flycheck-posframe
+  :init
+  (setq awesome-tab-display-icon nil)
   :config
   (awesome-tab-mode t))
 

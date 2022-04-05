@@ -28,14 +28,20 @@
         ivy-on-del-error-function #'ignore
         ivy-initial-inputs-alist nil)
   ;; Integrate yasnippet
-  (use-package ivy-yasnippet)
+  (use-package ivy-yasnippet))
 
-  ;; Select from xref candidates with Ivy
-  (use-package ivy-xref
-    :init
-    (when (boundp 'xref-show-definitions-function)
-      (setq xref-show-definitions-function #'ivy-xref-show-defs))
-    (setq xref-show-xrefs-function #'ivy-xref-show-xrefs)))
+;; Select from xref candidates with Ivy
+(use-package ivy-xref
+  :ensure t
+  :init
+  ;; xref initialization is different in Emacs 27 - there are two different
+  ;; variables which can be set rather than just one
+  (when (>= emacs-major-version 27)
+    (setq xref-show-definitions-function #'ivy-xref-show-defs))
+  ;; Necessary in Emacs <27. In Emacs 27 it will affect all xref-based
+  ;; commands other than xref-find-definitions (e.g. project-find-regexp)
+  ;; as well
+  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
 
 (use-package counsel
   :diminish counsel-mode

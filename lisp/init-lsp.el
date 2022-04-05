@@ -20,18 +20,19 @@
   "
     Buffer^^            Server^^                   Symbol^^^^
   --------^^------------------^^-------------------------^^^^-------------------------------
-    _f_: format        _M-r_: restart            _D_: declaration     _o_: documentation
+    _f_: format        _M-r_: restart            _c_: declaration     _o_: documentation
     _m_: imenu           _S_: shutdown           _d_: definition      _t_: type
     _x_: exec action   _M-s_: describe session   _r_: references      _s_: signature
           ^^                  ^^                 _i_: implementation  _R_: rename
         "
-  ("D" lsp-find-declaration)
+  ("c" lsp-find-declaration)
   ("d" lsp-ui-peek-find-definitions)
   ("r" lsp-ui-peek-find-references)
   ("i" lsp-ui-peek-find-implementation)
   ("t" lsp-find-type-definition)
   ("s" lsp-signature-help)
-  ("o" lsp-describe-thing-at-point)
+  ;;("o" lsp-describe-thing-at-point)
+  ("o" lsp-ui-doc-show)
   ("R" lsp-rename)
 
   ("f" lsp-format-buffer)
@@ -56,11 +57,13 @@
   :init
   ;; Disable headerline
   (setq lsp-headerline-breadcrumb-enable nil)
+  ;; Disable Code lens
+  (setq lsp-lens-enable nil)
   :config
   ;; use flycheck
   (setq lsp-prefer-flymake nil)
-  ;; ;; C/C++
-  ;; (require 'lsp-clangd)
+  ;; C/C++
+  ;;(require 'lsp-clangd)
   )
 
 (use-package lsp-ui
@@ -101,7 +104,26 @@
 ;; C/C++
 (use-package ccls
   :hook ((c-mode c++-mode objc-mode cuda-mode) .
-         (lambda () (require 'ccls) (lsp))))
+         (lambda () (require 'ccls) (lsp)))
+
+  :init
+  (defun +my/ccls-code-lens ()
+    (when (member major-mode '(c-mode c++-mode))
+      (ccls-code-lens-mode 1)))
+
+  :config
+  ;; Code lens
+  ;;(add-hook 'lsp-after-open-hook #'+my/ccls-code-lens)
+  ;; Documentation
+  (setq lsp-ui-doc-include-signature nil)  ; don't include type signature in the child frame
+  (setq lsp-ui-sideline-show-symbol t)  ; show symbol on the right of info
+
+  ;; Highlight
+  (setq ccls-sem-highlight-method 'font-lock)
+  ;; alternatively, (setq ccls-sem-highlight-method 'overlay)
+  )
+
+
 
 (provide 'init-lsp)
 

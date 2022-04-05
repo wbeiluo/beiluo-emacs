@@ -19,7 +19,9 @@
   ;;:bind ("C-c e". hydra-flycheck/body)
   :hook (prog-mode . flycheck-mode)
   :config
-  (flycheck-mode 1))
+  (flycheck-mode 1)
+  (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc))
+  )
 
 ;; (use-package flycheck-pos-tip
 ;;   :after flycheck

@@ -22,6 +22,7 @@
   (require 'company-dabbrev)
   (require 'company-files)
   (require 'company-capf)
+
   (use-package company-c-headers)
 
   (setq-default company-dabbrev-other-buffers 'all
@@ -70,7 +71,6 @@
   (use-package company-prescient
     :init (company-prescient-mode 1))
   )
-
 
 (provide 'init-company)
 
