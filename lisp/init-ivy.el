@@ -16,52 +16,43 @@
   :diminish ivy-mode
   :hook (after-init . ivy-mode)
   :init
-
-  (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t) ; Allow commands in minibuffers
-
-  (setq ivy-height 12
+  (setq ivy-use-virtual-buffers t
+        enable-recursive-minibuffers t
+        ;;ivy-height 12
         ivy-use-selectable-prompt t
-        ivy-use-virtual-buffers t    ; Enable bookmarks and recentf
+        ivy-use-virtual-buffers t
         ivy-fixed-height-minibuffer t
-        ;;ivy-count-format "[%d/%d] "
+        ivy-count-format "[%d/%d] "
         ivy-on-del-error-function #'ignore
         ivy-initial-inputs-alist nil)
+  :config
   ;; Integrate yasnippet
-  (use-package ivy-yasnippet))
+  (use-package ivy-yasnippet :ensure t)
+  ;; Select from xref candidates with Ivy
+  (use-package ivy-xref
+    :ensure t
+    :init
+    ;; xref initialization is different in Emacs 27 - there are two different
+    ;; variables which can be set rather than just one
+    (when (>= emacs-major-version 27)
+      (setq xref-show-definitions-function #'ivy-xref-show-defs))
+    ;; Necessary in Emacs <27. In Emacs 27 it will affect all xref-based
+    ;; commands other than xref-find-definitions (e.g. project-find-regexp)
+    ;; as well
+    (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
 
-;; Select from xref candidates with Ivy
-(use-package ivy-xref
-  :ensure t
-  :init
-  ;; xref initialization is different in Emacs 27 - there are two different
-  ;; variables which can be set rather than just one
-  (when (>= emacs-major-version 27)
-    (setq xref-show-definitions-function #'ivy-xref-show-defs))
-  ;; Necessary in Emacs <27. In Emacs 27 it will affect all xref-based
-  ;; commands other than xref-find-definitions (e.g. project-find-regexp)
-  ;; as well
-  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs))
+  (use-package imenu-anywhere :ensure t)
+  )
+
+;;(use-package ivy-posframe
+;;  :ensure t
+;;  :config
+;;  (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
+;;  (ivy-posframe-mode 1))
 
 (use-package counsel
   :diminish counsel-mode
   :hook (ivy-mode . counsel-mode)
-  :bind (("M-x" . counsel-M-x)
-         ("C-x C-f" . counsel-find-file)
-         ("C-c C-r" . ivy-resume)
-         ("C-c r" . counsel-rg)
-         ("C-c g" . counsel-grep)
-         ("C-c f" . counsel-describe-function)
-         ("C-c v" . counsel-describe-variable)
-
-         :map counsel-mode-map
-         ([remap swiper] . counsel-grep-or-swiper)
-         ([remap swiper-backward] . counsel-grep-or-swiper-backward)
-         ([remap dired] . counsel-dired)
-         ([remap set-variable] . counsel-set-variable)
-         ([remap insert-char] . counsel-unicode-char)
-         ([remap recentf-open-files] . counsel-recentf))
-
   :init
   ;; Use the faster search tool: ripgrep (`rg')
   (when (executable-find "rg")
@@ -82,40 +73,51 @@
     :hook (counsel-mode . counsel-projectile-mode)
     :init (setq counsel-projectile-grep-initial-input '(ivy-thing-at-point))))
 
-  ;; Display world clock using Ivy
-  ;; (use-package counsel-world-clock
-  ;;   :bind (:map counsel-mode-map
-  ;;               ("C-c c k" . counsel-world-clock))))
-
-
-;; Better experience with icons
-;; Enable it before`ivy-rich-mode' for better performance
-(use-package all-the-icons-ivy-rich
-  :hook (ivy-mode . all-the-icons-ivy-rich-mode)
-  :config
-  (plist-put all-the-icons-ivy-rich-display-transformers-list
-             'centaur-load-theme
-             '(:columns
-               ((all-the-icons-ivy-rich-theme-icon)
-                (ivy-rich-candidate))
-               :delimiter "\t"))
-  (all-the-icons-ivy-rich-reload))
-
 ;; More friendly display transformer for Ivy
 (use-package ivy-rich
-  :hook ((counsel-projectile-mode . ivy-rich-mode) ; MUST after `counsel-projectile'
-         (ivy-rich-mode . (lambda ()
-                            "Use abbreviate in `ivy-rich-mode'."
-                            (setq ivy-virtual-abbreviate
-                                  (or (and ivy-rich-mode 'abbreviate) 'name)))))
+  :ensure t
   :init
-  ;; For better performance
-  (setq ivy-rich-parse-remote-buffer nil))
+  ;; Better experience with icons
+  ;; Enable it before`ivy-rich-mode' for better performance
+  (use-package all-the-icons-ivy-rich
+    :ensure t
+    :init
+    ;; Whether display the icons
+    (setq all-the-icons-ivy-rich-icon t)
 
-(use-package swiper
-  :bind (("C-s" . swiper)
-         ;;:map ivy-mode-map
-         ("M-s" . swiper-thing-at-point)))
+    ;; Whether display the colorful icons.
+    ;; It respects `all-the-icons-color-icons'.
+    (setq all-the-icons-ivy-rich-color-icon t)
+
+    ;; The icon size
+    (setq all-the-icons-ivy-rich-icon-size 1.0)
+
+    ;; Whether support project root
+    (setq all-the-icons-ivy-rich-project t)
+
+    ;; Maximum truncation width of annotation fields.
+    ;; This value is adjusted depending on the `window-width'.
+    (setq all-the-icons-ivy-rich-field-width 80)
+
+    ;; Definitions for ivy-rich transformers.
+    ;; See `ivy-rich-display-transformers-list' for details."
+    ;; all-the-icons-ivy-rich-display-transformers-list
+
+    ;; Slow Rendering
+    ;; If you experience a slow down in performance when rendering multiple icons simultaneously,
+    ;; you can try setting the following variable
+    (setq inhibit-compacting-font-caches t)
+
+    (all-the-icons-ivy-rich-mode 1))
+
+  :config
+
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (setq ivy-rich-path-style 'abbrev)
+
+  (ivy-rich-mode 1))
+
+(use-package swiper :ensure t)
 
 (provide 'init-ivy)
 

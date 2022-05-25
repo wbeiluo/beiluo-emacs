@@ -1,41 +1,21 @@
 * 安装
+** 下载配置文件
+#+BEGIN_SRC shell
+git clone https://github.com/wbeiluo/beiluo-emacs.git .emacs.d
+#+END_SRC
 ** 安装字体
 #+BEGIN_SRC shell
-sudo pacman -S wqy-microhei wqy-zenhei
+sudo pacman -S ttf-jetbrains-mono adobe-source-code-pro-fonts wqy-microhei 
 #+END_SRC
-** 安装第三方软件
+** 安装其他软件
 *** ripgrep
 #+BEGIN_SRC shell
 sudo pacman -S ripgrep
-#+END_SRC
-*** ccls
-#+BEGIN_SRC shell
-sudo pacman -S ccls-git
 #+END_SRC
 *** SBCL
 #+BEGIN_SRC shell
 sudo pacman -S sbcl
 #+END_SRC
-* 快捷键
-** Org-mode 快捷键
-| 快捷键       | 说明                     |
-|-------------+--------------------------|
-| C-c a       | 打开org-agenda           |
-| C-c c       | 打开org-capture          |
-| C-c C-c     | Finish                   |
-| C-c C-w     | Refile                   |
-| C-c C-k     | Abort                    |
-| C-c C-s     | 添加起始时间             |
-| C-c C-d     | 添加结束时间             |
-| S-up/down   | 调整任务优先级           |
-| C-c C-x C-i | 开始一个任务             |
-| C-c C-x C-o | 结束一个任务             |
-| C-c C-x C-e | 为当前的计时任务更新进度 |
-| C-c C-x C-x | 取消当前的计时           |
-| C-c C-x C-j | 跳转到当前正在计时的任务 |
-| C-c C-x C-r | 生成动态报表             |
-| C-c C-q     | 输入标签                 |
-| C-c .       | 插入一个激活的时间戳     |
-| C-c !       | 出一个未激活的时间戳     |
-| C-c C-s     | 日程安排                 |
-| C-c C-d     | 截止日期                 |
+* 使用
+TODO...
+

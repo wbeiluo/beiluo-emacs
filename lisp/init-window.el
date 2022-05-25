@@ -9,92 +9,87 @@
 ;;; Commentary:
 ;;; Code:
 
-;; (use-package switch-window
-;;   :ensure t
-;;   :config
-;;   (setq-default switch-window-shortcut-style 'alphabet)
-;;   (setq-default switch-window-timeout nil)
-;;   :bind ("C-x o" . 'switch-window))
 
-(defun joe-scroll-other-window()
-  (interactive)
-  (scroll-other-window 1))
-(defun joe-scroll-other-window-down ()
-  (interactive)
-  (scroll-other-window-down 1))
+;; Quickly switch windows
 (use-package ace-window
-    :ensure t
-    :defer 1
-    :bind (("M-o" . 'ace-window))
-    :config
-    (set-face-attribute
-     'aw-leading-char-face nil
-     :foreground "deep sky blue"
-     :weight 'bold
-     :height 2.0)
-    (set-face-attribute
-     'aw-mode-line-face nil
-     :inherit 'mode-line-buffer-id
-     :foreground "lawn green")
-    (setq aw-keys '(?a ?s ?d ?f ?j ?k ?l)
-          aw-dispatch-always t
-          aw-dispatch-alist
-          '((?f hydra-frame-window/body)
-            (?0 delete-window)
-            (?1 delete-other-windows)
-            (?2 split-window-below)
-            (?3 split-window-right)
-            (?| (lambda ()
-                  (interactive)
-                  (split-window-right)
-                  (windmove-right)))
-            (?_ (lambda ()
-                  (interactive)
-                  (split-window-below)
-                  (windmove-down)))
-            (?b balance-windows)
-            (?w ace-delete-window)
-            (?S ace-swap-window)
-            (?F toggle-frame-fullscreen)
-            (?t toggle-window-spilt)
-            (?u (lambda ()
-                  (progn
-                    (winner-undo)
-                    (setq this-command 'winner-undo))))
-            (?r winner-redo)))
+  :functions hydra-frame-window/body
+  :bind (([remap other-window] . ace-window)
+	 ("C-o" . ace-window))
+  :custom-face
+  (aw-leading-char-face ((t (:inherit 'error :bold t :height 1.2))))
+  (aw-mode-line-face ((t (:inherit 'mode-line-emphasis :bold t))))
+  :preface
+  (defun toggle-window-split ()
+    (interactive)
+    (if (= (count-windows) 2)
+        (let* ((this-win-buffer (window-buffer))
+               (next-win-buffer (window-buffer (next-window)))
+               (this-win-edges (window-edges (selected-window)))
+               (next-win-edges (window-edges (next-window)))
+               (this-win-2nd (not (and (<= (car this-win-edges)
+                                          (car next-win-edges))
+                                       (<= (cadr this-win-edges)
+                                          (cadr next-win-edges)))))
+               (splitter
+                (if (= (car this-win-edges)
+                       (car (window-edges (next-window))))
+                    'split-window-horizontally
+                  'split-window-vertically)))
+          (delete-other-windows)
+          (let ((first-win (selected-window)))
+            (funcall splitter)
+            (if this-win-2nd (other-window 1))
+            (set-window-buffer (selected-window) this-win-buffer)
+            (set-window-buffer (next-window) next-win-buffer)
+            (select-window first-win)
+            (if this-win-2nd (other-window 1))))))
+  :hook (after-init . ace-window-display-mode)
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+        aw-dispatch-always t
+        aw-dispatch-alist
+        '((?0 delete-window)
+          (?1 delete-other-windows)
+          (?2 split-window-below)
+          (?3 split-window-right)
+	  (?4 consult-buffer-other-window)
+          (?| (lambda ()
+                (interactive)
+                (split-window-right)
+                (windmove-right)))
+          (?_ (lambda ()
+                (interactive)
+                (split-window-below)
+                (windmove-down)))))
 
-    (defhydra hydra-frame-window (:hint nil :color "deep sky blue")
+  (with-eval-after-load 'hydra
+    ;; https://github.com/abo-abo/ace-window/wiki/Hydra
+    ;; hydra-frame-window is designed from `ace-window' and
+    ;; matches aw-dispatch-alist with a few extra
+    (defhydra hydra-frame-window (:color red :hint nil)
       "
-  ^Delete^                       ^Frame resize^             ^Window^                Window Size^^^^^^   ^Text^
-  -------^^-----------------------------------^^-------------------^^--------------------------^^^^^^--------^^--
-  _0_: delete-frame              _g_: resize-frame-right    _t_: toggle               ^ ^ _k_ ^ ^        _K_
-  _1_: delete-other-frames       _H_: resize-frame-left     _e_: ace-swap-win         _h_ ^+^ _l_        ^+^
-  _2_: make-frame                _F_: fullscreen            ^ ^                       ^ ^ _j_ ^ ^        _J_
-  _d_: kill-and-delete-frame     _n_: new-frame-right       _w_: ace-delete-window    _b_alance^^^^      ^ ^
-    "
+^Frame^                 ^Window^      Window Size^^^^^^    ^Text Zoom^               (__)
+_0_: delete             _t_oggle        ^ ^ _k_ ^ ^            _=_                   (oo)
+_1_: delete others      _s_wap          _h_ ^+^ _l_            ^+^             /------\\/
+_2_: new                _d_elete        ^ ^ _j_ ^ ^            _-_            / |    ||
+_F_ullscreen            ^ ^             _b_alance^^^^          ^ ^        *  /\\---/\\  ~~  M-o w
+"
       ("0" delete-frame :exit t)
       ("1" delete-other-frames :exit t)
       ("2" make-frame  :exit t)
       ("b" balance-windows)
-      ("d" kill-and-delete-frame :exit t)
-      ("e" ace-swap-window)
-      ("F" toggle-frame-fullscreen)    ;; is <f11>
-      ("g" resize-frame-right :exit t)
-      ("H" resize-frame-left :exit t)  ;; aw-dispatch-alist uses h, I rebind here so hjkl can be used for size
-      ("n" new-frame-right :exit t)
-      ;; ("r" reverse-windows)
-      ("t" toggle-window-spilt)
-      ("w" ace-delete-window :exit t)
-      ("x" delete-frame :exit t)
-      ("K" text-scale-decrease)
-      ("J" text-scale-increase)
+      ("s" ace-swap-window)
+      ("F" toggle-frame-fullscreen)
+      ("t" toggle-window-split)
+      ("d" ace-delete-window :exit t)
+      ("-" text-scale-decrease)
+      ("=" text-scale-increase)
       ("h" shrink-window-horizontally)
       ("k" shrink-window)
       ("j" enlarge-window)
       ("l" enlarge-window-horizontally)
       ("q" nil "quit"))
-
-    (ace-window-display-mode t))
+    (add-to-list 'aw-dispatch-alist '(?w hydra-frame-window/body) t)))
 
 ;; 全屏显示
 (defun fullscreen ()
@@ -113,7 +108,7 @@
     (when (and (<= frame-alpha-lower-limit newalpha) (>= 100 newalpha))
       (modify-frame-parameters frame (list (cons 'alpha newalpha))))))
 
-;; (sanityinc/adjust-opacity nil -3)
+;; (sanityinc/adjust-opacity nil -2)
 
 (global-set-key (kbd "M-C-8") (lambda () (interactive) (sanityinc/adjust-opacity nil -2)))
 (global-set-key (kbd "M-C-9") (lambda () (interactive) (sanityinc/adjust-opacity nil 2)))

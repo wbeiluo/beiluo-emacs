@@ -1,6 +1,6 @@
 ;;; init-basic.el --- Default configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020 王北洛
+;; Copyright (C) 2022 王北洛
 
 ;; Author: 王北洛 <wbeiluo@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -32,44 +32,26 @@
 ;; (add-to-list 'default-frame-alist '(drag-internal-border . 1))
 ;; (add-to-list 'default-frame-alist '(internal-border-width . 1))
 
-;; Quiet Startup
-(tool-bar-mode -1)                      ;禁用工具栏
-(menu-bar-mode -1)                      ;禁用菜单栏
-(scroll-bar-mode -1)                    ;禁用滚动条
-(line-number-mode t)
-(column-number-mode t)
-(size-indication-mode t)
-(blink-cursor-mode -1)                ;指针不闪动
-(transient-mark-mode 1)               ;标记高亮
-;;(setq-default comment-style 'indent)  ;设定自动缩进的注释风格
-(global-hl-line-mode 1)               ;高亮当前行
-
-(setq-default major-mode 'text-mode
-              fill-column 80
-              tab-width 4
-              kill-whole-line t
-              indent-tabs-mode nil)
-              (defalias 'yes-or-no-p #'y-or-n-p)
-
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-message t)
-(setq inhibit-startup-echo-area-message t)
-(setq inhibit-compacting-font-caches t) ;使用字体缓存，避免卡顿
-(setq vc-handled-backends nil)          ;禁止版本控制工具，加速启动
-(setq initial-buffer-choice t)          ;Restore emacs session
-(setq mouse-yank-at-point t)            ;粘贴于光标处,而不是鼠标指针处
-(setq select-enable-clipboard t)        ;支持emacs和外部程序的粘贴
-(setq ring-bell-function 'ignore)
-(setq uniquify-buffer-name-style 'post-forward-angle-brackets) ; Show path if names are same
-(setq delete-by-moving-to-trash t)    ; Deleting files go to OS's trash folder
-(setq make-backup-files nil)          ; Forbide to make backup files
-(setq auto-save-default nil)          ; Disable auto save
-
-;;(setq display-time-day-and-date t)      ;打开日期显示
-(display-time-mode 1)                   ;打开时间显示
-(display-time)                          ;显示时间
-(setq display-time-format "%H:%M")      ;设定时间显示格式
-(setq display-time-24hr-format t)       ;打开24小时显示模式
+;; 界面设置
+(tool-bar-mode -1)                           ; 禁用工具栏
+(menu-bar-mode -1)                           ; 禁用菜单栏
+(scroll-bar-mode -1)                         ; 禁用滚动条
+(column-number-mode t)                       ; 显示列号
+(show-paren-mode t)                          ; 高亮另一个括号
+(global-auto-revert-mode t)                  ; 自动刷新buffer
+(transient-mark-mode t)                      ; 标记高亮
+(global-hl-line-mode t)                      ; 高亮当前行
+(global-display-line-numbers-mode t)         ; 在 Window 显示行号
+(setq display-time-format "%H:%M")           ; 设置时间显示格式
+(display-time-mode t)                        ; 打开时间显示
+(setq inhibit-startup-screen t)              ; 关闭启动界面
+(setq inhibit-startup-message t)             ; 关闭启动消息
+(setq make-backup-files nil)                 ; 关闭自动备份
+(setq mouse-yank-at-point t)                 ; 粘贴于光标处,而不是鼠标指针处
+(setq select-enable-clipboard t)             ; 支持emacs和外部程序的粘贴
+(setq inhibit-compacting-font-caches t)      ; 使用字体缓存，避免卡顿
+(setq auto-save-default nil)                 ; 关闭自动保存
+(fset 'yes-or-no-p 'y-or-n-p)                ; 使用y/n替换yes/no
 
 ;; Show native line numbers if possible, otherwise use `linum'
 (if (fboundp 'display-line-numbers-mode)
@@ -89,7 +71,29 @@
       :hook (global-linum-mode . hlinum-activate)
       :init (setq linum-highlight-in-all-buffersp t))))
 
-(use-package hydra)
+;; 界面平滑移动
+(use-package good-scroll
+  :ensure t
+  :init (good-scroll-mode))
+
+;; 启动界面
+(use-package dashboard
+  :ensure t
+  :config
+  (setq dashboard-banner-logo-title "Welcome to Emacs!") ; 个性签名
+  (setq dashboard-projects-backend 'project-el)          ; 项目
+  (setq dashboard-startup-banner 'official)              ; 显示默认图片
+  (setq dashboard-set-navigator t)                       ; 显示导航
+  (setq dashboard-set-heading-icons t)                   ; 显示导航图片
+  (setq dashboard-set-file-icons t)                      ; 显示文件图片
+  (setq dashboard-items '((recents  . 8)                 ; 显示5个最近文件
+			  (projects . 5)                 ; 显示多少个最近项目
+			  (bookmarks . 5)                ; 显示多少个最近书签
+			  ))
+  (dashboard-setup-startup-hook))
+
+(use-package hydra
+  :ensure t)
 
 (provide 'init-basic)
 

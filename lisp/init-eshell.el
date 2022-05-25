@@ -1,6 +1,6 @@
 ;; init-eshell.el --- eshell configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2020 王北洛
+;; Copyright (C) 2022 王北洛
 
 ;; Author: 王北洛 <wbeiluo@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,21 +12,8 @@
 
 ;;; Code:
 
-(add-hook 'shell-mode-hook 'yas-minor-mode)
-(add-hook 'shell-mode-hook 'flycheck-mode)
-(add-hook 'shell-mode-hook 'company-mode)
-
-(defun shell-mode-company-init ()
-  (setq-local company-backends '((company-shell
-                                  company-shell-env
-                                  company-etags
-                                  company-dabbrev-code))))
-
-(use-package company-shell
-  :ensure t
-  :config
-    (require 'company)
-    (add-hook 'shell-mode-hook 'shell-mode-company-init))
+;; (add-hook 'shell-mode-hook 'yas-minor-mode)
+;; (add-hook 'shell-mode-hook 'flycheck-mode)
 
 ;;  Display extra information for prompt
 (use-package eshell-prompt-extras
@@ -36,19 +23,17 @@
   :init (setq eshell-highlight-prompt nil
               eshell-prompt-function #'epe-theme-lambda))
 
+;; Enhanced shell command completion
+(use-package pcmpl-args
+  :ensure t)
+
 ;; Fish-like history autosuggestions
-(use-package esh-autosuggest
-  :defines ivy-display-functions-alist
-  :bind (:map eshell-mode-map
-              ([remap eshell-pcomplete] . completion-at-point))
-  :hook ((eshell-mode . esh-autosuggest-mode)
-         (eshell-mode . eshell-setup-ivy-completion))
-  :init (defun eshell-setup-ivy-completion ()
-          "Setup `ivy' completion in `eshell'."
-          (setq-local ivy-display-functions-alist
-                      (remq (assoc 'ivy-completion-in-region
-                                   ivy-display-functions-alist)
-                            ivy-display-functions-alist))))
+;; (use-package esh-autosuggest
+;;   :hook (eshell-mode . esh-autosuggest-mode)
+;;   ;; If you have use-package-hook-name-suffix set to nil, uncomment and use the
+;;   ;; line below instead:
+;;   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
+;;   :ensure t)
 
 ;; `eldoc' support
 (use-package esh-help

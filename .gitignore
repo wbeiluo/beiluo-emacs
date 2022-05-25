@@ -9,6 +9,7 @@ var/
 transient/
 server/
 request/
+.extension/
 
 custom.el
 recentf
@@ -17,6 +18,7 @@ history
 amx-items
 projectile-bookmarks.eld
 projectile.cache
+projects
 forge-database.sqlite
 .emacs.desktop
 bookmarks
@@ -24,3 +26,4 @@ org-clock-save.el
 .lsp-session-v1
 .dap-breakpoints
 .mc-lists.el
+org-roam.db

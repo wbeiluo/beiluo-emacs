@@ -26,10 +26,16 @@
              (lambda (new-frame)
                (select-frame new-frame)
                (when (display-graphic-p)
-                   (set-font "Source Code Pro" "WenQuanYi Micro Hei" 22 20))))
+                   (set-font "jetbrains mono" "WenQuanYi Micro Hei Mono" 18 17))))
+
+;; (when (display-graphic-p)
+;;   (set-font "Source Code Pro" "WenQuanYi Micro Hei" 18 17))
 
 (when (display-graphic-p)
-    (set-font "Source Code Pro" "WenQuanYi Micro Hei" 22 20))
+  (set-font "jetbrains mono" "WenQuanYi Micro Hei Mono" 18 17))
+
+;; (when (display-graphic-p)
+;;   (set-font "Iosevka Fixed" "WenQuanYi Micro Hei" 18 17))
 
 
 (provide 'init-fonts)
