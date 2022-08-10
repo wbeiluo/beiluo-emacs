@@ -29,7 +29,7 @@
   ;; Don't show diagnostics on modeline.
   (setq lsp-modeline-diagnostics-enable nil)
   ;; Disable Highlight references of the symbol at point.
-  (setq lsp-enable-symbol-highlighting nil)
+  (setq lsp-enable-symbol-highlighting t)
   
   (defun my/orderless-dispatch-flex-first (_pattern index _total)
     (and (eq index 0) 'orderless-flex))
@@ -53,14 +53,14 @@
     _d_: definition  _r_: references  _s_: symbols  _e_: treemacs error
     _f_: format      _m_: imenu       _R_: rename   _i_: implementation    "
     
-    ("d" lsp-find-definition)
-    ("r" lsp-find-references)
+    ("d" lsp-ui-peek-find-definition)
+    ("r" lsp-ui-peek-find-references)
+    ("i" lsp-ui-peek-find-implementation)
     ("s" consult-lsp-symbols)
     ("e" lsp-treemacs-errors-list)
     ("f" lsp-format-buffer)
     ("m" lsp-ui-imenu)
     ("R" lsp-rename)
-    ("i" lsp-find-implementation)
 
     ("q" nil "quit" :color "deep sky blue"))
   
@@ -120,63 +120,62 @@
   (setq lsp-ui-doc-show-with-mouse t)
   
   :config
-  ;(define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  ;(define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
   )
 
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 ;; DAP Mode
-(use-package dap-mode
-  :ensure t
-  :commands dap-debug
-  :defer
-  :custom
-  (dap-auto-configure-mode t)  ;; Automatically configure dap
-  (dap-auto-configure-features
-   '(sessions locals breakpoints controls expressions tooltip))  ;; Remove the button panel in the top
-  :config
-  (dap-mode 1)
-  ;; ;; The modes below are optional
-  ;; (dap-ui-mode 1)
-  ;; ;; enables mouse hover support
-  ;; (dap-tooltip-mode 1)
-  ;; ;; use tooltips for mouse hover
-  ;; ;; if it is not enabled `dap-mode' will use the minibuffer.
-  ;; (tooltip-mode 1)
-  ;; ;; displays floating panel with debug buttons
-  ;; ;; requies emacs 26+
-  ;; (dap-ui-controls-mode 1)
+;; (use-package dap-mode
+;;   :ensure t
+;;   :commands dap-debug
+;;   :defer
+;;   :custom
+;;   (dap-auto-configure-mode t)  ;; Automatically configure dap
+;;   (dap-auto-configure-features
+;;    '(sessions locals breakpoints controls expressions tooltip))  ;; Remove the button panel in the top
+;;   :config
+;;   (dap-mode 1)
+;;   ;; ;; The modes below are optional
+;;   ;; (dap-ui-mode 1)
+;;   ;; ;; enables mouse hover support
+;;   ;; (dap-tooltip-mode 1)
+;;   ;; ;; use tooltips for mouse hover
+;;   ;; ;; if it is not enabled `dap-mode' will use the minibuffer.
+;;   ;; (tooltip-mode 1)
+;;   ;; ;; displays floating panel with debug buttons
+;;   ;; ;; requies emacs 26+
+;;   ;; (dap-ui-controls-mode 1)
 
-  ;; C/C++ Debug
-  ;;(require 'dap-gdb-lldb)
-  ;;(dap-gdb-lldb-setup)
-  (require 'dap-cpptools)
-  (dap-cpptools-setup)
+;;   ;; C/C++ Debug
+;;   ;;(require 'dap-gdb-lldb)
+;;   ;;(dap-gdb-lldb-setup)
+;;   (require 'dap-cpptools)
+;;   (dap-cpptools-setup)
 
-  ;; ask user for executable to debug if not specified explicitly (c++)
-  ;;(setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
+;;   ;; ask user for executable to debug if not specified explicitly (c++)
+;;   ;;(setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
 
-  ;; default debug template for ARM GCC
-  ;; (dap-register-debug-template
-  ;;  "C++ LLDB dap"
-  ;;  (list :type "lldb-vscode"
-  ;;        :cwd nil
-  ;;        :args nil
-  ;;        :request "launch"
-  ;;        :program nil))
+;;   ;; default debug template for ARM GCC
+;;   ;; (dap-register-debug-template
+;;   ;;  "C++ LLDB dap"
+;;   ;;  (list :type "lldb-vscode"
+;;   ;;        :cwd nil
+;;   ;;        :args nil
+;;   ;;        :request "launch"
+;;   ;;        :program nil))
 
-  (defun dap-debug-create-or-edit-json-template ()
-    "Edit the C++ debugging configuration or create + edit if none exists yet."
-    (interactive)
-    (let ((filename (concat (lsp-workspace-root) "/launch.json"))
-	  (default "~/.emacs.d/resources/default-launch.json"))
-      (unless (file-exists-p filename)
-	(copy-file default filename))
-      (find-file-existing filename)))
+;;   (defun dap-debug-create-or-edit-json-template ()
+;;     "Edit the C++ debugging configuration or create + edit if none exists yet."
+;;     (interactive)
+;;     (let ((filename (concat (lsp-workspace-root) "/launch.json"))
+;; 	  (default "~/.emacs.d/resources/default-launch.json"))
+;;       (unless (file-exists-p filename)
+;; 	(copy-file default filename))
+;;       (find-file-existing filename)))
 
-)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+;; )
 
 
 (provide 'init-lsp)

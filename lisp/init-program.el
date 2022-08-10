@@ -10,7 +10,7 @@
 
 ;; Flexible text folding
 (use-package origami
-  :bind (("C-`" . origami-hydra/body))
+  :bind (("C-<tab>" . origami-hydra/body))
   :hook (prog-mode . origami-mode)
   :config
   (face-spec-reset-face 'origami-fold-header-face)

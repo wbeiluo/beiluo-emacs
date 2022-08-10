@@ -20,6 +20,7 @@
   :init
   ;; 设置缩进为4
   (setq-default c-basic-offset 4)
+  (setq-default indent-tabs-mode nil)
   
   ;; qt keywords and stuff ...
   ;; set up indenting correctly for new qt kewords

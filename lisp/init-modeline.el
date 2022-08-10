@@ -18,13 +18,14 @@
   :ensure t
   :hook (emacs-startup . doom-modeline-mode)
   :config
-  (if (display-graphic-p)
-      (progn (create-fontset-from-ascii-font "Source Code Pro::medium" nil "modeline")
-	     (set-face-attribute 'mode-line nil :height 130 :fontset "fontset-modeline")
-	     (set-face-attribute 'mode-line-inactive nil :height 130 :fontset "fontset-modeline")))
+  ;; (if (display-graphic-p)
+  ;;     (progn (create-fontset-from-ascii-font "Source Code Pro::medium" nil "modeline")
+  ;;            (set-face-attribute 'mode-line nil :height 130 :fontset "fontset-modeline")
+  ;;            (set-face-attribute 'mode-line-inactive nil :height 130 :fontset "fontset-modeline")))
 
+  ;;(setq all-the-icons-scale-factor 1.1)
   (setq inhibit-compacting-font-caches t
-        doom-modeline-height 1
+        ;;doom-modeline-height 28
         doom-modeline-buffer-file-name-style 'auto
         doom-modeline-icon nil
         doom-modeline-project-detection 'project))

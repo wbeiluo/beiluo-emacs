@@ -12,28 +12,17 @@
 
 ;;; Code:
 
-;; (add-hook 'shell-mode-hook 'yas-minor-mode)
-;; (add-hook 'shell-mode-hook 'flycheck-mode)
-
 ;;  Display extra information for prompt
-(use-package eshell-prompt-extras
-  :after esh-opt
-  :defines eshell-highlight-prompt
-  :commands (epe-theme-lambda epe-theme-dakrone epe-theme-pipeline)
-  :init (setq eshell-highlight-prompt nil
-              eshell-prompt-function #'epe-theme-lambda))
+;; (use-package eshell-prompt-extras
+;;   :after esh-opt
+;;   :defines eshell-highlight-prompt
+;;   :commands (epe-theme-lambda epe-theme-dakrone epe-theme-pipeline)
+;;   :init (setq eshell-highlight-prompt nil
+;;               eshell-prompt-function #'epe-theme-lambda))
 
 ;; Enhanced shell command completion
 (use-package pcmpl-args
   :ensure t)
-
-;; Fish-like history autosuggestions
-;; (use-package esh-autosuggest
-;;   :hook (eshell-mode . esh-autosuggest-mode)
-;;   ;; If you have use-package-hook-name-suffix set to nil, uncomment and use the
-;;   ;; line below instead:
-;;   ;; :hook (eshell-mode-hook . esh-autosuggest-mode)
-;;   :ensure t)
 
 ;; `eldoc' support
 (use-package esh-help

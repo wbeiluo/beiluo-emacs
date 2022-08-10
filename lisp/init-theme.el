@@ -165,7 +165,7 @@
                       :box nil
                       :overline nil
                       :underline nil
-		      :background "#2a2a3a")
+		      :background "#151823")
 
   (set-face-attribute 'mode-line-inactive nil
                       :box nil
@@ -178,9 +178,10 @@
                       :underline nil))
 
 ;; different theme for term and gui
-(if (display-graphic-p)
-    (light)
-  (dark))
+;; (if (display-graphic-p)
+;;     (light)
+;;   (dark))
+(dark)
 
 ;; 终端下不设置背景色(需要终端背景色与主题匹配)
 (defun set-background-for-terminal (&optional frame)
