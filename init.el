@@ -1,6 +1,6 @@
 ;;; init.el --- Load the full configuration -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020 王北洛
+;; Copyright (C) 2020~2023 王北洛
 
 ;; Author: 王北洛 <wbeiluo@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -30,13 +30,10 @@
 ;;----------------------------------------------------------------------------
 (eval-when-compile
   (require 'package)
-   (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-                            ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-                            ("org"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")))
-  ;; (setq package-archives '(("gnu"   . "http://elpa.emacs-china.org/gnu/")
-  ;;                          ("melpa" . "http://elpa.emacs-china.org/melpa/")
-  ;;                          ("org"   . "http://elpa.emacs-china.org/org/")))
-  ;;(setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
+  (setq package-archives '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
+                           ("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+                           ("org"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")))
+  ;; (setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
   ;;                         ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
   ;;                         ("melpa-stable" . "http://mirrors.ustc.edu.cn/elpa/melpa-stable/")
   ;;                         ("org" . "http://mirrors.ustc.edu.cn/elpa/org/")))
@@ -53,25 +50,37 @@
 (require 'diminish)
 (require 'bind-key)
 
+;; 安装 quelpa
+(use-package quelpa
+  :ensure t
+  :commands quelpa
+  :config
+  :custom
+  (quelpa-git-clone-depth 1)
+  (quelpa-update-melpa-p nil)
+  (quelpa-self-upgrade-p nil)
+  (quelpa-checkout-melpa-p nil))
+
+;; quelpa 与 use-package 集成
+(use-package quelpa-use-package
+  :ensure t)
+
 ;;----------------------------------------------------------------------------
 ;; Load configs for specific features and modes
 ;;----------------------------------------------------------------------------
 (require 'init-basic)
 (require 'init-theme)
+(require 'init-fonts)
 (require 'init-modeline)
-(require 'init-vertico)
-(require 'init-corfu)
+(require 'init-completion)
 (require 'init-edit)
-(require 'init-project)
+(require 'init-program)
 (require 'init-window)
-(require 'init-eshell)
-(require 'init-exec-path)
+(require 'init-shell)
 (require 'init-auto-save)
 (require 'init-pair)
 (require 'init-treemacs)
-(require 'init-fonts)
-(require 'init-git)
-(require 'init-program)
+(require 'init-project)
 (require 'init-lsp)
 (require 'init-cc)
 (require 'init-slime)
@@ -79,11 +88,10 @@
 (require 'init-yasnippet)
 (require 'init-elisp)
 (require 'init-org)
-(require 'init-org-agenda)
-;;(require 'init-pdf)
 (require 'init-music)
 (require 'init-windows)
 (require 'init-key-binding)
+;;(require 'init-tool)
 
 ;; change custom file location
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))

@@ -1,4 +1,4 @@
-;; init-eshell.el --- eshell configurations.	-*- lexical-binding: t -*-
+;; init-shell.el --- shell configurations.	-*- lexical-binding: t -*-
 
 ;; Copyright (C) 2022 王北洛
 
@@ -7,7 +7,7 @@
 
 ;;; Commentary:
 ;;
-;; eshell configurations.
+;; shell configurations.
 ;;
 
 ;;; Code:
@@ -24,6 +24,14 @@
 (use-package pcmpl-args
   :ensure t)
 
+(use-package exec-path-from-shell
+  :if (memq window-system '(mac ns))
+  :ensure t
+  :config
+  (dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "LANG" "LC_CTYPE"))
+    (add-to-list 'exec-path-from-shell-variables var))
+  (exec-path-from-shell-initialize))
+
 ;; `eldoc' support
 (use-package esh-help
   :init (setup-esh-help-eldoc))
@@ -32,8 +40,7 @@
 (use-package eshell-z
   :hook (eshell-mode . (lambda () (require 'eshell-z))))
 
-
-(provide 'init-eshell)
+(provide 'init-shell)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; init-eshell.el ends here
+;;; init-shell.el ends here

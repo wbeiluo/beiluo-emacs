@@ -14,8 +14,7 @@
   (setq shell-file-name (executable-find "C:\\msys64\\usr\\bin\\zsh.exe"))
   (setq gc-cons-threshold (* 512 1024 1024))
   (setq gc-cons-percentage 0.5)
-  (run-with-idle-timer 5 t #'garbage-collect)
-  )
+  (run-with-idle-timer 5 t #'garbage-collect))
 
 (provide 'init-windows)
 

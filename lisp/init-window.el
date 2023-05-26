@@ -9,7 +9,6 @@
 ;;; Commentary:
 ;;; Code:
 
-
 ;; Quickly switch windows
 (use-package ace-window
   :functions hydra-frame-window/body

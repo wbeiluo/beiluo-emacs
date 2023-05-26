@@ -10,6 +10,7 @@ transient/
 server/
 request/
 .extension/
+quelpa/
 
 custom.el
 recentf
@@ -27,3 +28,6 @@ org-clock-save.el
 .dap-breakpoints
 .mc-lists.el
 org-roam.db
+tramp
+places
+

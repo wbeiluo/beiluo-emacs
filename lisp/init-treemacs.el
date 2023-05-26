@@ -68,38 +68,21 @@
        (treemacs-git-mode 'deferred))
       (`(t . _)
        (treemacs-git-mode 'simple))))
-
-  (defhydra hydra-treemacs (:exit t :hint nil)
-    "
-    _0_: select window  _t_: treemacs  _f_: find file
-    _1_: delete window  _b_: bookmark  _g_: find tag   "
-
-    ("0"   treemacs-select-window)
-    ("1"   treemacs-delete-other-windows)
-    ("t"   treemacs)
-    ("b"   treemacs-bookmark)
-    ("f"   treemacs-find-file)
-    ("g"   treemacs-find-tag)
-    ("q"   nil "quit" :color "deep sky blue"))
   
   :bind
-  ("C-x t" . hydra-treemacs/body))
-  ;; (:map global-map
-  ;;       ("M-0"       . treemacs-select-window)
-  ;;       ("C-x t 1"   . treemacs-delete-other-windows)
-  ;;       ("C-x t t"   . treemacs)
-  ;;       ("C-x t B"   . treemacs-bookmark)
-  ;;       ("C-x t C-t" . treemacs-find-file)
-  ;;       ("C-x t M-t" . treemacs-find-tag)))
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t d"   . treemacs-select-directory)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
 
 (use-package treemacs-icons-dired
   :after treemacs dired
   :ensure t
   :config (treemacs-icons-dired-mode))
-
-(use-package treemacs-magit
-  :after treemacs magit
-  :ensure t)
 
 (use-package treemacs-persp
   :after treemacs persp-mode

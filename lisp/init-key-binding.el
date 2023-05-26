@@ -12,14 +12,11 @@
 
 ;;; Code:
 
-(global-set-key (kbd "<f5>") 'eshell)               ; eshell
-(global-set-key (kbd "<f6>") 'shell)                ; shell
-(global-set-key (kbd "<f7>") 'consult-recent-file)  ; 最近文件
-
-(global-set-key (kbd "C-x l") 'highlight-symbol)    ; 高亮标志
-(global-set-key (kbd "C->") 'forward-word)          ; 向前移动一个字
-(global-set-key (kbd "C-<") 'backward-word)         ; 向后移动一个字
-
+(use-package emacs
+  :bind (("<f5>" . eshell)
+         ("<f6>" . shell)
+         ("<f7>" . recentf-open-files)
+         ))
 
 (provide 'init-key-binding)
 
