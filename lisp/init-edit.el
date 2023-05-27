@@ -115,12 +115,6 @@
   :hook (after-init . goto-last-point-mode)
   :bind ("C-," . goto-last-point))
 
-;; Highlight Line
-(use-package hl-line
-  :ensure nil
-  :hook
-  (after-init . global-hl-line-mode))
-
 (use-package highlight-symbol
   :ensure t
   :bind ("C-x l" . highlight-symbol)

@@ -1,6 +1,6 @@
 ;; init-modeline.el --- modeline configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2022 王北洛
+;; Copyright (C) 2022~2023 王北洛
 
 ;; Author: 王北洛 <wbeiluo@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -13,24 +13,6 @@
 ;;; Code:
 
 (use-package nerd-icons)
-
-;; (use-package doom-modeline
-;;   :ensure t
-;;   :hook (emacs-startup . doom-modeline-mode)
-;;   :config
-;;   ;; (if (display-graphic-p)
-;;   ;;     (progn (create-fontset-from-ascii-font "Source Code Pro::medium" nil "modeline")
-;;   ;;            (set-face-attribute 'mode-line nil :height 130 :fontset "fontset-modeline")
-;;   ;;            (set-face-attribute 'mode-line-inactive nil :height 130 :fontset "fontset-modeline")))
-
-;;   (setq doom-modeline-icon (display-graphic-p))
-;;   ;;(setq all-the-icons-scale-factor 1.1)
-  
-;;   (setq inhibit-compacting-font-caches t
-;;         doom-modeline-height 30
-;;         doom-modeline-buffer-file-name-style 'auto
-;;         doom-modeline-icon nil
-;;         doom-modeline-project-detection 'project))
 
 (use-package doom-modeline
   :ensure t

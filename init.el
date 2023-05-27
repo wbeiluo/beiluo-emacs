@@ -88,7 +88,7 @@
 (require 'init-yasnippet)
 (require 'init-elisp)
 (require 'init-org)
-(require 'init-music)
+(require 'init-emms)
 (require 'init-windows)
 (require 'init-key-binding)
 ;;(require 'init-tool)

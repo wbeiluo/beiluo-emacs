@@ -31,6 +31,8 @@
 (show-paren-mode t)
 ;; 自动刷新buffer
 (global-auto-revert-mode t)
+;; 高亮当前行
+(global-hl-line-mode t)
 ;; 设置时间显示格式
 (setq display-time-24hr-format t)
 ;; 打开时间显示
@@ -79,11 +81,6 @@
 (setq scroll-down-aggressively 0.01)
 (setq scroll-preserve-screen-position 'always)
 
-;; 界面平滑移动
-;; (use-package good-scroll
-;;   :ensure t
-;;   :init (good-scroll-mode))
-
 ;; 设置自动折行宽度为100个字符，默认值为70
 (setq-default fill-column 100)
 
@@ -93,7 +90,6 @@
 ;; Encoding
 ;; 配置所有的编码为UTF-8，参考：
 ;; https://thraxys.wordpress.com/2016/01/13/utf-8-in-emacs-everywhere-forever/
-(setq locale-coding-system 'utf-8)
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 (set-selection-coding-system 'utf-8)
@@ -107,23 +103,18 @@
 (when (display-graphic-p)
   (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
 
-;; Show native line numbers if possible, otherwise use `linum'
-(if (fboundp 'display-line-numbers-mode)
-    (use-package display-line-numbers
-      :ensure nil
-      :hook (prog-mode . display-line-numbers-mode))
-  (use-package linum-off
-    :demand
-    :defines linum-format
-    :hook (after-init . global-linum-mode)
-    ;; :init (setq linum-format "%4d")
-    :config
-    ;; Highlight current line number
-    (use-package hlinum
-      :defines linum-highlight-in-all-buffersp
-      :custom-face (linum-highlight-face ((t (:inherit default :background nil :foreground nil))))
-      :hook (global-linum-mode . hlinum-activate)
-      :init (setq linum-highlight-in-all-buffersp t))))
+(use-package linum-off
+  :demand
+  :defines linum-format
+  :hook (after-init . global-linum-mode)
+  :init (setq linum-format "%4d")
+  :config
+  ;; Highlight current line number
+  (use-package hlinum
+    :defines linum-highlight-in-all-buffersp
+    :custom-face (linum-highlight-face ((t (:inherit default :background nil :foreground nil))))
+    :hook (global-linum-mode . hlinum-activate)
+    :init (setq linum-highlight-in-all-buffersp t)))
 
 (use-package savehist
   :ensure nil
