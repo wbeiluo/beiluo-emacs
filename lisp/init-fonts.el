@@ -33,7 +33,7 @@
 ;;   (set-font "jetbrains mono" "WenQuanYi Micro Hei Mono" 18 17))
 
 (when (display-graphic-p)
-  (set-font "Sarasa Term SC Nerd" "Sarasa Term SC Nerd" 18 18))
+  (set-font "Sarasa Mono SC" "Sarasa Mono SC" 18 18))
 
 (provide 'init-fonts)
 

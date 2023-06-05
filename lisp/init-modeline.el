@@ -12,7 +12,11 @@
 
 ;;; Code:
 
-(use-package nerd-icons)
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family "Symbols Nerd Font Mono")
+  :config
+  (setq nerd-icons-scale-factor 1.1))
 
 (use-package doom-modeline
   :ensure t

@@ -22,7 +22,7 @@
 	       ("i" . emms-mode-line-toggle)
 	       ))
   :custom
-  (emms-player-list '(emms-player-mplayer emms-player-mpv))
+  (emms-player-list '(emms-player-mplayer))
   (emms-source-file-default-directory "~/Music/")
   (emms-playlist-buffer-name "*Emms*")
   (emms-repeat-playlist t)

@@ -12,15 +12,15 @@
   :ensure nil
   :mode ("\\.org\\'" . org-mode)
   :hook ((org-mode . visual-line-mode)
- 	 (org-mode . my/org-prettify-symbols)
+ 	 ;;(org-mode . my/org-prettify-symbols)
          )
   :commands (org-find-exact-headline-in-buffer org-set-tags)
   :custom-face
   ;; 设置Org mode标题以及每级标题行的大小
   (org-document-title ((t (:height 1.2 :weight bold))))
-  (org-level-1 ((t (:height 1.1 :weight bold))))
-  (org-level-2 ((t (:height 1.05 :weight bold))))
-  (org-level-3 ((t (:height 1.0 :weight bold))))
+  (org-level-1 ((t (:height 1.15 :weight bold))))
+  (org-level-2 ((t (:height 1.10 :weight bold))))
+  (org-level-3 ((t (:height 1.05 :weight bold))))
   (org-level-4 ((t (:height 1.0 :weight bold))))
   (org-level-5 ((t (:height 1.0 :weight bold))))
   (org-level-6 ((t (:height 1.0 :weight bold))))
@@ -30,40 +30,40 @@
   :config
 
   ;; 在org mode里美化字符串标志
-  (defun my/org-prettify-symbols ()
-    (setq prettify-symbols-alist
-          (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-        	  '(
-        	    ("[ ]"              . "󰄱")
-        	    ("[X]"              . "󰄵")
-        	    ("[-]"              . "󰡖")
-        	    ("#+begin_src"      . "")
-        	    ("#+end_src"        . "")
-        	    ("#+begin_example"  . "")
-        	    ("#+end_example"    . "")
-        	    ("#+results:"       . "")
-        	    ("#+attr_latex:"    . "🄛")
-        	    ("#+attr_html:"     . "🄗")
-        	    ("#+attr_org:"      . "🄞")
-        	    ("#+name:"          . "🄝")
-        	    ("#+caption:"       . "🄒")
-        	    ("#+date:"          . "")
-        	    ("#+author:"        . "")
-        	    ("#+setupfile:"     . "")
-        	    ("#+email:"         . "")
-        	    ("#+startup:"       . "")
-        	    ("#+options:"       . "")
-        	    ("#+title:"         . "󰊄")
-        	    ("#+subtitle:"      . "󰨖")
-        	    ("#+downloaded:"    . "")
-        	    ("#+language:"      . "")
-        	    ("#+begin_quote"    . "")
-        	    ("#+end_quote"      . "")
-                    ("#+begin_results"  . "⋯")
-                    ("#+end_results"    . "⋯")
-        	    )))
-    (setq prettify-symbols-unprettify-at-point t)
-    (prettify-symbols-mode 1))
+  ;; (defun my/org-prettify-symbols ()
+  ;;   (setq prettify-symbols-alist
+  ;;         (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+  ;;       	  '(
+  ;;       	    ("[ ]"              . "󰄱")
+  ;;       	    ("[X]"              . "󰄵")
+  ;;       	    ("[-]"              . "󰡖")
+  ;;       	    ("#+begin_src"      . "")
+  ;;       	    ("#+end_src"        . "")
+  ;;       	    ("#+begin_example"  . "")
+  ;;       	    ("#+end_example"    . "")
+  ;;       	    ("#+results:"       . "")
+  ;;       	    ("#+attr_latex:"    . "🄛")
+  ;;       	    ("#+attr_html:"     . "🄗")
+  ;;       	    ("#+attr_org:"      . "🄞")
+  ;;       	    ("#+name:"          . "🄝")
+  ;;       	    ("#+caption:"       . "🄒")
+  ;;       	    ("#+date:"          . "")
+  ;;       	    ("#+author:"        . "")
+  ;;       	    ("#+setupfile:"     . "")
+  ;;       	    ("#+email:"         . "")
+  ;;       	    ("#+startup:"       . "")
+  ;;       	    ("#+options:"       . "")
+  ;;       	    ("#+title:"         . "󰊄")
+  ;;       	    ("#+subtitle:"      . "󰨖")
+  ;;       	    ("#+downloaded:"    . "")
+  ;;       	    ("#+language:"      . "")
+  ;;       	    ("#+begin_quote"    . "")
+  ;;       	    ("#+end_quote"      . "")
+  ;;                   ("#+begin_results"  . "⋯")
+  ;;                   ("#+end_results"    . "⋯")
+  ;;       	    )))
+  ;;   (setq prettify-symbols-unprettify-at-point t)
+  ;;   (prettify-symbols-mode 1))
 
   ;; 提升latex预览的图片清晰度
   (plist-put org-format-latex-options :scale 1.8)
@@ -119,8 +119,8 @@
   (org-pretty-entities t)
   ;; 当启用缩进模式时自动隐藏前置星号
   (org-indent-mode-turns-on-hiding-stars t)
-  ;; 自动启用缩进
-  (org-startup-indented t)
+  ;; 关闭缩进
+  (org-startup-indented nil)
   ;; 根据标题栏自动缩进文本
   (org-adapt-indentation t)
   ;; 自动显示图片
@@ -256,8 +256,8 @@
                         (setq org-modern-hide-stars 'leading)
                         (global-org-modern-mode t)))
   :config
-  ;; 标题行型号字符
-  (setq org-modern-star ["" "" "󱞈" "󰥺" "󰜡"])
+  ;; 标题行星号字符“☯” “☰” “☱” “☲” “☳” “☴” “☵” “☶”
+  ;;(setq org-modern-star ["" "" "" ""])
 
   ;; 额外的行间距，0.1表示10%，1表示1px
   (setq-default line-spacing 0.1)
@@ -269,16 +269,16 @@
   (setq org-modern-table-horizontal 0)
 
   ;; 列表符号
-  (setq org-modern-list
-        '((?- . "")
-          (?+ . "")
-          (?* . "")))
+  ;; (setq org-modern-list
+  ;;       '((?- . "")
+  ;;         (?+ . "")
+  ;;         (?* . "")))
 
   ;; TODO 样式
   (setq org-modern-todo-faces
         '(("TODO"       . (:inherit org-verbatim :weight bold :foreground "IndianRed" :inverse-video t))
           ("NEXT"       . (:inherit org-verbatim :weight bold :foreground "#50a14f" :inverse-video t))
-          ("WAIT"       . ( :inherit org-verbatim :weight bold :foreground "coral" :inverse-video t))
+          ("WAIT"       . (:inherit org-verbatim :weight bold :foreground "coral" :inverse-video t))
           ("HOLD"       . (:inherit org-verbatim :weight bold :foreground "orange" :inverse-video t))
           ("DONE"       . (:inherit org-verbatim :weight bold :foreground "dim gray" :inverse-video t))
           ("CANCELLED"  . (:inherit org-verbatim :weight bold :foreground "LightGray" :inverse-video t))
@@ -297,11 +297,11 @@
   ;; 代码块左边加上一条竖边线（需要Org mode顶头，如果启用了 `visual-fill-column-mode' 会很难看）
   (setq org-modern-block-fringe t)
   ;; 代码块类型美化，使用 `prettify-symbols-mode'
-  (setq org-modern-block-name nil)
+  ;;(setq org-modern-block-name nil)
   ;; 关闭关键字美化，使用 `prettify-symbols-mode'
-  (setq org-modern-keyword nil)
+  ;;(setq org-modern-keyword nil)
   ;; 关闭checkbox美化，使用 `prettify-symbols-mode'
-  (setq org-modern-checkbox nil)
+  ;;(setq org-modern-checkbox nil)
   )
 
 (use-package org-appear
