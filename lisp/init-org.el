@@ -154,7 +154,7 @@
   (org-yank-adjusted-subtrees t)
 
   ;; TOOD的关键词设置，可以设置不同的组
-  (org-todo-keywords '((sequence "TODO(t)" "NEXT(n!)" "HOLD(h!)" "WAIT(w!)" "|" "DONE(d!)" "CANCELLED(c@/!)")
+  (org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h!)" "WAIT(w!)" "|" "DONE(d!)" "CANCELLED(c@/!)")
   		       (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f!)")))
 
   ;; 当标题行状态变化时标签同步发生的变化
@@ -163,7 +163,6 @@
   ;; Moving a task to HOLD adds WAIT and HOLD tags
   ;; Moving a task to a done state removes WAIT and HOLD tags
   ;; Moving a task to TODO removes WAIT, CANCELLED, and HOLD tags
-  ;; Moving a task to NEXT removes WAIT, CANCELLED, and HOLD tags
   ;; Moving a task to DONE removes WAIT, CANCELLED, and HOLD tags
   (org-todo-state-tags-triggers
    (quote (("CANCELLED" ("CANCELLED" . t))
@@ -171,9 +170,8 @@
   	   ("HOLD" ("WAIT") ("HOLD" . t))
   	   (done ("WAIT") ("HOLD"))
   	   ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
-           ("NEXT" ("WAIT") ("CANCELLED") ("HOLD"))
   	   ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
-  
+
   ;; 使用专家模式选择标题栏状态
   (org-use-fast-todo-selection 'expert)
   ;; 父子标题栏状态有依赖
@@ -206,22 +204,21 @@
   ;; refile使用缓存
   (org-refile-use-cache t)
   ;; refile的目的地，这里设置的是agenda文件的所有标题
-  (org-refile-targets '((org-agenda-files . (:maxlevel . 9))))
+  (org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
   ;; 将文件名加入到路径
   (org-refile-use-outline-path 'file)
   ;; 是否按步骤refile
   (org-outline-path-complete-in-steps nil)
   ;; 允许创建新的标题行，但需要确认
   (org-refile-allow-creating-parent-nodes 'confirm)
-
-  ;; 设置标签的默认位置，默认是第77列右对齐
-  ;; (org-tags-column -77)
-  ;; 自动对齐标签
+  ;; 设置标签的默认位置，第80列右对齐
+  (org-tags-column -80)
+  ;; 不自动对齐标签
   (org-auto-align-tags nil)
-  ;; 标签不继承
-  (org-use-tag-inheritance nil)
-  ;; 在日程视图的标签不继承
-  (org-agenda-use-tag-inheritance nil)
+  ;; 标签继承
+  (org-use-tag-inheritance t)
+  ;; 在日程视图的标签继承
+  (org-agenda-use-tag-inheritance t)
   ;; 标签快速选择
   (org-use-fast-tag-selection t)
   ;; 标签选择不需要回车确认
@@ -230,78 +227,62 @@
   (org-track-ordered-property-with-tag t)
   ;; 始终存在的的标签
   (org-tag-persistent-alist '(("read"     . ?r)
-  			      ("mail"     . ?m)
-  			      ("emacs"    . ?e)
   			      ("study"    . ?s)
   			      ("work"     . ?w)
-                              ("project"  . ?p)))
+                              ("project"  . ?p)
+  			      ("emacs"    . ?e)
+  			      ("life"     . ?l)))
   ;; 预定义好的标签
   (org-tag-alist '((:startgroup)
-  		   ("linux"    . ?l)
-  		   ("noexport" . ?n)
-  		   ("ignore"   . ?i)
-  		   ("toc"      . ?t)
+  		   ("play"     . ?y)
+  		   ("tour"     . ?t)
   		   (:endgroup)))
 
   ;; 归档设置
   (org-archive-location "%s_archive::datetree/")
   )
 
-;; Org mode的附加包，有诸多附加功能
-;; (use-package org-contrib)
-
 (use-package org-modern
   :ensure t
-  :hook (after-init . (lambda ()
-                        (setq org-modern-hide-stars 'leading)
-                        (global-org-modern-mode t)))
+  ;; :load-path "packages/org-modern/"
+  :hook ((org-mode . org-modern-mode)
+         (org-agenda-finalize . org-modern-agenda))
   :config
   ;; 标题行星号字符“☯” “☰” “☱” “☲” “☳” “☴” “☵” “☶”
-  ;;(setq org-modern-star ["" "" "" ""])
+  ;; (setq org-modern-star ["" "" "" ""])
 
   ;; 额外的行间距，0.1表示10%，1表示1px
-  (setq-default line-spacing 0.1)
+  ;; (setq-default line-spacing 0.1)
   ;; tag边框宽度，还可以设置为 `auto' 即自动计算
-  (setq org-modern-label-border 1)
-  ;; 设置表格竖线宽度，默认为3
-  (setq org-modern-table-vertical 2)
-  ;; 设置表格横线为0，默认为0.1
-  (setq org-modern-table-horizontal 0)
-
-  ;; 列表符号
-  ;; (setq org-modern-list
-  ;;       '((?- . "")
-  ;;         (?+ . "")
-  ;;         (?* . "")))
+  (setq org-modern-label-border 0)
+  ;; 设置表格竖线宽度为1
+  (setq org-modern-table-vertical 1)
+  ;; 设置表格横线为1
+  (setq org-modern-table-horizontal 1)
 
   ;; TODO 样式
   (setq org-modern-todo-faces
-        '(("TODO"       . (:inherit org-verbatim :weight bold :foreground "IndianRed" :inverse-video t))
-          ("NEXT"       . (:inherit org-verbatim :weight bold :foreground "#50a14f" :inverse-video t))
-          ("WAIT"       . (:inherit org-verbatim :weight bold :foreground "coral" :inverse-video t))
-          ("HOLD"       . (:inherit org-verbatim :weight bold :foreground "orange" :inverse-video t))
-          ("DONE"       . (:inherit org-verbatim :weight bold :foreground "dim gray" :inverse-video t))
-          ("CANCELLED"  . (:inherit org-verbatim :weight bold :foreground "LightGray" :inverse-video t))
-          ("REPORT"     . (:inherit org-verbatim :weight bold :foreground "magenta" :inverse-video t))
-          ("BUG"        . (:inherit org-verbatim :weight bold :foreground "firebrick" :inverse-video t))
-          ("KNOWNCAUSE" . (:inherit org-verbatim :weight bold :foreground "orange" :inverse-video t))
-          ("FIXED"      . (:inherit org-verbatim :weight bold :foreground "LightGray" :inverse-video t)))
+        '(("TODO"       . (:inherit org-verbatim :weight regular :foreground "IndianRed" :inverse-video t))
+          ("NEXT"       . (:inherit org-verbatim :weight regular :foreground "#50a14f" :inverse-video t))
+          ("WAIT"       . (:inherit org-verbatim :weight regular :foreground "coral" :inverse-video t))
+          ("HOLD"       . (:inherit org-verbatim :weight regular :foreground "orange" :inverse-video t))
+          ("DONE"       . (:inherit org-verbatim :weight regular :foreground "dim gray" :inverse-video t))
+          ("CANCELLED"  . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))
+          ("REPORT"     . (:inherit org-verbatim :weight regular :foreground "magenta" :inverse-video t))
+          ("BUG"        . (:inherit org-verbatim :weight regular :foreground "firebrick" :inverse-video t))
+          ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :foreground "orange" :inverse-video t))
+          ("FIXED"      . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t)))
         )
 
   ;; 优先级样式
   (setq org-modern-priority-faces
-        '((?A :inherit org-verbatim :weight bold :foreground "IndianRed" :inverse-video t)
-          (?B :inherit org-priority :weight bold :foreground "coral" :inverse-video t)
-          (?C :inherit org-priority :weight bold :foreground "goldenrod" :inverse-video t)))
+        '((?A :inherit org-priority :weight regular :foreground "IndianRed" :inverse-video t)
+          (?B :inherit org-priority :weight regular :foreground "coral" :inverse-video t)
+          (?C :inherit org-priority :weight regular :foreground "goldenrod" :inverse-video t)))
 
   ;; 代码块左边加上一条竖边线（需要Org mode顶头，如果启用了 `visual-fill-column-mode' 会很难看）
   (setq org-modern-block-fringe t)
-  ;; 代码块类型美化，使用 `prettify-symbols-mode'
-  ;;(setq org-modern-block-name nil)
-  ;; 关闭关键字美化，使用 `prettify-symbols-mode'
-  ;;(setq org-modern-keyword nil)
-  ;; 关闭checkbox美化，使用 `prettify-symbols-mode'
-  ;;(setq org-modern-checkbox nil)
+  (setq org-pretty-entities t)
   )
 
 (use-package org-appear
@@ -345,7 +326,7 @@
                             :immediate-finish t)
                            ("d" "Diary")
                            ("dt" "Today's TODO list" entry (file+olp+datetree "diary.org")
-                            "* Today's TODO list [/]\n%T\n\n** TODO %?"
+                            "* Today's todo list [/]\n%T\n\n** TODO %?"
                             :empty-lines 1
                             :jump-to-captured t)
                            ("do" "Other stuff" entry (file+olp+datetree "diary.org")
@@ -460,6 +441,177 @@ Marked 2 is a mac app that renders markdown."
   :config
   (setq org-super-links-related-into-drawer t)
   (setq	org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
+
+(use-package org-agenda
+  :ensure nil
+  :hook (org-agenda-finalize . org-agenda-to-appt)
+  :bind (("\e\e a" . org-agenda)
+         :map org-agenda-mode-map
+         ("i" . (lambda () (interactive) (org-capture nil "d")))
+         ("J" . consult-org-agenda))
+  :config
+
+  ;; 显示时间线
+  (setq org-agenda-use-time-grid t)
+  ;; 设置面包屑分隔符
+  (setq org-agenda-breadcrumbs-separator " ❱ ")
+  ;; 设置时间线的当前时间指示串
+  (setq org-agenda-current-time-string "now ----------------------------")
+  ;; 时间线范围和颗粒度设置
+  (setq org-agenda-time-grid (quote ((daily today)
+                                     (0600 0800 1000 1200
+                                           1400 1600 1800
+                                           2000 2200 2400)
+                                     "......" "--------------------------------")))
+  ;; 日程视图的前缀设置
+  (setq org-agenda-prefix-format '((agenda . " %i %-25:c %5t %s")
+                                   (todo   . " %i %-25:c ")
+                                   (tags   . " %i %-25:c ")
+                                   (search . " %i %-25:c ")))
+  ;; 对于计划中的任务在视图里的显示
+  (setq org-agenda-scheduled-leaders
+        '("计划 " "%02d天前开始 "))
+  ;; 对于截止日期的任务在视图里的显示
+  (setq org-agenda-deadline-leaders
+        '("截止 " "%02d天后截止 " "过期%02d天 "))
+
+  ;; =====================
+  ;; 自定义日程视图，分别显示TODO，NEXT-LINE，NEXT中的任务
+  ;; n键显示自定义视图，p键纯文本视图，a键默认视图
+  ;; =====================
+  ;; (defvar my-org-custom-daily-agenda
+  ;;   `((todo "TODO"
+  ;;           ((org-agenda-block-separator nil)
+  ;;            (org-agenda-overriding-header "所有待办任务\n")))
+  ;;     (todo "NEXT"
+  ;;           ((org-agenda-block-separator nil)
+  ;;            (org-agenda-overriding-header "\n进行中的任务\n")))
+  ;;     (todo "WAIT"
+  ;;           ((org-agenda-block-separator nil)
+  ;;            (org-agenda-overriding-header "\n等待中的任务\n")))
+  ;;     (agenda "" ((org-agenda-block-separator nil)
+  ;;                 (org-agenda-overriding-header "\n今日日程\n"))))
+  ;;   "Custom agenda for use in `org-agenda-custom-commands'.")
+  ;; (setq org-agenda-custom-commands
+  ;;       `(("n" "Daily agenda and top priority tasks"
+  ;;          ,my-org-custom-daily-agenda)
+  ;;         ("p" "Plain text daily agenda and top priorities"
+  ;;          ,my-org-custom-daily-agenda
+  ;;          ((org-agenda-with-colors nil)
+  ;;           (org-agenda-prefix-format "%t %s")
+  ;;           (org-agenda-current-time-string ,(car (last org-agenda-time-grid)))
+  ;;           (org-agenda-fontify-priorities nil)
+  ;;           (org-agenda-remove-tags t))
+  ;;          ("agenda.txt"))))
+
+  ;; 时间戳格式设置，会影响到 `svg-tag' 等基于正则的设置
+  ;; 这里设置完后是 <2022-12-24 星期六> 或 <2022-12-24 星期六 06:53>
+  ;; (setq system-time-locale "zh_CN.UTF-8")
+  (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
+  ;; 不同日程类别间的间隔
+  (setq org-cycle-separator-lines 2)
+  :custom
+  ;; 设置需要被日程监控的org文件
+  (org-agenda-files
+   (list (expand-file-name "tasks.org" org-directory)
+         (expand-file-name "diary.org" org-directory)
+         ))
+  ;; 设置org的日记文件
+  (org-agenda-diary-file (expand-file-name "diary.org" org-directory))
+  ;; 日记插入精确时间戳
+  (org-agenda-insert-diary-extract-time t)
+  ;; 设置日程视图更加紧凑
+  (org-agenda-compact-blocks nil)
+  ;; 日程视图的块分隔符
+  (org-agenda-block-separator ?─)
+  ;; 日视图还是周视图，通过 v-d, v-w, v-m, v-y 切换视图，默认周视图
+  (org-agenda-span 'day)
+  ;; q退出时删除agenda缓冲区
+  (org-agenda-sticky t)
+  ;; 是否包含直接日期
+  (org-agenda-include-deadlines t)
+  ;; 禁止日程启动画面
+  (org-agenda-inhibit-startup t)
+  ;; 显示每一天，不管有没有条目
+  (org-agenda-show-all-dates t)
+  ;; 时间不足位时前面加0
+  (org-agenda-time-leading-zero t)
+  ;; 日程同时启动log mode
+  (org-agenda-start-with-log-mode t)
+  ;; 日程同时启动任务时间记录报告模式
+  (org-agenda-start-with-clockreport-mode t)
+  ;; 截止的任务完成后不显示
+  (org-agenda-skip-deadline-if-done t)
+  ;; 当计划的任务完成后不显示
+  (org-agenda-skip-scheduled-if-done t)
+  ;; 计划过期上限
+  (org-scheduled-past-days 365)
+  ;; 计划截止上限
+  (org-deadline-past-days 365)
+  ;; 计划中的任务不提醒截止时间
+  (org-agenda-skip-deadline-prewarning-if-scheduled 1)
+  (org-agenda-skip-scheduled-if-deadline-is-shown t)
+  (org-agenda-skip-timestamp-if-deadline-is-shown t)
+  ;; 设置工时记录报告格式
+  (org-agenda-clockreport-parameter-plist
+   '(:link t :maxlevel 5 :compact nil :narrow 80 :timestamp t))
+  (org-agenda-columns-add-appointments-to-effort-sum t)
+  (org-agenda-restore-windows-after-quit t)
+  (org-agenda-window-setup 'current-window)
+  ;; 标签显示的位置，第100列往前右对齐
+  (org-agenda-tags-column -100)
+  ;; 从星期一开始作为一周第一天
+  (org-agenda-start-on-weekday 1)
+  ;; 是否使用am/pm
+  (org-agenda-timegrid-use-ampm nil)
+  ;; 搜索是不看时间
+  (org-agenda-search-headline-for-time nil)
+  ;; 提前3天截止日期到期告警
+  (org-deadline-warning-days 3)
+  )
+
+;; (use-package org-habit
+;;   :ensure nil
+;;   :defer t
+;;   :custom
+;;   (org-habit-show-habits t)
+;;   (org-habit-graph-column 70)
+;;   (org-habit-show-all-today t)
+;;   (org-habit-show-done-always-green t)
+;;   (org-habit-scheduled-past-days t)
+;;   ;; org habit show 7 days before today and 7 days after today. ! means not done. * means done.
+;;   (org-habit-preceding-days 7)
+;;   )
+
+;; (use-package appt
+;;   :ensure nil
+;;   :hook ((after-init . (lambda () (appt-activate 1)))
+;;          (org-finalize-agenda . org-agenda-to-appt))
+;;   :config
+;;   ;; 通知提醒
+;;   (defun appt-display-with-notification (min-to-app new-time appt-msg)
+;;     (notify-send :title (format "Appointment in %s minutes" min-to-app)
+;;                  :body appt-msg
+;;                  :urgency 'critical)
+;;     (appt-disp-window min-to-app new-time appt-msg))
+
+;;   ;; 每15分钟更新一次appt
+;;   (run-at-time t 900 #'org-agenda-to-appt)
+
+;;   :custom
+;;   ;; 是否显示日记
+;;   (appt-display-diary nil)
+;;   ;; 提醒间隔时间，每15分钟提醒一次
+;;   (appt-display-interval 15)
+;;   ;; 模式栏显示提醒
+;;   (appt-display-mode-line t)
+;;   ;; 设置提醒响铃
+;;   (appt-audible t)
+;;   ;; 提前30分钟提醒
+;;   (appt-message-warning-time 30)
+;;   ;; 通知提醒函数
+;;   (appt-disp-window-function #'appt-display-with-notification)
+;;   )
 
 ;; (use-package org-src
 ;;   :ensure nil
@@ -1023,179 +1175,6 @@ Marked 2 is a mac app that renders markdown."
 ;;                            ("wiki"          . "https://en.wikipedia.org/wiki/")
 ;;                            ("youtube"       . "https://youtube.com/watch?v=")
 ;;                            ("zhihu"         . "https://zhihu.com/question/"))))
-
-
-(use-package org-agenda
-  :ensure nil
-  :hook (org-agenda-finalize . org-agenda-to-appt)
-  :bind (("\e\e a" . org-agenda)
-         :map org-agenda-mode-map
-         ("i" . (lambda () (interactive) (org-capture nil "d")))
-         ("J" . consult-org-agenda))
-  :config
-
-  ;; 显示时间线
-  (setq org-agenda-use-time-grid t)
-  ;; 设置面包屑分隔符
-  ;; (setq org-agenda-breadcrumbs-separator " ❱ ")
-  ;; 设置时间线的当前时间指示串
-  (setq org-agenda-current-time-string "󱫡------------now")
-  ;; 时间线范围和颗粒度设置
-  (setq org-agenda-time-grid (quote ((daily today)
-                                     (0600 0800 1000 1200
-                                           1400 1600 1800
-                                           2000 2200 2400)
-                                     "......" "----------------")))
-  ;; 日程视图的前缀设置
-  (setq org-agenda-prefix-format '((agenda . " %i %-25:c %5t %s")
-                                   (todo   . " %i %-25:c ")
-                                   (tags   . " %i %-25:c ")
-                                   (search . " %i %-25:c ")))
-  ;; 对于计划中的任务在视图里的显示
-  (setq org-agenda-scheduled-leaders
-        '("计划 " "应在%02d天前开始 "))
-  ;; 对于截止日期的任务在视图里的显示
-  (setq org-agenda-deadline-leaders
-        '("截止 " "还有%02d天到期 " "已经过期%02d天 "))
-
-  ;; =====================
-  ;; 自定义日程视图，分别显示TODO，WIP，NEXT中的任务
-  ;; n键显示自定义视图，p键纯文本视图，a键默认视图
-  ;; =====================
-  (defvar my-org-custom-daily-agenda
-    `((todo "TODO"
-            ((org-agenda-block-separator nil)
-             (org-agenda-overriding-header "所有待办任务\n")))
-      (todo "NEXT"
-            ((org-agenda-block-separator nil)
-             (org-agenda-overriding-header "\n进行中的任务\n")))
-      (todo "WAIT"
-            ((org-agenda-block-separator nil)
-             (org-agenda-overriding-header "\n等待中的任务\n")))
-      (agenda "" ((org-agenda-block-separator nil)
-                  (org-agenda-overriding-header "\n今日日程\n"))))
-    "Custom agenda for use in `org-agenda-custom-commands'.")
-  (setq org-agenda-custom-commands
-        `(("n" "Daily agenda and top priority tasks"
-           ,my-org-custom-daily-agenda)
-          ("p" "Plain text daily agenda and top priorities"
-           ,my-org-custom-daily-agenda
-           ((org-agenda-with-colors nil)
-            (org-agenda-prefix-format "%t %s")
-            (org-agenda-current-time-string ,(car (last org-agenda-time-grid)))
-            (org-agenda-fontify-priorities nil)
-            (org-agenda-remove-tags t))
-           ("agenda.txt"))))
-
-  ;; 时间戳格式设置，会影响到 `svg-tag' 等基于正则的设置
-  ;; 这里设置完后是 <2022-12-24 星期六> 或 <2022-12-24 星期六 06:53>
-  (setq system-time-locale "zh_CN.UTF-8")
-  (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
-  ;; 不同日程类别间的间隔
-  (setq org-cycle-separator-lines 2)
-  :custom
-  ;; 设置需要被日程监控的org文件
-  (org-agenda-files
-   (list (expand-file-name "tasks.org" org-directory)
-         (expand-file-name "diary.org" org-directory)
-         (expand-file-name "mail.org" org-directory)
-         ))
-  ;; 设置org的日记文件
-  (org-agenda-diary-file (expand-file-name "diary.org" org-directory))
-  ;; 日记插入精确时间戳
-  (org-agenda-insert-diary-extract-time t)
-  ;; 设置日程视图更加紧凑
-  ;; (org-agenda-compact-blocks t)
-  ;; 日程视图的块分隔符
-  (org-agenda-block-separator ?─)
-  ;; 日视图还是周视图，通过 v-d, v-w, v-m, v-y 切换视图，默认周视图
-  (org-agenda-span 'day)
-  ;; q退出时删除agenda缓冲区
-  (org-agenda-sticky t)
-  ;; 是否包含直接日期
-  (org-agenda-include-deadlines t)
-  ;; 禁止日程启动画面
-  (org-agenda-inhibit-startup t)
-  ;; 显示每一天，不管有没有条目
-  (org-agenda-show-all-dates t)
-  ;; 时间不足位时前面加0
-  (org-agenda-time-leading-zero t)
-  ;; 日程同时启动log mode
-  (org-agenda-start-with-log-mode t)
-  ;; 日程同时启动任务时间记录报告模式
-  (org-agenda-start-with-clockreport-mode t)
-  ;; 截止的任务完成后不显示
-  ;; (org-agenda-skip-deadline-if-done t)
-  ;; 当计划的任务完成后不显示
-  (org-agenda-skip-scheduled-if-done t)
-  ;; 计划过期上限
-  (org-scheduled-past-days 365)
-  ;; 计划截止上限
-  (org-deadline-past-days 365)
-  ;; 计划中的任务不提醒截止时间
-  (org-agenda-skip-deadline-prewarning-if-scheduled 1)
-  (org-agenda-skip-scheduled-if-deadline-is-shown t)
-  (org-agenda-skip-timestamp-if-deadline-is-shown t)
-  ;; 设置工时记录报告格式
-  (org-agenda-clockreport-parameter-plist
-   '(:link t :maxlevel 5 :fileskip0 t :compact nil :narrow 80))
-  (org-agenda-columns-add-appointments-to-effort-sum t)
-  (org-agenda-restore-windows-after-quit t)
-  (org-agenda-window-setup 'current-window)
-  ;; 标签显示的位置，第100列往前右对齐
-  (org-agenda-tags-column -100)
-  ;; 从星期一开始作为一周第一天
-  (org-agenda-start-on-weekday 1)
-  ;; 是否使用am/pm
-  ;; (org-agenda-timegrid-use-ampm nil)
-  ;; 搜索是不看时间
-  (org-agenda-search-headline-for-time nil)
-  ;; 提前3天截止日期到期告警
-  (org-deadline-warning-days 3)
-  )
-
-;; (use-package org-habit
-;;   :ensure nil
-;;   :defer t
-;;   :custom
-;;   (org-habit-show-habits t)
-;;   (org-habit-graph-column 70)
-;;   (org-habit-show-all-today t)
-;;   (org-habit-show-done-always-green t)
-;;   (org-habit-scheduled-past-days t)
-;;   ;; org habit show 7 days before today and 7 days after today. ! means not done. * means done.
-;;   (org-habit-preceding-days 7)
-;;   )
-
-;; (use-package appt
-;;   :ensure nil
-;;   :hook ((after-init . (lambda () (appt-activate 1)))
-;;          (org-finalize-agenda . org-agenda-to-appt))
-;;   :config
-;;   ;; 通知提醒
-;;   (defun appt-display-with-notification (min-to-app new-time appt-msg)
-;;     (notify-send :title (format "Appointment in %s minutes" min-to-app)
-;;                  :body appt-msg
-;;                  :urgency 'critical)
-;;     (appt-disp-window min-to-app new-time appt-msg))
-
-;;   ;; 每15分钟更新一次appt
-;;   (run-at-time t 900 #'org-agenda-to-appt)
-
-;;   :custom
-;;   ;; 是否显示日记
-;;   (appt-display-diary nil)
-;;   ;; 提醒间隔时间，每15分钟提醒一次
-;;   (appt-display-interval 15)
-;;   ;; 模式栏显示提醒
-;;   (appt-display-mode-line t)
-;;   ;; 设置提醒响铃
-;;   (appt-audible t)
-;;   ;; 提前30分钟提醒
-;;   (appt-message-warning-time 30)
-;;   ;; 通知提醒函数
-;;   (appt-disp-window-function #'appt-display-with-notification)
-;;   )
 
 
 (provide 'init-org)
