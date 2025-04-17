@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2022 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -13,7 +13,7 @@
 ;;; Code:
 
 (use-package cc-mode
-  :ensure nil
+;;  :ensure nil
   ;; :bind (:map c-mode-base-map
   ;;        ("C-c c" . compile))
   :hook (c-mode-common . (lambda () (c-set-style "stroustrup")))

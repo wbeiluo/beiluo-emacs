@@ -1,19 +1,19 @@
 ;;; init-org.el --- Org Mode Configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2023 王北洛
+;; Copyright (C) 2020~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
 ;;; Code:
 
+;;; Org Mode基础设置
 (use-package org
   :ensure nil
   :mode ("\\.org\\'" . org-mode)
   :hook ((org-mode . visual-line-mode)
- 	 ;;(org-mode . my/org-prettify-symbols)
-         )
+         (org-mode . my/org-prettify-symbols))
   :commands (org-find-exact-headline-in-buffer org-set-tags)
   :custom-face
   ;; 设置Org mode标题以及每级标题行的大小
@@ -27,64 +27,60 @@
   (org-level-7 ((t (:height 1.0 :weight bold))))
   (org-level-8 ((t (:height 1.0 :weight bold))))
   (org-level-9 ((t (:height 1.0 :weight bold))))
+  ;; 设置org-table字体
+  (org-table ((t (:font "LXGW WenKai Mono:pixelsize=26"))))
   :config
-
   ;; 在org mode里美化字符串标志
-  ;; (defun my/org-prettify-symbols ()
-  ;;   (setq prettify-symbols-alist
-  ;;         (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-  ;;       	  '(
-  ;;       	    ("[ ]"              . "󰄱")
-  ;;       	    ("[X]"              . "󰄵")
-  ;;       	    ("[-]"              . "󰡖")
-  ;;       	    ("#+begin_src"      . "")
-  ;;       	    ("#+end_src"        . "")
-  ;;       	    ("#+begin_example"  . "")
-  ;;       	    ("#+end_example"    . "")
-  ;;       	    ("#+results:"       . "")
-  ;;       	    ("#+attr_latex:"    . "🄛")
-  ;;       	    ("#+attr_html:"     . "🄗")
-  ;;       	    ("#+attr_org:"      . "🄞")
-  ;;       	    ("#+name:"          . "🄝")
-  ;;       	    ("#+caption:"       . "🄒")
-  ;;       	    ("#+date:"          . "")
-  ;;       	    ("#+author:"        . "")
-  ;;       	    ("#+setupfile:"     . "")
-  ;;       	    ("#+email:"         . "")
-  ;;       	    ("#+startup:"       . "")
-  ;;       	    ("#+options:"       . "")
-  ;;       	    ("#+title:"         . "󰊄")
-  ;;       	    ("#+subtitle:"      . "󰨖")
-  ;;       	    ("#+downloaded:"    . "")
-  ;;       	    ("#+language:"      . "")
-  ;;       	    ("#+begin_quote"    . "")
-  ;;       	    ("#+end_quote"      . "")
-  ;;                   ("#+begin_results"  . "⋯")
-  ;;                   ("#+end_results"    . "⋯")
-  ;;       	    )))
-  ;;   (setq prettify-symbols-unprettify-at-point t)
-  ;;   (prettify-symbols-mode 1))
+  (defun my/org-prettify-symbols ()
+    (setq prettify-symbols-alist
+          (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+        	  '(("[#A]"            . "🅐")
+                    ("[#B]"            . "🅑")
+                    ("[#C]"            . "🅒")
+        	    ("[ ]"             . "󰄱")
+        	    ("[X]"             . "󰄵")
+        	    ("[-]"             . "󰡖")
+        	    ;("#+begin_src"     . "")
+        	    ;("#+end_src"       . "")
+        	    ;("#+begin_example" . "")
+        	    ;("#+end_example"   . "")
+        	    ("#+results:"      . "")
+        	    ("#+attr_latex:"   . "🄛")
+        	    ("#+attr_html:"    . "🄗")
+        	    ("#+attr_org:"     . "🄞")
+        	    ("#+name:"         . "🄝")
+        	    ("#+caption:"      . "🄒")
+        	    ("#+date:"         . "")
+        	    ("#+author:"       . "")
+        	    ("#+setupfile:"    . "")
+        	    ("#+email:"        . "󰇰")
+        	    ("#+startup:"      . "")
+        	    ("#+options:"      . "")
+        	    ("#+title:"        . "")
+        	    ("#+subtitle:"     . "󰨖")
+        	    ("#+downloaded:"   . "")
+        	    ("#+language:"     . "")
+        	    ("#+begin_quote"   . "")
+        	    ("#+end_quote"     . "")
+                    ("#+begin_results" . "⋯")
+                    ("#+end_results"   . "⋯"))))
+    (setq prettify-symbols-unprettify-at-point t)
+    (prettify-symbols-mode 1))
+
+  ;; 设置优先级样式
+  (setq org-priority-faces
+        '((?A :inherit org-priority :weight regular :foreground "IndianRed" :background nil :inverse-video nil)
+          (?B :inherit org-priority :weight regular :foreground "DarkOrange" :background nil :inverse-video nil)
+          (?C :inherit org-priority :weight regular :foreground "ForestGreen" :background nil :inverse-video nil)))
 
   ;; 提升latex预览的图片清晰度
   (plist-put org-format-latex-options :scale 1.8)
 
   ;; 设置标题行之间总是有空格；列表之间根据情况自动加空格
   (setq org-blank-before-new-entry '((heading . t)
-  				     (plain-list-item . auto)
-  				     ))
+  				     (plain-list-item . auto)))
 
   ;; 设置打开Org links的程序
-  (defun my-func/open-and-play-gif-image (file &optional link)
-    "Open and play GIF image `FILE' in Emacs buffer.
-  Optional for Org-mode file: `LINK'."
-    (let ((gif-image (create-image file))
-  	  (tmp-buf (get-buffer-create "*Org-mode GIF image animation*")))
-      (switch-to-buffer tmp-buf)
-      (erase-buffer)
-      (insert-image gif-image)
-      (image-animate gif-image nil t)
-      (local-set-key (kbd "q") 'bury-buffer)
-      ))
   (setq org-file-apps '(("\\.png\\'"     . default)
                         (auto-mode       . emacs)
                         (directory       . emacs)
@@ -92,11 +88,23 @@
                         ("\\.x?html?\\'" . default)
                         ("\\.pdf\\'"     . emacs)
                         ("\\.md\\'"      . emacs)
-                        ("\\.gif\\'"     . my-func/open-and-play-gif-image)
+                        ("\\.gif\\'"     . default)
                         ("\\.xlsx\\'"    . default)
                         ("\\.svg\\'"     . default)
                         ("\\.pptx\\'"    . default)
                         ("\\.docx\\'"    . default)))
+
+  ;; 自动显示隐藏符号
+  (use-package org-appear
+    :ensure t
+    :hook (org-mode . org-appear-mode)
+    :config
+    (setq org-appear-autolinks t)
+    (setq org-appear-autosubmarkers t)
+    (setq org-appear-autoentities t)
+    (setq org-appear-autokeywords t)
+    (setq org-appear-inside-latex t)
+    (setq org-appear-delay 0.5))
 
   :custom
   ;; 设置Org mode的目录
@@ -106,17 +114,21 @@
   ;; 启用一些子模块
   (org-modules '(ol-bibtex ol-gnus ol-info ol-eww org-habit org-protocol))
   ;; 设置标题行折叠符号
-  (org-ellipsis " ▾")
+  (org-ellipsis "⋯")
   ;; 在活动区域内的所有标题栏执行某些命令
   (org-loop-over-headlines-in-active-region t)
   ;; 隐藏宏标记
   (org-hide-macro-markers t)
   ;; 隐藏强调标签
   (org-hide-emphasis-markers t)
+  ;; 隐藏符号
+  (org-pretty-entities t)
   ;; 高亮latex语法
   (org-highlight-latex-and-related '(native script entities))
   ;; 以UTF-8显示
   (org-pretty-entities t)
+  ;; 关闭缩进模式
+  (org-indent-mode nil)
   ;; 当启用缩进模式时自动隐藏前置星号
   (org-indent-mode-turns-on-hiding-stars t)
   ;; 关闭缩进
@@ -130,11 +142,9 @@
   ;; 允许字母列表
   (org-list-allow-alphabetical t)
   ;; 列表的下一级设置
-  (org-list-demote-modify-bullet '(
-  				   ("-"  . "+")
+  (org-list-demote-modify-bullet '(("-"  . "+")
                                    ("+"  . "1.")
-  				   ("1." . "a.")
-  				   ))
+  				   ("1." . "a.")))
   ;; 编辑时检查是否在折叠的不可见区域
   (org-fold-catch-invisible-edits 'smart)
   ;; 在当前位置插入新标题行还是在当前标题行后插入，这里设置为当前位置
@@ -172,6 +182,19 @@
   	   ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
   	   ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
 
+    ;; 始终存在的的标签
+  (org-tag-persistent-alist '(("read"     . ?r)
+  			      ("study"    . ?s)
+  			      ("work"     . ?w)
+                              ("project"  . ?p)
+  			      ("emacs"    . ?e)
+  			      ("life"     . ?l)))
+  ;; 预定义好的标签
+  (org-tag-alist '((:startgroup)
+  		   ("play"     . ?y)
+  		   ("tour"     . ?t)
+  		   (:endgroup)))
+
   ;; 使用专家模式选择标题栏状态
   (org-use-fast-todo-selection 'expert)
   ;; 父子标题栏状态有依赖
@@ -183,7 +206,6 @@
         		   ("APPT_WARNTIME_ALL" . "0 5 10 15 20 25 30 45 60")
         		   ("RISK_ALL" . "Low Medium High")
         		   ("STYLE_ALL" . "habit")))
-
   ;; Org columns的默认格式
   (org-columns-default-format "%25ITEM %TODO %SCHEDULED %DEADLINE %3PRIORITY %TAGS %CLOCKSUM %EFFORT{:}")
   ;; 当状态从DONE改成其他状态时，移除 CLOSED: [timestamp]
@@ -200,7 +222,6 @@
   (org-log-into-drawer t)
   ;; 紧接着标题行或者计划/截止时间戳后加上记录抽屉
   (org-log-state-notes-insert-after-drawers nil)
-
   ;; refile使用缓存
   (org-refile-use-cache t)
   ;; refile的目的地，这里设置的是agenda文件的所有标题
@@ -211,8 +232,8 @@
   (org-outline-path-complete-in-steps nil)
   ;; 允许创建新的标题行，但需要确认
   (org-refile-allow-creating-parent-nodes 'confirm)
-  ;; 设置标签的默认位置，第80列右对齐
-  (org-tags-column -80)
+  ;; 设置标签的默认位置，第100列右对齐
+  (org-tags-column -100)
   ;; 不自动对齐标签
   (org-auto-align-tags nil)
   ;; 标签继承
@@ -225,223 +246,48 @@
   (org-fast-tag-selection-single-key t)
   ;; 定义了有序属性的标题行也加上 OREDERD 标签
   (org-track-ordered-property-with-tag t)
-  ;; 始终存在的的标签
-  (org-tag-persistent-alist '(("read"     . ?r)
-  			      ("study"    . ?s)
-  			      ("work"     . ?w)
-                              ("project"  . ?p)
-  			      ("emacs"    . ?e)
-  			      ("life"     . ?l)))
-  ;; 预定义好的标签
-  (org-tag-alist '((:startgroup)
-  		   ("play"     . ?y)
-  		   ("tour"     . ?t)
-  		   (:endgroup)))
-
   ;; 归档设置
-  (org-archive-location "%s_archive::datetree/")
-  )
+  (org-archive-location "%s_archive::datetree/"))
 
 (use-package org-modern
   :ensure t
-  ;; :load-path "packages/org-modern/"
   :hook ((org-mode . org-modern-mode)
          (org-agenda-finalize . org-modern-agenda))
+  :custom
+  ;; 设置star样式
+  (org-modern-replace-stars "☯☰☱☲☳☴☵☶☷")
+  (org-modern-star 'replace)
+  ;; 关闭table美化
+  (org-modern-table nil)
+  ;; 关闭时间戳美化，避免表格不对齐
+  (org-modern-timestamp nil)
+  ;; 关闭优先级美化，使用prettify-symbols-mode
+  (org-modern-priority nil)
+  ;; 关闭关键字美化，使用prettify-symbols-mode
+  (org-modern-keyword nil)
+  
   :config
-  ;; 标题行星号字符“☯” “☰” “☱” “☲” “☳” “☴” “☵” “☶”
-  ;; (setq org-modern-star ["" "" "" ""])
-
-  ;; 额外的行间距，0.1表示10%，1表示1px
-  ;; (setq-default line-spacing 0.1)
-  ;; tag边框宽度，还可以设置为 `auto' 即自动计算
-  (setq org-modern-label-border 0)
-  ;; 设置表格竖线宽度为1
-  (setq org-modern-table-vertical 1)
-  ;; 设置表格横线为1
-  (setq org-modern-table-horizontal 1)
-
   ;; TODO 样式
   (setq org-modern-todo-faces
         '(("TODO"       . (:inherit org-verbatim :weight regular :foreground "IndianRed" :inverse-video t))
-          ("NEXT"       . (:inherit org-verbatim :weight regular :foreground "#50a14f" :inverse-video t))
+          ("NEXT"       . (:inherit org-verbatim :weight regular :foreground "ForestGreen" :inverse-video t))
           ("WAIT"       . (:inherit org-verbatim :weight regular :foreground "coral" :inverse-video t))
-          ("HOLD"       . (:inherit org-verbatim :weight regular :foreground "orange" :inverse-video t))
+          ("HOLD"       . (:inherit org-verbatim :weight regular :foreground "DarkOrange" :inverse-video t))
           ("DONE"       . (:inherit org-verbatim :weight regular :foreground "dim gray" :inverse-video t))
           ("CANCELLED"  . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))
-          ("REPORT"     . (:inherit org-verbatim :weight regular :foreground "magenta" :inverse-video t))
+          ("REPORT"     . (:inherit org-verbatim :weight regular :foreground "coral" :inverse-video t))
           ("BUG"        . (:inherit org-verbatim :weight regular :foreground "firebrick" :inverse-video t))
-          ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :foreground "orange" :inverse-video t))
-          ("FIXED"      . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t)))
-        )
+          ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :foreground "DarkOrange" :inverse-video t))
+          ("FIXED"      . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))))
 
   ;; 优先级样式
-  (setq org-modern-priority-faces
-        '((?A :inherit org-priority :weight regular :foreground "IndianRed" :inverse-video t)
-          (?B :inherit org-priority :weight regular :foreground "coral" :inverse-video t)
-          (?C :inherit org-priority :weight regular :foreground "goldenrod" :inverse-video t)))
-
-  ;; 代码块左边加上一条竖边线（需要Org mode顶头，如果启用了 `visual-fill-column-mode' 会很难看）
-  (setq org-modern-block-fringe t)
-  (setq org-pretty-entities t)
+  ;; (setq org-modern-priority-faces
+  ;;       '((?A :inherit org-priority :weight regular :foreground "tomato" :inverse-video t)
+  ;;         (?B :inherit org-priority :weight regular :foreground "salmon" :inverse-video t)
+  ;;         (?C :inherit org-priority :weight regular :foreground "SandyBrown" :inverse-video t)))
   )
 
-(use-package org-appear
-  :ensure t
-  :hook (org-mode . org-appear-mode)
-  :config
-  (setq org-appear-autolinks t)
-  (setq org-appear-autosubmarkers t)
-  (setq org-appear-autoentities t)
-  (setq org-appear-autokeywords t)
-  (setq org-appear-inside-latex t)
-  )
-
-(use-package org-auto-tangle
-  :ensure t
-  :hook (org-mode . org-auto-tangle-mode)
-  :config
-  (setq org-auto-tangle-default t)
-  )
-
-(use-package org-capture
-  :ensure nil
-  :bind ("\e\e c" . (lambda () (interactive) (org-capture)))
-  :hook ((org-capture-mode . (lambda ()
-                               (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
-         (org-capture-mode . delete-other-windows))
-  :custom
-  (org-capture-use-agenda-date nil)
-  ;; define common template
-  (org-capture-templates `(("t" "Tasks" entry (file+headline "tasks.org" "Reminders")
-                            "* TODO %i%?"
-                            :empty-lines-after 1
-                            :prepend t)
-                           ("n" "Notes" entry (file+headline "capture.org" "Notes")
-                            "* %? %^g\n%i\n"
-                            :empty-lines-after 1)
-                           ;; For EWW
-                           ("b" "Bookmarks" entry (file+headline "capture.org" "Bookmarks")
-                            "* %:description\n\n%a%?"
-                            :empty-lines 1
-                            :immediate-finish t)
-                           ("d" "Diary")
-                           ("dt" "Today's TODO list" entry (file+olp+datetree "diary.org")
-                            "* Today's todo list [/]\n%T\n\n** TODO %?"
-                            :empty-lines 1
-                            :jump-to-captured t)
-                           ("do" "Other stuff" entry (file+olp+datetree "diary.org")
-                            "* %?\n%T\n\n%i"
-                            :empty-lines 1
-                            :jump-to-captured t)
-                           ))
-  )
-
-(use-package denote
-  :ensure t
-  :hook (dired-mode . denote-dired-mode-in-directories)
-  :bind (("C-c d n" . denote)
-         ("C-c d d" . denote-date)
-         ("C-c d t" . denote-type)
-         ("C-c d s" . denote-subdirectory)
-         ("C-c d f" . denote-open-or-create)
-         ("C-c d r" . denote-dired-rename-file))
-  :init
-  (with-eval-after-load 'org-capture
-    (setq denote-org-capture-specifiers "%l\n%i\n%?")
-    (add-to-list 'org-capture-templates
-                 '("N" "New note (with denote.el)" plain
-                   (file denote-last-path)
-                   #'denote-org-capture
-                   :no-save t
-                   :immediate-finish nil
-                   :kill-buffer t
-                   :jump-to-captured t)))
-  :config
-  (setq denote-directory (expand-file-name "~/Org/notes/"))
-  (setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project"))
-  (setq denote-infer-keywords t)
-  (setq denote-sort-keywords t)
-  ;; org is default, set others such as text, markdown-yaml, markdown-toml
-  (setq denote-file-type nil)
-  (setq denote-prompts '(title keywords))
-
-  ;; We allow multi-word keywords by default.  The author's personal
-  ;; preference is for single-word keywords for a more rigid workflow.
-  (setq denote-allow-multi-word-keywords t)
-  (setq denote-date-format nil)
-
-  ;; If you use Markdown or plain text files (Org renders links as buttons
-  ;; right away)
-  (add-hook 'find-file-hook #'denote-link-buttonize-buffer)
-  (setq denote-dired-rename-expert nil)
-
-  ;; OR if only want it in `denote-dired-directories':
-  (add-hook 'dired-mode-hook #'denote-dired-mode-in-directories)
-  )
-
-(use-package consult-notes
-  :ensure t
-  :commands (consult-notes
-             consult-notes-search-in-all-notes)
-  :bind (("C-c n f" . consult-notes)
-         ("C-c n c" . consult-notes-search-in-all-notes))
-  :config
-  (setq consult-notes-file-dir-sources
-        `(
-          ("notes"   ?n ,(concat org-directory "/notes/"))
-          ("work"    ?w ,(concat org-directory "/work/"))
-          ("article" ?a ,(concat org-directory "/article/"))
-          ("study"   ?s ,(concat org-directory "/study/"))
-          ("org"     ?o ,(concat org-directory "/"))
-          ;;("books"   ?b ,(concat (getenv "HOME") "/books/"))
-          ("books"   ?b ,(concat org-directory "/books/"))
-          ))
-
-  ;; embark support
-  (with-eval-after-load 'embark
-    (defun consult-notes-open-dired (cand)
-      "Open notes directory dired with point on file CAND."
-      (interactive "fNote: ")
-      ;; dired-jump is in dired-x.el but is moved to dired in Emacs 28
-      (dired-jump nil cand))
-
-    (defun consult-notes-marked (cand)
-      "Open a notes file CAND in Marked 2.
-Marked 2 is a mac app that renders markdown."
-      (interactive "fNote: ")
-      (call-process-shell-command (format "open -a \"Marked 2\" \"%s\"" (expand-file-name cand))))
-
-    (defun consult-notes-grep (cand)
-      "Run grep in directory of notes file CAND."
-      (interactive "fNote: ")
-      (consult-grep (file-name-directory cand)))
-
-    (embark-define-keymap consult-notes-map
-                          "Keymap for Embark notes actions."
-                          :parent embark-file-map
-                          ("d" consult-notes-dired)
-                          ("g" consult-notes-grep)
-                          ("m" consult-notes-marked))
-
-    (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))
-
-    ;; make embark-export use dired for notes
-    (setf (alist-get consult-notes-category embark-exporters-alist) #'embark-export-dired)
-    )
-  )
-
-(use-package org-super-links
-  :quelpa (org-super-links :fetcher github :repo "toshism/org-super-links")
-  :bind (("C-c s s"   . org-super-links-link)
-         ("C-c s l"   . org-super-links-store-link)
-         ("C-c s C-l" . org-super-links-insert-link)
-         ("C-c s d"   . org-super-links-quick-insert-drawer-link)
-         ("C-c s i"   . org-super-links-quick-insert-inline-link)
-         ("C-c s C-d" . org-super-links-delete-link))
-  :config
-  (setq org-super-links-related-into-drawer t)
-  (setq	org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
-
+;;; 日程设置
 (use-package org-agenda
   :ensure nil
   :hook (org-agenda-finalize . org-agenda-to-appt)
@@ -450,7 +296,6 @@ Marked 2 is a mac app that renders markdown."
          ("i" . (lambda () (interactive) (org-capture nil "d")))
          ("J" . consult-org-agenda))
   :config
-
   ;; 显示时间线
   (setq org-agenda-use-time-grid t)
   ;; 设置面包屑分隔符
@@ -504,9 +349,7 @@ Marked 2 is a mac app that renders markdown."
   ;;           (org-agenda-remove-tags t))
   ;;          ("agenda.txt"))))
 
-  ;; 时间戳格式设置，会影响到 `svg-tag' 等基于正则的设置
-  ;; 这里设置完后是 <2022-12-24 星期六> 或 <2022-12-24 星期六 06:53>
-  ;; (setq system-time-locale "zh_CN.UTF-8")
+  ;; 时间戳格式设置: <2022-12-24 星期六> 或 <2022-12-24 星期六 06:53>
   (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
   ;; 不同日程类别间的间隔
   (setq org-cycle-separator-lines 2)
@@ -514,8 +357,7 @@ Marked 2 is a mac app that renders markdown."
   ;; 设置需要被日程监控的org文件
   (org-agenda-files
    (list (expand-file-name "tasks.org" org-directory)
-         (expand-file-name "diary.org" org-directory)
-         ))
+         (expand-file-name "diary.org" org-directory)))
   ;; 设置org的日记文件
   (org-agenda-diary-file (expand-file-name "diary.org" org-directory))
   ;; 日记插入精确时间戳
@@ -558,8 +400,8 @@ Marked 2 is a mac app that renders markdown."
   (org-agenda-columns-add-appointments-to-effort-sum t)
   (org-agenda-restore-windows-after-quit t)
   (org-agenda-window-setup 'current-window)
-  ;; 标签显示的位置，第100列往前右对齐
-  (org-agenda-tags-column -100)
+  ;; 标签显示的位置，第80列往前右对齐
+  (org-agenda-tags-column -80)
   ;; 从星期一开始作为一周第一天
   (org-agenda-start-on-weekday 1)
   ;; 是否使用am/pm
@@ -567,21 +409,143 @@ Marked 2 is a mac app that renders markdown."
   ;; 搜索是不看时间
   (org-agenda-search-headline-for-time nil)
   ;; 提前3天截止日期到期告警
-  (org-deadline-warning-days 3)
+  (org-deadline-warning-days 3))
+
+(use-package org-capture
+  :ensure nil
+  :bind ("\e\e c" . (lambda () (interactive) (org-capture)))
+  :hook ((org-capture-mode . (lambda ()
+                               (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
+         (org-capture-mode . delete-other-windows))
+  :custom
+  (org-capture-use-agenda-date nil)
+  ;; define common template
+  (org-capture-templates `(("t" "Tasks" entry (file+headline "tasks.org" "Reminders")
+                            "* TODO %i%?"
+                            :empty-lines-after 1
+                            :prepend t)
+                           ("n" "Notes" entry (file+headline "capture.org" "Notes")
+                            "* %? %^g\n%i\n"
+                            :empty-lines-after 1)
+                           ;; For EWW
+                           ("b" "Bookmarks" entry (file+headline "capture.org" "Bookmarks")
+                            "* %:description\n\n%a%?"
+                            :empty-lines 1
+                            :immediate-finish t)
+                           ("d" "Diary")
+                           ("dt" "Today's TODO list" entry (file+olp+datetree "diary.org")
+                            "* Today's todo list [/]\n%T\n\n** TODO %?"
+                            :empty-lines 1
+                            :jump-to-captured t)
+                           ("do" "Other stuff" entry (file+olp+datetree "diary.org")
+                            "* %?\n%T\n\n%i"
+                            :empty-lines 1
+                            :jump-to-captured t))))
+
+;;; 笔记管理
+(use-package denote
+  :ensure t
+  :hook (dired-mode . denote-dired-mode)
+  :bind (("C-c n n" . denote)
+         ("C-c n r" . denote-rename-file)
+         ("C-c n l" . denote-link)
+         ("C-c n b" . denote-backlinks)
+         ("C-c n d" . denote-dired))
+  :init
+  ;; Create note using Org capture
+  (with-eval-after-load 'org-capture
+    (setq denote-org-capture-specifiers "%l\n%i\n%?")
+    (add-to-list 'org-capture-templates
+                 '("N" "New note (with Denote)" plain
+                   (file denote-last-path)
+                   #'denote-org-capture
+                   :no-save t
+                   :immediate-finish nil
+                   :kill-buffer t
+                   :jump-to-captured t)))
+
+  :config
+  (setq denote-directory (expand-file-name "~/Org/notes/"))
+  (setq denote-save-buffers nil)
+  (setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project"))
+  (setq denote-infer-keywords t)
+  (setq denote-sort-keywords t)
+  (setq denote-prompts '(title keywords))
+  (setq denote-excluded-directories-regexp nil)
+  (setq denote-excluded-keywords-regexp nil)
+  (setq denote-rename-confirmations '(rewrite-front-matter modify-file-name))
+
+  ;; Pick dates, where relevant, with Org's advanced interface:
+  (setq denote-date-prompt-use-org-read-date t)
+
+  ;; Automatically rename Denote buffers using the `denote-rename-buffer-format'.
+  (denote-rename-buffer-mode 1))
+
+(use-package consult-notes
+  :ensure t
+  :commands (consult-notes
+             consult-notes-search-in-all-notes)
+  :bind (("C-c n f" . consult-notes)
+         ("C-c n c" . consult-notes-search-in-all-notes))
+  :config
+  (setq consult-notes-file-dir-sources
+        `(("org"     ?o ,(concat org-directory "/"))
+          ("notes"   ?n ,(concat org-directory "/notes/"))
+          ("work"    ?w ,(concat org-directory "/work/"))
+          ("article" ?a ,(concat org-directory "/article/"))
+          ("study"   ?s ,(concat org-directory "/study/"))
+          ("books"   ?b ,(concat org-directory "/books/"))))
+
+  ;; embark support
+  (with-eval-after-load 'embark
+    (defun consult-notes-open-dired (cand)
+      "Open notes directory dired with point on file CAND."
+      (interactive "fNote: ")
+      ;; dired-jump is in dired-x.el but is moved to dired in Emacs 28
+      (dired-jump nil cand))
+
+    (defun consult-notes-grep (cand)
+      "Run grep in directory of notes file CAND."
+      (interactive "fNote: ")
+      (consult-grep (file-name-directory cand)))
+
+    (embark-define-keymap consult-notes-map
+                          "Keymap for Embark notes actions."
+                          :parent embark-file-map
+                          ("d" consult-notes-dired)
+                          ("g" consult-notes-grep))
+
+    (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))
+
+    ;; make embark-export use dired for notes
+    (setf (alist-get consult-notes-category embark-exporters-alist) #'embark-export-dired))
   )
 
-;; (use-package org-habit
-;;   :ensure nil
-;;   :defer t
-;;   :custom
-;;   (org-habit-show-habits t)
-;;   (org-habit-graph-column 70)
-;;   (org-habit-show-all-today t)
-;;   (org-habit-show-done-always-green t)
-;;   (org-habit-scheduled-past-days t)
-;;   ;; org habit show 7 days before today and 7 days after today. ! means not done. * means done.
-;;   (org-habit-preceding-days 7)
-;;   )
+;; (use-package org-super-links
+;;   :quelpa (org-super-links :fetcher github :repo "toshism/org-super-links")
+;;   :bind (("C-c s s"   . org-super-links-link)
+;;          ("C-c s l"   . org-super-links-store-link)
+;;          ("C-c s C-l" . org-super-links-insert-link)
+;;          ("C-c s d"   . org-super-links-quick-insert-drawer-link)
+;;          ("C-c s i"   . org-super-links-quick-insert-inline-link)
+;;          ("C-c s C-d" . org-super-links-delete-link))
+;;   :config
+;;   (setq org-super-links-related-into-drawer t)
+;;   (setq	org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
+
+;; (use-package org-super-links
+;;   :quelpa (org-super-links :repo "toshism/org-super-links" :fetcher github :commit "0.4")
+;;   :bind (("C-c s s" . org-super-links-link)
+;;          ("C-c s l" . org-super-links-store-link)
+;;          ("C-c s C-l" . org-super-links-insert-link)
+;;          ("C-c s d" . org-super-links-quick-insert-drawer-link)
+;;          ("C-c s i" . org-super-links-quick-insert-inline-link)
+;;          ("C-c s C-d" . org-super-links-delete-link))
+;;   :config
+;;   (setq org-super-links-related-into-drawer t
+;;   	org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
+
+
 
 ;; (use-package appt
 ;;   :ensure nil
@@ -814,367 +778,6 @@ Marked 2 is a mac app that renders markdown."
 ;;           ))
 ;;   )
 
-;; (use-package gnuplot
-;;   :ensure t
-;;   :mode ("\\.gp$" . gnuplot-mode)
-;;   :init
-;;   (add-to-list 'org-src-lang-modes '("gnuplot" . gnuplot))
-;;   (org-babel-do-load-languages 'org-babel-load-languages
-;;                                (append org-babel-load-languages
-;;                                        '((gnuplot . t))))
-;;   :config
-;;   ;; (add-to-list 'auto-mode-alist '("\\.gp$" . gnuplot-mode))
-;;   (setq org-babel-default-header-args:gnuplot
-;;         '((:exports . "results")
-;;           (:results . "file")))
-;;   )
-
-;; (use-package lilypond-mode
-;;   :ensure nil
-;;   :mode ("\\.i?ly\\'" . LilyPond-mode)
-;;   :init
-;;   (add-to-list 'org-src-lang-modes '("lilypond" . lilypond))
-;;   ;; add support for org babel
-;;   (org-babel-do-load-languages 'org-babel-load-languages
-;;                                (append org-babel-load-languages
-;;                                        '((lilypond . t))))
-;;   ;; set lilypond binary directory
-;;   (setq org-babel-lilypond-ly-command "/usr/local/bin/lilypond -dpreview")
-;;   :config
-;;   ;; ;; trim extra space for generated image
-;;   ;; (defun my/trim-lilypond-png (orig-fun
-;;   ;;                              &optional arg
-;;   ;;                              info
-;;   ;;                              param)
-;;   ;;   (when (member (car (org-babel-get-src-block-info)) '("lilypond"))
-;;   ;;     (let ((ly-file (alist-get :file (nth 2 (org-babel-get-src-block-info)))))
-;;   ;;       (let ((ly-preview-file (replace-regexp-in-string "\\.png" ".preview.png" ly-file)))
-;;   ;;         (when (file-exists-p ly-preview-file)
-;;   ;;           (shell-command (concat "mv " ly-preview-file " " ly-file)))
-;;   ;;         (org-redisplay-inline-images)))))
-;;   ;; (advice-add 'org-babel-execute-src-block :after #'my/trim-lilypond-png)
-;;   (setq ob-lilypond-header-args
-;;         '((:results . "file replace")
-;;           (:exports . "results")
-;;           ))
-;;   )
-
-;; limit the babel result length
-(defvar org-babel-result-lines-limit 40)
-(defvar org-babel-result-length-limit 6000)
-
-(defun org-babel-insert-result@limit (orig-fn result &rest args)
-  (if (not (member (car (org-babel-get-src-block-info)) '("jupyter-python"))) ; not for jupyter-python etc.
-      (if (and result (or org-babel-result-lines-limit org-babel-result-length-limit))
-          (let (new-result plines plenght limit)
-            (with-temp-buffer
-              (insert result)
-              (setq plines (if org-babel-result-lines-limit
-                               (goto-line org-babel-result-lines-limit)
-                             (point-max)))
-              (setq plenght (if org-babel-result-length-limit
-                                (min org-babel-result-length-limit (point-max))
-                              (point-max)))
-              (setq limit (min plines plenght))
-              (setq new-result (concat (buffer-substring (point-min) limit)
-                                       (if (< limit (point-max)) "..."))))
-            (apply orig-fn new-result args))
-        (apply orig-fn result args))
-    (apply orig-fn result args)))
-
-(advice-add 'org-babel-insert-result :around #'org-babel-insert-result@limit)
-
-;; (use-package ox
-;;   :ensure nil
-;;   :custom
-;;   (org-export-with-toc t)
-;;   (org-export-with-tags 'not-in-toc)
-;;   (org-export-with-drawers nil)
-;;   (org-export-with-priority t)
-;;   (org-export-with-footnotes t)
-;;   (org-export-with-smart-quotes t)
-;;   (org-export-with-section-numbers t)
-;;   (org-export-with-sub-superscripts '{})
-;;   ;; `org-export-use-babel' set to nil will cause all source block header arguments to be ignored This means that code blocks with the argument :exports none or :exports results will end up in the export.
-;;   ;; See:
-;;   ;; https://stackoverflow.com/questions/29952543/how-do-i-prevent-org-mode-from-executing-all-of-the-babel-source-blocks
-;;   (org-export-use-babel t)
-;;   (org-export-headline-levels 9)
-;;   (org-export-coding-system 'utf-8)
-;;   (org-export-with-broken-links 'mark)
-;;   (org-export-default-language "zh-CN") ; 默认是en
-;;   ;; (org-ascii-text-width 72)
-;;   )
-
-;; export extra
-;; (use-package ox-extra
-;;   :ensure nil
-;;   :config
-;;   (ox-extras-activate '(ignore-headlines))
-;;   )
-
-;; (use-package ox-html
-;;   :ensure nil
-;;   :init
-;;   ;; add support for video
-;;   (defun org-video-link-export (path desc backend)
-;;     (let ((ext (file-name-extension path)))
-;;       (cond
-;;        ((eq 'html backend)
-;;         (format "<video width='800' preload='metadata' controls='controls'><source type='video/%s' src='%s' /></video>" ext path))
-;;        ;; fall-through case for everything else
-;;        (t
-;;         path))))
-;;   (org-link-set-parameters "video" :export 'org-video-link-export)
-;;   :custom
-;;   (org-html-doctype "html5")
-;;   (org-html-html5-fancy t)
-;;   (org-html-checkbox-type 'unicode)
-;;   (org-html-validation-link nil))
-
-;; (use-package htmlize
-;;   :ensure t
-;;   :custom
-;;   (htmlize-pre-style t)
-;;   (htmlize-output-type 'inline-css))
-
-;; (use-package ox-latex
-;;   :ensure nil
-;;   :defer t
-;;   :config
-;;   (add-to-list 'org-latex-classes
-;;                '("cn-article"
-;;                  "\\documentclass[UTF8,a4paper]{article}"
-;;                  ("\\section{%s}" . "\\section*{%s}")
-;;                  ("\\subsection{%s}" . "\\subsection*{%s}")
-;;                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-;;                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
-;;                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-
-;;   (add-to-list 'org-latex-classes
-;;                '("cn-report"
-;;                  "\\documentclass[11pt,a4paper]{report}"
-;;                  ("\\chapter{%s}" . "\\chapter*{%s}")
-;;                  ("\\section{%s}" . "\\section*{%s}")
-;;                  ("\\subsection{%s}" . "\\subsection*{%s}")
-;;                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-;;   (setq org-latex-default-class "cn-article")
-;;   (setq org-latex-image-default-height "0.9\\textheight"
-;;         org-latex-image-default-width "\\linewidth")
-;;   (setq org-latex-pdf-process
-;; 	'("xelatex -interaction nonstopmode -output-directory %o %f"
-;; 	  "bibtex %b"
-;; 	  "xelatex -interaction nonstopmode -output-directory %o %f"
-;; 	  "xelatex -interaction nonstopmode -output-directory %o %f"
-;; 	  "rm -fr %b.out %b.log %b.tex %b.brf %b.bbl auto"
-;; 	  ))
-;;   ;; 使用 Listings 宏包格式化源代码(只是把代码框用 listing 环境框起来，还需要额外的设置)
-;;   (setq org-latex-listings t)
-;;   ;; mapping jupyter-python to Python
-;;   (add-to-list 'org-latex-listings-langs '(jupyter-python "Python"))
-;;   ;; Options for \lset command（reference to listing Manual)
-;;   (setq org-latex-listings-options
-;;         '(
-;;           ("basicstyle" "\\small\\ttfamily")       ; 源代码字体样式
-;;           ("keywordstyle" "\\color{eminence}\\small")                 ; 关键词字体样式
-;;           ;; ("identifierstyle" "\\color{doc}\\small")
-;;           ("commentstyle" "\\color{commentgreen}\\small\\itshape")    ; 批注样式
-;;           ("stringstyle" "\\color{red}\\small")                       ; 字符串样式
-;;           ("showstringspaces" "false")                                ; 字符串空格显示
-;;           ("numbers" "left")                                          ; 行号显示
-;;           ("numberstyle" "\\color{preprocess}")                       ; 行号样式
-;;           ("stepnumber" "1")                                          ; 行号递增
-;;           ("xleftmargin" "2em")                                       ;
-;;           ;; ("backgroundcolor" "\\color{background}")                   ; 代码框背景色
-;;           ("tabsize" "4")                                             ; TAB 等效空格数
-;;           ("captionpos" "t")                                          ; 标题位置 top or buttom(t|b)
-;;           ("breaklines" "true")                                       ; 自动断行
-;;           ("breakatwhitespace" "true")                                ; 只在空格分行
-;;           ("showspaces" "false")                                      ; 显示空格
-;;           ("columns" "flexible")                                      ; 列样式
-;;           ("frame" "tb")                                              ; 代码框：single, or tb 上下线
-;;           ("frameleftmargin" "1.5em")                                 ; frame 向右偏移
-;;           ;; ("frameround" "tttt")                                       ; 代码框： 圆角
-;;           ;; ("framesep" "0pt")
-;;           ;; ("framerule" "1pt")                                         ; 框的线宽
-;;           ;; ("rulecolor" "\\color{background}")                         ; 框颜色
-;;           ;; ("fillcolor" "\\color{white}")
-;;           ;; ("rulesepcolor" "\\color{comdil}")
-;;           ("framexleftmargin" "5mm")                                  ; let line numer inside frame
-;;           ))
-;;   )
-
-;; (use-package ox-reveal
-;;   :ensure t
-;;   :after ox
-;;   :config
-;;   (setq org-reveal-hlevel 1)
-;;   ;; Avalable themes: night, black, white, league, beige, sky, serif, simple, solarized, blood, moon
-;;   (setq org-reveal-theme "moon")
-;;   ;; can also set root to a CDN cloud: https://cdn.jsdelivr.net/npm/reveal.js
-;;   (setq org-reveal-root (expand-file-name "reveal.js" user-emacs-directory))
-;;   (setq org-reveal-mathjax t)
-;;   (setq org-reveal-ignore-speaker-notes t)
-;;   ;; original title font size is TOO large!
-;;   (setq org-reveal-title-slide "<h1><font size=\"8\">%t</font></h1><h2><font size=\"6\">%s</font></h2><p><font size=\"5\">%a</font><br/><font size=\"5\">%d</font></p>")
-;;   ;; don't load highlight, use htmlize instead. If you want to add line-number, add -n in src block header
-;;   (setq org-reveal-plugins '(markdown zoom notes search))
-;;   (setq org-reveal-klipsify-src 'on)
-;;   (setq org-reveal-extra-css (expand-file-name "reveal.js/css/extra.css" user-emacs-directory))
-;;   )
-
-;; (use-package ox-gfm
-;;   :ensure t
-;;   :after ox)
-
-;; (use-package ox-pandoc
-;;   :ensure t
-;;   :custom
-;;   ;; special extensions for markdown_github output
-;;   (org-pandoc-format-extensions '(markdown_github+pipe_tables+raw_html))
-;;   (org-pandoc-command "/usr/local/bin/pandoc")
-;;   )
-
-;; (use-package ox-publish
-;;   :ensure nil
-;;   :commands (org-publish org-publish-all)
-;;   :config
-;;   (setq org-export-global-macros
-;;         '(("timestamp" . "@@html:<span class=\"timestamp\">[$1]</span>@@")))
-
-;;   ;; sitemap 生成函数
-;;   (defun my/org-sitemap-date-entry-format (entry style project)
-;;     "Format ENTRY in org-publish PROJECT Sitemap format ENTRY ENTRY STYLE format that includes date."
-;;     (let ((filename (org-publish-find-title entry project)))
-;;       (if (= (length filename) 0)
-;;           (format "*%s*" entry)
-;;         (format "{{{timestamp(%s)}}} [[file:%s][%s]]"
-;;                 (format-time-string "%Y-%m-%d"
-;;                                     (org-publish-find-date entry project))
-;;                 entry
-;;                 filename))))
-
-;;   ;; 设置 org-publish 的项目列表
-;;   (setq org-publish-project-alist
-;;         '(
-;;           ;; 笔记部分
-;;           ("org-notes"
-;;            :base-directory "~/org/"
-;;            :base-extension "org"
-;;            :exclude "\\(tasks\\|test\\|scratch\\|diary\\|capture\\|mail\\|habits\\|resume\\|meetings\\|personal\\|org-beamer-example\\)\\.org\\|test\\|article\\|roam\\|hugo"
-;;            :publishing-directory "~/public_html/"
-;;            :recursive t                 ; include subdirectories if t
-;;            :publishing-function org-html-publish-to-html
-;;            :headline-levels 6
-;;            :auto-preamble t
-;;            :auto-sitemap t
-;;            :sitemap-filename "sitemap.org"
-;;            :sitemap-title "Sitemap"
-;;            :sitemap-format-entry my/org-sitemap-date-entry-format)
-
-;;           ;; 静态资源部分
-;;           ("org-static"
-;;            :base-directory "~/org/"
-;;            :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|mov"
-;;            :publishing-directory "~/public_html/"
-;;            :recursive t
-;;            :publishing-function org-publish-attachment)
-
-;;           ;; 项目集合
-;;           ("org"
-;;            :components ("org-notes" "org-static"))
-;;           ))
-;;   )
-
-;; (use-package ox-hugo
-;;   :ensure t
-;;   :config
-;;   (with-eval-after-load 'org-capture
-;;     (defun org-hugo-new-subtree-post-capture-template ()
-;;       "Returns `org-capture' template string for new Hugo post.
-;; See `org-capture-templates' for more information."
-;;       (let* ((title (read-from-minibuffer "Post Title: ")) ; Prompt to enter the post title
-;;              (fname (org-hugo-slug title)))
-;;         (mapconcat #'identity
-;;                    `(
-;;                      ,(concat "* TODO " title)
-;;                      ":PROPERTIES:"
-;;                      ,(concat ":EXPORT_FILE_NAME: " fname)
-;;                      ":END:"
-;;                      "%?\n")          ; Place the cursor here finally
-;;                    "\n")))
-
-;;     (add-to-list 'org-capture-templates
-;;                  '("h"                ; `org-capture' binding + h
-;;                    "Hugo post"
-;;                    entry
-;;                    ;; It is assumed that below file is present in `org-directory'
-;;                    ;; and that it has a "Blog Ideas" heading. It can even be a
-;;                    ;; symlink pointing to the actual location of capture.org!
-;;                    (file+olp "capture.org" "Notes")
-;;                    (function org-hugo-new-subtree-post-capture-template))))
-;;   )
-
-;; (use-package emacs
-;;   :ensure nil
-;;   :after org
-;;   :bind (:map org-mode-map
-;;               ("s-V" . my/org-insert-clipboard-image))
-;;   :config
-;;   (defun my/org-insert-clipboard-image (width)
-;;     "create a time stamped unique-named file from the clipboard in the sub-directory
-;;  (%filename.assets) as the org-buffer and insert a link to this file."
-;;     (interactive (list
-;;                   (read-string (format "Input image width, default is 800: ")
-;;                                nil nil "800")))
-;;     ;; 设置图片存放的文件夹位置为 `当前Org文件同名.assets'
-;;     (setq foldername (concat (file-name-base (buffer-file-name)) ".assets/"))
-;;     (if (not (file-exists-p foldername))
-;;         (mkdir foldername))
-;;     ;; 设置图片的文件名，格式为 `img_年月日_时分秒.png'
-;;     (setq imgName (concat "img_" (format-time-string "%Y%m%d_%H%M%S") ".png"))
-;;     ;; 图片文件的相对路径
-;;     (setq relativeFilename (concat (file-name-base (buffer-name)) ".assets/" imgName))
-;;     ;; 根据不同的操作系统设置不同的命令行工具
-;;     (cond ((string-equal system-type "gnu/linux")
-;;            (shell-command (concat "xclip -selection clipboard -t image/png -o > " relativeFilename)))
-;;           ((string-equal system-type "darwin")
-;;            (shell-command (concat "pngpaste " relativeFilename))))
-;;     ;; 给粘贴好的图片链接加上宽度属性，方便导出
-;;     (insert (concat "\n#+DOWNLOADED: screenshot @ "
-;;                     (format-time-string "%Y-%m-%d %a %H:%M:%S" (current-time))
-;;                     "\n#+CAPTION: \n#+ATTR_ORG: :width "
-;;                     width
-;;                     "\n#+ATTR_LATEX: :width "
-;;                     (if (>= (/ (string-to-number width) 800.0) 1.0)
-;;                         "1.0"
-;;                       (number-to-string (/ (string-to-number width) 800.0)))
-;;                     "\\linewidth :float nil\n"
-;;                     "#+ATTR_HTML: :width "
-;;                     width
-;;                     "\n[[file:" relativeFilename "]]\n"))
-;;     ;; 重新显示一下图片
-;;     (org-redisplay-inline-images)
-;;     )
-;;   )
-
-;; (use-package toc-org
-;;   :ensure t
-;;   :hook (org-mode . toc-org-mode))
-
-;; (use-package ol
-;;   :ensure nil
-;;   :defer t
-;;   :custom
-;;   (org-link-keep-stored-after-insertion t)
-;;   (org-link-abbrev-alist '(("github"        . "https://github.com/")
-;;                            ("gitlab"        . "https://gitlab.com/")
-;;                            ("google"        . "https://google.com/search?q=")
-;;                            ("baidu"         . "https://baidu.com/s?wd=")
-;;                            ("rfc"           . "https://tools.ietf.org/html/")
-;;                            ("wiki"          . "https://en.wikipedia.org/wiki/")
-;;                            ("youtube"       . "https://youtube.com/watch?v=")
-;;                            ("zhihu"         . "https://zhihu.com/question/"))))
 
 
 (provide 'init-org)

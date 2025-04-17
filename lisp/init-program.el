@@ -1,12 +1,15 @@
 ;;; init-program.el --- Program config -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021~2023 王北洛
+;; Copyright (C) 2021~2025 王北洛
 
 ;; Author: 王北洛 <beiluo.wang@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
 ;;; Code:
+
+(use-package project
+  :bind-keymap ("M-p" . project-prefix-map))
 
 (use-package magit
   :ensure t
@@ -25,7 +28,6 @@
 (use-package diff-hl
   :ensure t
   :hook ((dired-mode         . diff-hl-dired-mode-unless-remote)
-         (magit-pre-refresh  . diff-hl-magit-pre-refresh)
          (magit-post-refresh . diff-hl-magit-post-refresh))
   :init
   (global-diff-hl-mode t)
@@ -34,22 +36,22 @@
   (unless (display-graphic-p)
     (diff-hl-margin-mode)))
 
-;; (use-package magit-delta
-;;   :ensure t
-;;   :hook (magit-mode . magit-delta-mode)
-;;   :config
-;;   (setq magit-delta-hide-plus-minus-markers nil)
-;;   )
+(use-package smartparens
+  :ensure smartparens  ;; install the package
+  :hook (prog-mode text-mode markdown-mode) ;; add `smartparens-mode` to these hooks
+  :config
+  ;; load default config
+  (require 'smartparens-config))
 
 ;; Flexible text folding
 (use-package origami
+  :hook (prog-mode . origami-mode)
   :bind (("C-<tab> <tab>" . origami-toggle-node)
          ("C-<tab> C-<tab>" . origami-toggle-all-nodes)
          ("C-<tab> o" . origami-open-node)
          ("C-<tab> c" . origami-close-node)
          ("C-<tab> n" . origami-next-fold)
          ("C-<tab> p" . origami-previous-fold))
-  :hook (prog-mode . origami-mode)
   :config
   (face-spec-reset-face 'origami-fold-header-face))
 
@@ -71,8 +73,7 @@
 
 ;; Rainbow delimiters
 (use-package rainbow-delimiters
-  :hook
-  (prog-mode . rainbow-delimiters-mode))
+  :hook (prog-mode . rainbow-delimiters-mode))
 
 (provide 'init-program)
 

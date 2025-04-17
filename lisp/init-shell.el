@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2022 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:

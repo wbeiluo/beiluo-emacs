@@ -1,8 +1,8 @@
 ;;; init-basic.el --- Default configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2023 王北洛
+;; Copyright (C) 2022~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -26,7 +26,6 @@
 (menu-bar-mode -1)
 ;; 禁用滚动条
 (scroll-bar-mode -1)
-
 ;; 高亮另一个括号
 (show-paren-mode t)
 ;; 自动刷新buffer
@@ -34,62 +33,48 @@
 ;; 高亮当前行
 (global-hl-line-mode t)
 ;; 设置时间显示格式
-(setq display-time-24hr-format t)
+;;(setq display-time-24hr-format t)
+(setq display-time-format "%Y-%m-%d %H:%M")
+;; 不显示平均负载
+(setq display-time-default-load-average nil)
 ;; 打开时间显示
 (display-time-mode t)
 ; 打开电池显示
-(display-battery-mode t)
+;; (display-battery-mode nil)
 ;; 在modeline上显示列号
 (column-number-mode t)
-
+;; 显示行号
+(global-display-line-numbers-mode t)
 ;; 鼠标操作不使用对话框
 (setq use-dialog-box nil)
 ;; 不加载 `default' 库
 (setq inhibit-default-init t)
 ;; 设置大文件阈值为100MB，默认10MB
 (setq large-file-warning-threshold 100000000)
-
 ;; 以16进制显示字节数
 (setq display-raw-bytes-as-hex t)
 ;; 有输入时禁止 `fontification' 相关的函数钩子，能让滚动更顺滑
 (setq redisplay-skip-fontification-on-input t)
-
 ;; 禁止响铃
 (setq ring-bell-function 'ignore)
-
 ;; 在光标处而非鼠标所在位置粘贴
 (setq mouse-yank-at-point t)
 ;; 选择文字时不拷贝
 (setq select-enable-primary nil)
 ;; 拷贝时使用剪贴板
 (setq select-enable-clipboard t)
-
 ;; 关闭自动备份和保存
 (setq make-backup-files nil)
 (setq auto-save-default nil)
-
 ;; 使用y/n替换yes/no
 (fset 'yes-or-no-p 'y-or-n-p)
-
-;; 鼠标滚动设置
-(setq scroll-step 2)
-(setq scroll-margin 2)
-(setq hscroll-step 2)
-(setq hscroll-margin 2)
-(setq scroll-conservatively 101)
-(setq scroll-up-aggressively 0.01)
-(setq scroll-down-aggressively 0.01)
-(setq scroll-preserve-screen-position 'always)
-
-;; 设置自动折行宽度为100个字符，默认值为70
-(setq-default fill-column 100)
-
+;; 设置自动折行宽度为120个字符，默认值为70
+(setq-default fill-column 120)
 ;; 设置剪贴板历史长度200，默认为60
 (setq kill-ring-max 200)
 
 ;; Encoding
-;; 配置所有的编码为UTF-8，参考：
-;; https://thraxys.wordpress.com/2016/01/13/utf-8-in-emacs-everywhere-forever/
+;; 配置所有的编码为UTF-8
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 (set-selection-coding-system 'utf-8)
@@ -103,19 +88,20 @@
 (when (display-graphic-p)
   (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
 
-(use-package linum-off
-  :demand
-  :defines linum-format
-  :hook (after-init . global-linum-mode)
-  :init (setq linum-format "%4d")
+;; 自动保存文件
+(use-package super-save
+  :ensure t
   :config
-  ;; Highlight current line number
-  (use-package hlinum
-    :defines linum-highlight-in-all-buffersp
-    :custom-face (linum-highlight-face ((t (:inherit default :background nil :foreground nil))))
-    :hook (global-linum-mode . hlinum-activate)
-    :init (setq linum-highlight-in-all-buffersp t)))
+  (setq super-save-auto-save-when-idle t)
+  (setq super-save-idle-duration 1)
+  (setq save-silently t)
+  ;; add integration with ace-window
+  (add-to-list 'super-save-triggers 'ace-window)
+  ;; save on find-file
+  (add-to-list 'super-save-hook-triggers 'find-file-hook)
+  (super-save-mode +1))
 
+;; 保存和恢复 minibuffer 历史记录
 (use-package savehist
   :ensure nil
   :hook (after-init . savehist-mode)
@@ -141,21 +127,8 @@
     :config
     (which-key-mode))
 
-;; 启动界面
-(use-package dashboard
-  :ensure t
-  :config
-  (setq dashboard-banner-logo-title "Welcome to Emacs!") ; 个性签名
-  (setq dashboard-projects-backend 'project-el)          ; 项目
-  (setq dashboard-startup-banner 'official)              ; 显示默认图片
-  (setq dashboard-set-navigator t)                       ; 显示导航
-  (setq dashboard-set-heading-icons t)                   ; 显示导航图片
-  (setq dashboard-set-file-icons t)                      ; 显示文件图片
-  (setq dashboard-items '((recents  . 10)                ; 显示10个最近文件
-			  (projects . 10)                ; 显示10个最近项目
-			  (bookmarks . 8)                ; 显示8个最近书签
-			  ))
-  (dashboard-setup-startup-hook))
+(use-package diminish
+  :ensure t)
 
 ;; 全屏显示
 (defun fullscreen ()
@@ -175,11 +148,12 @@
     (when (and (<= frame-alpha-lower-limit newalpha) (>= 100 newalpha))
       (modify-frame-parameters frame (list (cons 'alpha newalpha))))))
 
-;; (sanityinc/adjust-opacity nil -2)
+;; (if (display-graphic-p)
+;;     (sanityinc/adjust-opacity nil -5))
 
-(global-set-key (kbd "M-C-8") (lambda () (interactive) (sanityinc/adjust-opacity nil -2)))
-(global-set-key (kbd "M-C-9") (lambda () (interactive) (sanityinc/adjust-opacity nil 2)))
-(global-set-key (kbd "M-C-7") (lambda () (interactive) (modify-frame-parameters nil `((alpha . 100)))))
+(global-set-key (kbd "C-M-8") (lambda () (interactive) (sanityinc/adjust-opacity nil -2)))
+(global-set-key (kbd "C-M-9") (lambda () (interactive) (sanityinc/adjust-opacity nil 2)))
+(global-set-key (kbd "C-M-7") (lambda () (interactive) (modify-frame-parameters nil `((alpha . 100)))))
 
 (provide 'init-basic)
 

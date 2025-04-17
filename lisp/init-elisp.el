@@ -1,8 +1,8 @@
-;; init-hydra.el --- Elisp configurations.	-*- lexical-binding: t -*-
+;; init-elisp.el --- Elisp configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2020 王北洛
+;; Copyright (C) 2020~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -22,7 +22,7 @@
       (goto-char (point-min))
       (insert ";;; " fname " --- Insert description here -*- lexical-binding: t -*-\n\n"
               ";; Copyright (C) 2021 王北洛\n\n"
-              ";; Author: 王北洛 <wbeiluo@139.com>\n"
+              ";; Author: 王北洛 <wbeiluo@gmail.com>\n"
               ";; URL: https://github.com/wbeiluo/beiluo-emacs\n\n"
               ";;; Commentary:\n"
               ";;; Code:\n\n")

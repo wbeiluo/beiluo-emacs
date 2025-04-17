@@ -1,8 +1,8 @@
 ;; init-edit.el --- edit configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2023 王北洛
+;; Copyright (C) 2020~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -11,6 +11,8 @@
 ;;
 
 ;;; Code:
+
+(require 'ring)
 
 ;; 移动至行首或行尾
 (use-package mwim
@@ -21,16 +23,13 @@
 ;; Jump to things in Emacs tree-style
 (use-package avy
   :ensure t
-  :bind (("C-." . avy-goto-char-timer)
-         ("C-。" . avy-goto-char-timer)
+  :bind (("C-'" . avy-goto-char-timer)
          :map isearch-mode-map
-         ("C-." . avy-isearch))
-  
+         ("C-'" . avy-isearch))
+
   :custom
-  (avy-timeout-seconds 1.0)
-  (avy-all-windows t)
-  (avy-background t)
-  (avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l ?q ?e ?r ?u ?i ?p ?n))
+  (avy-timeout-seconds 0.6)
+  ;; (avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l ?q ?e ?r ?u ?i ?p ?n))
   
   :config
   (defun avy-action-kill-whole-line (pt)
@@ -66,15 +65,6 @@
     (avy-action-kill-whole-line pt)
     (save-excursion (yank)) t)
 
-  (defun avy-action-helpful (pt)
-    "avy action: get helpful information at point"
-    (save-excursion
-      (goto-char pt)
-      (helpful-at-point))
-    ;; (select-window
-    ;;  (cdr (ring-ref avy-ring 0)))
-    t)
-
   (defun avy-action-mark-to-char (pt)
     "avy action: mark from current point to avy selection"
     (activate-mark)
@@ -98,7 +88,6 @@
         (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
         (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
         (alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line
-        (alist-get ?H avy-dispatch-alist) 'avy-action-helpful
         (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char
         (alist-get ?o avy-dispatch-alist) 'avy-action-embark
         )
@@ -139,10 +128,10 @@
 ;; 多行文本操作
 (use-package multiple-cursors
   :ensure t
-  :bind (("C-c m SPC" . mc/edit-lines)
-         ("C-c m n"   . mc/mark-next-like-this)
-         ("C-c m p"   . mc/mark-previous-like-this)
-         ("C-c m a"   . mc/mark-all-like-this)))
+  :bind (("C-c C-c SPC" . mc/edit-lines)
+         ("C-c C-c n"   . mc/mark-next-like-this)
+         ("C-c C-c p"   . mc/mark-previous-like-this)
+         ("C-c C-c a"   . mc/mark-all-like-this)))
 
 (use-package imenu
   :ensure t

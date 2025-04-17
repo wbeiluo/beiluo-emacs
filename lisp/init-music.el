@@ -1,8 +1,8 @@
-;;; init-emms.el --- Emms Configuration -*- lexical-binding: t -*-
+;;; init-music.el --- Music Configuration -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 王北洛
+;; Copyright (C) 2023~2025 王北洛
 
-;; Author: 王北洛 <beiluo.wang@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -19,10 +19,10 @@
 	       ("d" . emms-play-directory-tree)
 	       ("g" . emms-playlist-mode-go)
 	       ("m" . emms-metaplaylist-mode-go)
-	       ("i" . emms-mode-line-toggle)
+	       ("i" . emms-mode-line-mode)
 	       ))
   :custom
-  (emms-player-list '(emms-player-mplayer))
+  (emms-player-list '(emms-player-mpv))
   (emms-source-file-default-directory "~/Music/")
   (emms-playlist-buffer-name "*Emms*")
   (emms-repeat-playlist t)
@@ -35,6 +35,6 @@
   (emms-mode-line-disable)
   )
 
-(provide 'init-emms)
+(provide 'init-music)
 
-;;; init-emms.el ends here
+;;; init-music.el ends here

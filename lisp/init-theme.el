@@ -1,8 +1,8 @@
 ;;; init-theme.el --- Config Theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2023 王北洛
+;; Copyright (C) 2022~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -29,10 +29,10 @@
   (setq solarized-use-more-italic t)
 
   ;; Use less colors for indicators such as git:gutter, flycheck and similar
-  (setq solarized-emphasize-indicators t)
+  (setq solarized-emphasize-indicators nil)
 
   ;; Don't change size of org-mode headlines (but keep other size-changes)
-  (setq solarized-scale-org-headlines t)
+  (setq solarized-scale-org-headlines nil)
 
   ;; Avoid all font-size changes
   (setq solarized-height-minus-1 1.0)
@@ -40,6 +40,9 @@
   (setq solarized-height-plus-2 1.0)
   (setq solarized-height-plus-3 1.0)
   (setq solarized-height-plus-4 1.0)
+  :config
+  ;; (load-theme 'solarized-dark :no-confim)
+  ;; (load-theme 'solarized-light :no-confim)
   )
 
 (use-package modus-themes
@@ -50,7 +53,7 @@
         modus-themes-bold-constructs nil)
 
   ;; Load the theme of your choice.
-  ;; (load-theme 'modus-vivendi-tritanopia :no-confim)
+  ;; (load-theme 'modus-vivendi :no-confim)
   ;; :bind ("<f5>" . modus-themes-toggle)
   )
 
@@ -61,17 +64,17 @@
   (load-theme 'modus-operandi :no-confim)
 
   ;; 设置选中区域背景色
-  (set-face-attribute 'region nil
-                      :distant-foreground 'unspecified
-                      ;; :foreground "grey"
-                      :background "#b6bfc5")
+  ;; (set-face-attribute 'region nil
+  ;;                     :distant-foreground 'unspecified
+  ;;                     ;; :foreground "grey"
+  ;;                     :background "#b6bfc5")
   
   ;; 取消Modeline边框
   (set-face-attribute 'mode-line nil
                       :box nil
                       :overline nil
                       :underline nil
-		      :background "#eee9e9")
+        	      :background "#eee9e9")
 
   (set-face-attribute 'mode-line-inactive nil
                       :box nil
@@ -81,7 +84,8 @@
   (set-face-attribute 'header-line t
                       :box nil
                       :overline nil
-                      :underline nil))
+                      :underline nil)
+  )
 
 ;; switch to dark theme
 (defun dark_modus ()
@@ -91,18 +95,17 @@
   (load-theme 'modus-vivendi :no-confim)
 
   ;; 设置选中区域背景色
-  (set-face-attribute 'region nil
-                      :distant-foreground 'unspecified
-                      ;; :foreground "grey"
-                      :background "#45526b")
+  ;; (set-face-attribute 'region nil
+  ;;                     :distant-foreground 'unspecified
+  ;;                     ;; :foreground "grey"
+  ;;                     :background "#45526b")
 
   ;; 取消Modeline边框
   (set-face-attribute 'mode-line nil
                       :box nil
                       :overline nil
                       :underline nil
-		      :background "#242424"
-                      )
+		      :background "#242424")
 
   (set-face-attribute 'mode-line-inactive nil
                       :box nil
@@ -121,11 +124,12 @@
 
   (load-theme 'solarized-light :no-confim)
 
-    ;; 设置选中区域背景色
-  (set-face-attribute 'region nil
-                      ;; :distant-foreground 'unspecified
-                      :foreground "#5d5b53"
-                      :background "#e6e0ce")
+  ;; 设置选中区域背景色
+  ;; (set-face-attribute 'region nil
+  ;;                     ;; :distant-foreground 'unspecified
+  ;;                     :foreground "#5d5b53"
+  ;;                     :background "#e6e0ce")
+
   ;; 取消Modeline边框
   (set-face-attribute 'mode-line nil
                       :box nil
@@ -140,7 +144,8 @@
   (set-face-attribute 'header-line nil
                       :box nil
                       :overline nil
-                      :underline nil))
+                      :underline nil)
+  )
 
 ;; switch to dark theme
 (defun dark_solarized ()
@@ -150,10 +155,11 @@
   (load-theme 'solarized-dark :no-confim)
 
   ;; 设置选中区域背景色
-  (set-face-attribute 'region nil
-                      ;; :distant-foreground 'unspecified
-                      :foreground "grey"
-                      :background "#103d49")
+  ;; (set-face-attribute 'region nil
+  ;;                     ;; :distant-foreground 'unspecified
+  ;;                     :foreground "grey"
+  ;;                     :background "#103d49")
+
   ;; 取消Modeline边框
   (set-face-attribute 'mode-line nil
                       :box nil
@@ -168,21 +174,22 @@
   (set-face-attribute 'header-line nil
                       :box nil
                       :overline nil
-                      :underline nil))
+                      :underline nil)
+  )
+
 ;; different theme for term and gui
-;; (if (display-graphic-p)
-;;     (light)
-;;   (dark))
-(dark_modus)
+(if (display-graphic-p)
+    (dark_solarized)
+  (dark_modus))
 
 ;; 终端下不设置背景色(需要终端背景色与主题匹配)
-(defun set-background-for-terminal (&optional frame)
-  (or frame (setq frame (selected-frame)))
-  "Unsets the background color in terminal mode"
-  (unless (display-graphic-p frame)
-    (set-face-background 'default"unspecified-bg" frame)))
-(add-hook 'after-make-frame-functions 'set-background-for-terminal)
-(add-hook 'window-setup-hook 'set-background-for-terminal)
+;; (defun set-background-for-terminal (&optional frame)
+;;   (or frame (setq frame (selected-frame)))
+;;   "Unsets the background color in terminal mode"
+;;   (unless (display-graphic-p frame)
+;;     (set-face-background 'default"unspecified-bg" frame)))
+;; (add-hook 'after-make-frame-functions 'set-background-for-terminal)
+;; (add-hook 'window-setup-hook 'set-background-for-terminal)
 
 (provide 'init-theme)
 ;;; init-theme.el ends here

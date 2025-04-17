@@ -1,8 +1,8 @@
 ;; init-lsp.el --- lsp configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2023 王北洛
+;; Copyright (C) 2022~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -12,45 +12,34 @@
 
 ;;; Code:
 
-(global-unset-key (kbd "M-l"))
+;;(global-unset-key (kbd "M-l"))
 
 (use-package lsp-mode
-  :ensure t
+  :init
+  ;; set prefix for lsp-command-keymap
+  (setq lsp-keymap-prefix "C-c l")
   :hook ((c-mode . lsp)
-         (c++-mode . lsp))
+         (c++-mode . lsp)
+         (python-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
   :custom
-  (lsp-completion-provider :none) ;; we use Corfu!
-
+  (lsp-completion-provider :none)
   :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "M-l")
   ;; Disable headerline
   (setq lsp-headerline-breadcrumb-enable nil)
+  ;; Enable Highlight references of the symbol at point.
+  (setq lsp-enable-symbol-highlighting t)
   ;; Disable Code lens
   (setq lsp-lens-enable t)
   ;; Don't show diagnostics on modeline.
   (setq lsp-modeline-diagnostics-enable nil)
-  ;; Disable Highlight references of the symbol at point.
-  (setq lsp-enable-symbol-highlighting t)
-  
-  (defun my/orderless-dispatch-flex-first (_pattern index _total)
-    (and (eq index 0) 'orderless-flex))
+  )
 
-  (defun my/lsp-mode-setup-completion ()
-    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-          '(orderless)))
-
-  ;; Optionally configure the first word as flex filtered.
-  (add-hook 'orderless-style-dispatchers #'my/orderless-dispatch-flex-first nil 'local)
-
-  ;; Optionally configure the cape-capf-buster.
-  (setq-local completion-at-point-functions (list (cape-capf-buster #'lsp-completion-at-point)))
-
-  :hook
-  (lsp-completion-mode . my/lsp-mode-setup-completion))
-
-(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+;; optionally
+(use-package lsp-treemacs
+  :commands lsp-treemacs-errors-list)
 
 (use-package consult-lsp
   :config
@@ -59,14 +48,13 @@
 (use-package lsp-ui
   :commands lsp-ui-mode
   :init
-
   ;; lsp-ui-sideline
   ;; show diagnostics messages in sideline
-  (setq lsp-ui-sideline-show-diagnostics nil)
+  (setq lsp-ui-sideline-show-diagnostics t)
   ;; show hover messages in sideline
-  (setq lsp-ui-sideline-show-hover nil)
+  (setq lsp-ui-sideline-show-hover t)
   ;; show code actions in sideline
-  (setq lsp-ui-sideline-show-code-actions nil)
+  (setq lsp-ui-sideline-show-code-actions t)
   ;; seconds to wait before showing sideline
   (setq lsp-ui-sideline-delay 0.5)
 
@@ -89,57 +77,47 @@
   (setq lsp-ui-doc-show-with-mouse t)
   )
 
-;; DAP Mode
-;; (use-package dap-mode
-;;   :ensure t
-;;   :commands dap-debug
-;;   :defer
-;;   :custom
-;;   (dap-auto-configure-mode t)  ;; Automatically configure dap
-;;   (dap-auto-configure-features
-;;    '(sessions locals breakpoints controls expressions tooltip))  ;; Remove the button panel in the top
-;;   :config
-;;   (dap-mode 1)
-;;   ;; ;; The modes below are optional
-;;   ;; (dap-ui-mode 1)
-;;   ;; ;; enables mouse hover support
-;;   ;; (dap-tooltip-mode 1)
-;;   ;; ;; use tooltips for mouse hover
-;;   ;; ;; if it is not enabled `dap-mode' will use the minibuffer.
-;;   ;; (tooltip-mode 1)
-;;   ;; ;; displays floating panel with debug buttons
-;;   ;; ;; requies emacs 26+
-;;   ;; (dap-ui-controls-mode 1)
+;; Debug Adapter Protocol
+(use-package dape
+  :preface
+  ;; By default dape shares the same keybinding prefix as `gud'
+  ;; If you do not want to use any prefix, set it to nil.
+  ;; (setq dape-key-prefix "\C-x\C-a")
 
-;;   ;; C/C++ Debug
-;;   ;;(require 'dap-gdb-lldb)
-;;   ;;(dap-gdb-lldb-setup)
-;;   (require 'dap-cpptools)
-;;   (dap-cpptools-setup)
+  :hook
+  ;; Save breakpoints on quit
+  (kill-emacs . dape-breakpoint-save)
+  ;; Load breakpoints on startup
+  (after-init . dape-breakpoint-load)
 
-;;   ;; ask user for executable to debug if not specified explicitly (c++)
-;;   ;;(setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
+  :config
+  ;; Turn on global bindings for setting breakpoints with mouse
+  (dape-breakpoint-global-mode)
 
-;;   ;; default debug template for ARM GCC
-;;   ;; (dap-register-debug-template
-;;   ;;  "C++ LLDB dap"
-;;   ;;  (list :type "lldb-vscode"
-;;   ;;        :cwd nil
-;;   ;;        :args nil
-;;   ;;        :request "launch"
-;;   ;;        :program nil))
+  ;; Info buffers to the right
+  (setq dape-buffer-window-arrangement 'right)
 
-;;   (defun dap-debug-create-or-edit-json-template ()
-;;     "Edit the C++ debugging configuration or create + edit if none exists yet."
-;;     (interactive)
-;;     (let ((filename (concat (lsp-workspace-root) "/launch.json"))
-;; 	  (default "~/.emacs.d/resources/default-launch.json"))
-;;       (unless (file-exists-p filename)
-;; 	(copy-file default filename))
-;;       (find-file-existing filename)))
+  ;; Info buffers like gud (gdb-mi)
+  ;; (setq dape-buffer-window-arrangement 'gud)
+  ;; (setq dape-info-hide-mode-line nil)
 
-;; )
+  ;; Pulse source line (performance hit)
+  (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
 
+  ;; Showing inlay hints
+  (setq dape-inlay-hints t)
+
+  ;; Save buffers on startup, useful for interpreted languages
+  (add-hook 'dape-start-hook (lambda () (save-some-buffers t t)))
+
+  ;; Kill compile buffer on build success
+  ;; (add-hook 'dape-compile-hook 'kill-buffer)
+  )
+
+;; Enable repeat mode for more ergonomic `dape' use
+(use-package repeat
+  :config
+  (repeat-mode))
 
 (provide 'init-lsp)
 

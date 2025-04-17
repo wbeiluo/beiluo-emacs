@@ -5,7 +5,7 @@ git clone https://github.com/wbeiluo/beiluo-emacs.git .emacs.d
 #+END_SRC
 ** 安装字体
 #+BEGIN_SRC shell
-sudo pacman -S ttf-jetbrains-mono adobe-source-code-pro-fonts wqy-microhei 
+sudo pacman -S ttf-maplemono ttf-maplemono-nf-unhinted ttf-maplemono-nf-cn-unhinted ttf-lxgw-wenkai-mono ttf-firacode-nerd ttf-jetbrains-mono 
 #+END_SRC
 ** 安装其他软件
 *** ripgrep
@@ -17,5 +17,5 @@ sudo pacman -S ripgrep
 sudo pacman -S sbcl
 #+END_SRC
 * 使用
-TODO...
+  TODO...
 

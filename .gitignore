@@ -12,6 +12,7 @@ request/
 .extension/
 quelpa/
 emms/
+eln-cache/
 
 custom.el
 recentf
@@ -27,6 +28,7 @@ bookmarks
 org-clock-save.el
 .lsp-session-v1
 .dap-breakpoints
+.dape-breakpoints
 .mc-lists.el
 org-roam.db
 tramp

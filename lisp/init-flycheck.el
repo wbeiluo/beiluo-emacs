@@ -1,8 +1,8 @@
 ;; init-flycheck.el --- flycheck configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2023 王北洛
+;; Copyright (C) 2022~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
@@ -11,7 +11,6 @@
 ;;
 
 ;;; Code:
-
 
 (use-package flycheck
   :ensure t
@@ -23,19 +22,6 @@
   :config
   (flycheck-mode 1)
   (setq-default flycheck-disabled-checkers '(c/c++-clang c/c++-cppcheck c/c++-gcc)))
-
-;; (use-package flycheck-pos-tip
-;;   :after flycheck
-;;   :hook
-;;   (flycheck-mode . flycheck-pos-tip-mode))
-
-;; (use-package flycheck-posframe
-;;   :ensure
-;;   :hook (flycheck-mode-hook . flycheck-posframe-mode))
-
-(use-package flycheck-color-mode-line
-  :hook (flycheck-mode-hook . flycheck-color-mode-line-mode))
-
 
 (provide 'init-flycheck)
 

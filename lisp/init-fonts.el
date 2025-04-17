@@ -1,21 +1,15 @@
 ;;; init-fonts.el --- Set Fonts -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2023 王北洛
+;; Copyright (C) 2020~2025 王北洛
 
-;; Author: 王北洛 <wbeiluo@139.com>
+;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
 ;;; Code:
 
-;; (let ((emacs-font-size 14)
-;;       (emacs-font-name "Sarasa Mono SC"))
-;;   (when (display-grayscale-p)
-;;   (set-frame-font (format "%s-%s" (eval emacs-font-name) (eval emacs-font-size)))
-;;   (set-fontset-font (frame-parameter nil 'font) 'unicode (eval emacs-font-name))))
-
 (defun set-font (english chinese english-size chinese-size)
-  "Set english, chinese font and size"
+  "Set ENGLISH, CHINESE font and ENGLISH-SIZE, CHINESE-SIZE."
   (set-face-attribute 'default nil :font
                       (format "%s:pixelsize=%d" english english-size))
   (set-face-attribute 'variable-pitch nil :font
@@ -24,17 +18,33 @@
     (set-fontset-font (frame-parameter nil 'font) charset
                       (font-spec :family chinese :size chinese-size))))
 
+;; Chinese fonts: Sarasa Mono SC, WenQuanYi Micro Hei Mono, Hack Nerd Font Mono, LXGW WenKai Mono
+;; English fonts: jetbrains mono, Sarasa Mono SC, Maple Mono
+
+;; (when (display-graphic-p)
+;;   (set-font "LXGW WenKai Mono" "LXGW WenKai Mono" 26 26))
+
+(when (display-graphic-p)
+  (set-font "Maple Mono" "LXGW WenKai Mono" 24 26))
+
+;; (when (display-graphic-p)
+;;   (set-font "Sarasa Mono SC" "Sarasa Mono SC" 24 24))
+
 (add-to-list 'after-make-frame-functions
              (lambda (new-frame)
                (select-frame new-frame)
                (when (display-graphic-p)
-                   (set-font "Sarasa Mono SC" "Sarasa Mono SC" 18 18))))
+                 (set-font "Maple Mono" "LXGW WenKai Mono" 24 26))))
 
-;; (when (display-graphic-p)
-;;   (set-font "jetbrains mono" "WenQuanYi Micro Hei Mono" 18 17))
+;; 设置图标字体
+(use-package nerd-icons
+  :custom
+  (nerd-icons-font-family "FiraCode Nerd Font") ;;Symbols Nerd Font Mono
+  :config
+  (setq nerd-icons-scale-factor 1.1))
 
-(when (display-graphic-p)
-  (set-font "Sarasa Mono SC" "Sarasa Mono SC" 18 18))
+;; 设置Uniclode字体
+(set-fontset-font "fontset-default" 'unicode "FiraCode Nerd Font") ;;FiraCode Nerd Font
 
 (provide 'init-fonts)
 
