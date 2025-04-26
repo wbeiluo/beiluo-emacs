@@ -137,6 +137,24 @@
   :ensure t
   :bind ("M-g i" . imenu))
 
+;; 插入时间
+(defun insert-current-time ()
+  "Insert current time."
+  (interactive)
+  (insert (format-time-string "%H:%M")))
+
+;; 插入日期时间
+(defun insert-current-data-time ()
+  "Insert current data and time."
+  (interactive)
+  (insert (format-time-string "%Y-%m-%d %H:%M")))
+
+;; 插入日期星期时间
+(defun insert-current-data-week-time ()
+  "Insert current data, week and time."
+  (interactive)
+  (insert (format-time-string "%Y-%m-%d %A %H:%M")))
+
 (provide 'init-edit)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

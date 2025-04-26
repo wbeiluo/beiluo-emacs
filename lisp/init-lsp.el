@@ -12,12 +12,12 @@
 
 ;;; Code:
 
-;;(global-unset-key (kbd "M-l"))
 
 (use-package lsp-mode
   :init
   ;; set prefix for lsp-command-keymap
-  (setq lsp-keymap-prefix "C-c l")
+  (global-unset-key (kbd "M-l"))
+  (setq lsp-keymap-prefix "M-l")
   :hook ((c-mode . lsp)
          (c++-mode . lsp)
          (python-mode . lsp)
@@ -52,7 +52,7 @@
   ;; show diagnostics messages in sideline
   (setq lsp-ui-sideline-show-diagnostics t)
   ;; show hover messages in sideline
-  (setq lsp-ui-sideline-show-hover t)
+  (setq lsp-ui-sideline-show-hover nil)
   ;; show code actions in sideline
   (setq lsp-ui-sideline-show-code-actions t)
   ;; seconds to wait before showing sideline

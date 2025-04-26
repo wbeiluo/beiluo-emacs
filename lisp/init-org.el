@@ -165,7 +165,7 @@
 
   ;; TOOD的关键词设置，可以设置不同的组
   (org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h!)" "WAIT(w!)" "|" "DONE(d!)" "CANCELLED(c@/!)")
-  		       (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f!)")))
+  		       (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f@/!)" "CLOSED(c@/!)")))
 
   ;; 当标题行状态变化时标签同步发生的变化
   ;; Moving a task to CANCELLED adds a CANCELLED tag
@@ -188,7 +188,8 @@
   			      ("work"     . ?w)
                               ("project"  . ?p)
   			      ("emacs"    . ?e)
-  			      ("life"     . ?l)))
+  			      ("life"     . ?l)
+                              ("misc"     . ?m)))
   ;; 预定义好的标签
   (org-tag-alist '((:startgroup)
   		   ("play"     . ?y)
@@ -265,6 +266,9 @@
   (org-modern-priority nil)
   ;; 关闭关键字美化，使用prettify-symbols-mode
   (org-modern-keyword nil)
+  :custom-face
+  ;; 设置label大小
+  ;; (org-modern-label ((t (:height 1.0 :width condensed :weight regular :underline nil))))
   
   :config
   ;; TODO 样式
@@ -278,7 +282,8 @@
           ("REPORT"     . (:inherit org-verbatim :weight regular :foreground "coral" :inverse-video t))
           ("BUG"        . (:inherit org-verbatim :weight regular :foreground "firebrick" :inverse-video t))
           ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :foreground "DarkOrange" :inverse-video t))
-          ("FIXED"      . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))))
+          ("FIXED"      . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))
+          ("CLOSED"     . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))))
 
   ;; 优先级样式
   ;; (setq org-modern-priority-faces
@@ -356,8 +361,9 @@
   :custom
   ;; 设置需要被日程监控的org文件
   (org-agenda-files
-   (list (expand-file-name "tasks.org" org-directory)
-         (expand-file-name "diary.org" org-directory)))
+   (list (expand-file-name "diary.org" org-directory)
+         (expand-file-name "tasks.org" org-directory)
+         (expand-file-name "work.org" org-directory)))
   ;; 设置org的日记文件
   (org-agenda-diary-file (expand-file-name "diary.org" org-directory))
   ;; 日记插入精确时间戳
@@ -424,6 +430,10 @@
                             "* TODO %i%?"
                             :empty-lines-after 1
                             :prepend t)
+                           ("w" "Work" entry (file+headline "work.org" "Reminders")
+                            "* TODO %i%?"
+                            :empty-lines-after 1
+                            :prepend t)
                            ("n" "Notes" entry (file+headline "capture.org" "Notes")
                             "* %? %^g\n%i\n"
                             :empty-lines-after 1)
@@ -467,7 +477,7 @@
   :config
   (setq denote-directory (expand-file-name "~/Org/notes/"))
   (setq denote-save-buffers nil)
-  (setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project"))
+  (setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project" "misc"))
   (setq denote-infer-keywords t)
   (setq denote-sort-keywords t)
   (setq denote-prompts '(title keywords))

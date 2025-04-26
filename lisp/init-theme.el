@@ -179,7 +179,7 @@
 
 ;; different theme for term and gui
 (if (display-graphic-p)
-    (dark_solarized)
+    (dark_solarized) ; light_modus
   (dark_modus))
 
 ;; 终端下不设置背景色(需要终端背景色与主题匹配)

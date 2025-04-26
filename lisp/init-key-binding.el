@@ -15,7 +15,11 @@
 (use-package emacs
   :bind (("<f5>" . eshell)
          ("<f6>" . shell)
-         ("<f7>" . recentf-open-files)))
+         ("<f7>" . recentf-open-files)
+         ("C-c t t" . insert-current-time)
+         ("C-c t d" . insert-current-data-time)
+         ("C-c t w" . insert-current-data-week-time)
+         ))
 
 (provide 'init-key-binding)
 
