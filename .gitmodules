@@ -1,0 +1,204 @@
+[submodule "extensions/gcmh"]
+	path = extensions/gcmh
+	url = https://github.com/emacsmirror/gcmh.git
+[submodule "extensions/nerd-icons"]
+	path = extensions/nerd-icons
+	url = https://github.com/rainstormstudio/nerd-icons.el.git
+[submodule "extensions/hydra"]
+	path = extensions/hydra
+	url = https://github.com/abo-abo/hydra.git
+[submodule "extensions/solarized-emacs"]
+	path = extensions/solarized-emacs
+	url = https://github.com/bbatsov/solarized-emacs.git
+[submodule "extensions/modus-themes"]
+	path = extensions/modus-themes
+	url = https://github.com/protesilaos/modus-themes.git
+[submodule "extensions/dash"]
+	path = extensions/dash
+	url = https://github.com/magnars/dash.el.git
+[submodule "extensions/s"]
+	path = extensions/s
+	url = https://github.com/magnars/s.el.git
+[submodule "extensions/f"]
+	path = extensions/f
+	url = https://github.com/rejeep/f.el.git
+[submodule "extensions/shrink-path"]
+	path = extensions/shrink-path
+	url = https://github.com/emacsmirror/shrink-path.git
+[submodule "extensions/doom-modeline"]
+	path = extensions/doom-modeline
+	url = https://github.com/seagle0128/doom-modeline.git
+[submodule "extensions/vertico"]
+	path = extensions/vertico
+	url = https://github.com/minad/vertico.git
+[submodule "extensions/orderless"]
+	path = extensions/orderless
+	url = https://github.com/oantolin/orderless.git
+[submodule "extensions/marginalia"]
+	path = extensions/marginalia
+	url = https://github.com/minad/marginalia.git
+[submodule "extensions/nerd-icons-completion"]
+	path = extensions/nerd-icons-completion
+	url = https://github.com/rainstormstudio/nerd-icons-completion.git
+[submodule "extensions/pinyinlib"]
+	path = extensions/pinyinlib
+	url = https://github.com/cute-jumper/pinyinlib.el.git
+[submodule "extensions/consult"]
+	path = extensions/consult
+	url = https://github.com/minad/consult.git
+[submodule "extensions/corfu"]
+	path = extensions/corfu
+	url = https://github.com/minad/corfu.git
+[submodule "extensions/cape"]
+	path = extensions/cape
+	url = https://github.com/minad/cape.git
+[submodule "extensions/nerd-icons-corfu"]
+	path = extensions/nerd-icons-corfu
+	url = https://github.com/LuigiPiucco/nerd-icons-corfu.git
+[submodule "extensions/embark"]
+	path = extensions/embark
+	url = https://github.com/oantolin/embark.git
+[submodule "extensions/vundo"]
+	path = extensions/vundo
+	url = https://github.com/casouri/vundo.git
+[submodule "extensions/symbol-overlay"]
+	path = extensions/symbol-overlay
+	url = https://github.com/wolray/symbol-overlay.git
+[submodule "extensions/highlight-indent-guides"]
+	path = extensions/highlight-indent-guides
+	url = https://github.com/DarthFennec/highlight-indent-guides.git
+[submodule "extensions/colorful-mode"]
+	path = extensions/colorful-mode
+	url = https://github.com/DevelopmentCool2449/colorful-mode.git
+[submodule "extensions/rainbow-delimiters"]
+	path = extensions/rainbow-delimiters
+	url = https://github.com/Fanael/rainbow-delimiters.git
+[submodule "extensions/avy"]
+	path = extensions/avy
+	url = https://github.com/abo-abo/avy.git
+[submodule "extensions/mwim"]
+	path = extensions/mwim
+	url = https://github.com/alezost/mwim.el.git
+[submodule "extensions/goto-chg"]
+	path = extensions/goto-chg
+	url = https://github.com/emacs-evil/goto-chg.git
+[submodule "extensions/goto-last-point"]
+	path = extensions/goto-last-point
+	url = https://github.com/emacsmirror/goto-last-point.git
+[submodule "extensions/ace-window"]
+	path = extensions/ace-window
+	url = https://github.com/abo-abo/ace-window.git
+[submodule "extensions/pcmpl-args"]
+	path = extensions/pcmpl-args
+	url = https://github.com/JonWaltman/pcmpl-args.el.git
+[submodule "extensions/exec-path-from-shell"]
+	path = extensions/exec-path-from-shell
+	url = https://github.com/purcell/exec-path-from-shell.git
+[submodule "extensions/esh-help"]
+	path = extensions/esh-help
+	url = https://github.com/tom-tan/esh-help.git
+[submodule "extensions/ht"]
+	path = extensions/ht
+	url = https://github.com/Wilfred/ht.el.git
+[submodule "extensions/pfuture"]
+	path = extensions/pfuture
+	url = https://github.com/Alexander-Miller/pfuture.git
+[submodule "extensions/cfrs"]
+	path = extensions/cfrs
+	url = https://github.com/Alexander-Miller/cfrs.git
+[submodule "extensions/treemacs"]
+	path = extensions/treemacs
+	url = https://github.com/Alexander-Miller/treemacs.git
+[submodule "extensions/treemacs-nerd-icons"]
+	path = extensions/treemacs-nerd-icons
+	url = https://github.com/rainstormstudio/treemacs-nerd-icons.git
+[submodule "extensions/org-modern"]
+	path = extensions/org-modern
+	url = https://github.com/minad/org-modern.git
+[submodule "extensions/org-appear"]
+	path = extensions/org-appear
+	url = https://github.com/awth13/org-appear.git
+[submodule "extensions/denote"]
+	path = extensions/denote
+	url = https://github.com/protesilaos/denote.git
+[submodule "extensions/consult-notes"]
+	path = extensions/consult-notes
+	url = https://github.com/mclear-tools/consult-notes.git
+[submodule "extensions/org-super-links"]
+	path = extensions/org-super-links
+	url = https://github.com/toshism/org-super-links.git
+[submodule "extensions/drag-stuff"]
+	path = extensions/drag-stuff
+	url = https://github.com/rejeep/drag-stuff.el.git
+[submodule "extensions/multiple-cursors"]
+	path = extensions/multiple-cursors
+	url = https://github.com/magnars/multiple-cursors.el.git
+[submodule "extensions/transient"]
+	path = extensions/transient
+	url = https://github.com/magit/transient.git
+[submodule "extensions/magit"]
+	path = extensions/magit
+	url = https://github.com/magit/magit.git
+[submodule "extensions/with-editor"]
+	path = extensions/with-editor
+	url = https://github.com/magit/with-editor.git
+[submodule "extensions/diff-hl"]
+	path = extensions/diff-hl
+	url = https://github.com/dgutov/diff-hl.git
+[submodule "extensions/llama"]
+	path = extensions/llama
+	url = https://github.com/tarsius/llama.git
+[submodule "extensions/smartparens"]
+	path = extensions/smartparens
+	url = https://github.com/Fuco1/smartparens.git
+[submodule "extensions/origami"]
+	path = extensions/origami
+	url = https://github.com/gregsexton/origami.el.git
+[submodule "extensions/lsp-mode"]
+	path = extensions/lsp-mode
+	url = https://github.com/emacs-lsp/lsp-mode.git
+[submodule "extensions/lsp-ui"]
+	path = extensions/lsp-ui
+	url = https://github.com/emacs-lsp/lsp-ui.git
+[submodule "extensions/spinner"]
+	path = extensions/spinner
+	url = https://github.com/Malabarba/spinner.el.git
+[submodule "extensions/dape"]
+	path = extensions/dape
+	url = https://github.com/svaante/dape.git
+[submodule "extensions/markdown-mode"]
+	path = extensions/markdown-mode
+	url = https://github.com/jrblevin/markdown-mode.git
+[submodule "extensions/c-eldoc"]
+	path = extensions/c-eldoc
+	url = https://github.com/nflath/c-eldoc.git
+[submodule "extensions/modern-cpp-font-lock"]
+	path = extensions/modern-cpp-font-lock
+	url = https://github.com/ludwigpacifici/modern-cpp-font-lock.git
+[submodule "extensions/super-save"]
+	path = extensions/super-save
+	url = https://github.com/bbatsov/super-save.git
+[submodule "extensions/flycheck"]
+	path = extensions/flycheck
+	url = https://github.com/flycheck/flycheck.git
+[submodule "extensions/emms"]
+	path = extensions/emms
+	url = https://github.com/emacsmirror/emms.git
+[submodule "extensions/emacs-dashboard"]
+	path = extensions/emacs-dashboard
+	url = https://github.com/emacs-dashboard/emacs-dashboard.git
+[submodule "extensions/posframe"]
+	path = extensions/posframe
+	url = https://github.com/tumashu/posframe.git
+[submodule "extensions/sdcv"]
+	path = extensions/sdcv
+	url = https://github.com/manateelazycat/sdcv.git
+[submodule "extensions/tempel"]
+	path = extensions/tempel
+	url = https://github.com/minad/tempel.git
+[submodule "extensions/tempel-collection"]
+	path = extensions/tempel-collection
+	url = https://github.com/Crandel/tempel-collection.git
+[submodule "extensions/transwin"]
+	path = extensions/transwin
+	url = https://github.com/jcs-elpa/transwin.git

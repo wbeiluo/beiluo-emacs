@@ -9,10 +9,10 @@ var/
 transient/
 server/
 request/
-.extension/
 quelpa/
 emms/
 eln-cache/
+extensions/pkg-autoload.el
 
 custom.el
 recentf
@@ -27,10 +27,9 @@ forge-database.sqlite
 bookmarks
 org-clock-save.el
 .lsp-session-v1
-.dap-breakpoints
 dape-breakpoints
 .mc-lists.el
-org-roam.db
+org-persist
 tramp
 places
 

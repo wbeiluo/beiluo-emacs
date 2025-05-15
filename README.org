@@ -1,21 +1,34 @@
-* 安装
-** 下载配置文件
-#+BEGIN_SRC shell
-git clone https://github.com/wbeiluo/beiluo-emacs.git .emacs.d
-#+END_SRC
-** 安装字体
-#+BEGIN_SRC shell
-sudo pacman -S ttf-maplemono ttf-maplemono-nf-unhinted ttf-maplemono-nf-cn-unhinted ttf-lxgw-wenkai-mono ttf-firacode-nerd ttf-jetbrains-mono 
-#+END_SRC
-** 安装其他软件
-*** ripgrep
-#+BEGIN_SRC shell
-sudo pacman -S ripgrep
-#+END_SRC
-*** SBCL
-#+BEGIN_SRC shell
-sudo pacman -S sbcl
-#+END_SRC
-* 使用
-  TODO...
+* BLEmacs
+
+  王北洛's Emacs for Org schedule, C/C++ development, etc...
+
+** 安装
+  1. 下载配置文件
+    #+BEGIN_SRC shell
+    git clone --recursive https://github.com/wbeiluo/beiluo-emacs.git .emacs.d
+    #+END_SRC
+
+  2. 安装字体
+    #+BEGIN_SRC shell
+    sudo pacman -S ttf-maplemono ttf-maplemono-nf-unhinted ttf-maplemono-nf-cn-unhinted ttf-lxgw-wenkai-mono ttf-jetbrains-mono ttf-nerd-fonts-symbols-common ttf-nerd-fonts-symbols-mono
+    #+END_SRC
+
+  3. 安装依赖软件
+    + ripgrep
+    #+BEGIN_SRC shell
+    sudo pacman -S ripgrep
+    #+END_SRC
+    + sdcv
+    #+BEGIN_SRC shell
+    sudo pacman -S sdcv stardict
+    #+END_SRC
+
+** 更新扩展包
+   执行如下命令，更新所有扩展包：
+   #+BEGIN_SRC shell
+   git submodule update --remote --recursive
+   #+END_SRC
+
+** 快捷键
+  常用快捷键定义在[[https://github.com/wbeiluo/beiluo-emacs/config/init-key.el][init-key.el]]文件中。
 
