@@ -80,7 +80,7 @@
 ;; If you are experiencing the laggy issue, especially while editing remote files
 ;; with tramp, please try `file-name' style.
 ;; Please refer to https://github.com/bbatsov/projectile/issues/657.
-(setq doom-modeline-buffer-file-name-style 'auto)
+(setq doom-modeline-buffer-file-name-style 'relative-to-project)
 
 ;; Whether display icons in the mode-line.
 ;; While using the server mode in GUI, should set the value explicitly.

@@ -14,13 +14,8 @@
     #+END_SRC
 
   3. 安装依赖软件
-    + ripgrep
     #+BEGIN_SRC shell
-    sudo pacman -S ripgrep
-    #+END_SRC
-    + sdcv
-    #+BEGIN_SRC shell
-    sudo pacman -S sdcv stardict
+    sudo pacman -S ripgrep sdcv stardict 
     #+END_SRC
 
 ** 更新扩展包
@@ -30,5 +25,5 @@
    #+END_SRC
 
 ** 快捷键
-  常用快捷键定义在[[https://github.com/wbeiluo/beiluo-emacs/config/init-key.el][init-key.el]]文件中。
+  常用快捷键定义在[[https://github.com/wbeiluo/beiluo-emacs/tree/master/config/init-key.el][init-key.el]]文件中。
 

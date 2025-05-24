@@ -68,6 +68,7 @@
 (add-to-list 'extension-path (expand-file-name "extensions/hydra" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/gcmh" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/nerd-icons" user-emacs-directory) t)
+(add-to-list 'extension-path (expand-file-name "extensions/nerd-icons/data" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/transwin" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/solarized-emacs" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/modus-themes" user-emacs-directory) t)

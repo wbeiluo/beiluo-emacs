@@ -11,6 +11,7 @@
 (require 'org)
 (require 'org-agenda)
 (require 'appt)
+(require 'notifications)
 (require 'org-capture)
 (require 'org-modern)
 (require 'org-appear)
@@ -76,9 +77,9 @@
 
 ;; 设置优先级样式
 (setq org-priority-faces
-      '((?A :inherit org-priority :weight regular :foreground "IndianRed" :background nil :inverse-video nil)
-        (?B :inherit org-priority :weight regular :foreground "DarkOrange" :background nil :inverse-video nil)
-        (?C :inherit org-priority :weight regular :foreground "ForestGreen" :background nil :inverse-video nil)))
+      '((?A :inherit org-priority :weight regular :foreground "IndianRed" :inverse-video nil)
+        (?B :inherit org-priority :weight regular :foreground "DarkOrange" :inverse-video nil)
+        (?C :inherit org-priority :weight regular :foreground "ForestGreen" :inverse-video nil)))
 
 ;; 提升latex预览的图片清晰度
 (plist-put org-format-latex-options :scale 1.8)
@@ -218,7 +219,7 @@
 ;; refile使用缓存
 (setq org-refile-use-cache t)
 ;; refile的目的地，这里设置的是agenda文件的所有标题
-(setq org-refile-targets '((org-agenda-files . (:maxlevel . 6))))
+(setq org-refile-targets '((org-agenda-files . (:maxlevel . 8))))
 ;; 将文件名加入到路径
 (setq org-refile-use-outline-path 'file)
 ;; 是否按步骤refile
@@ -347,12 +348,12 @@
 (setq org-agenda-skip-timestamp-if-deadline-is-shown t)
 ;; 设置工时记录报告格式
 (setq org-agenda-clockreport-parameter-plist
-      '(:link t :maxlevel 5 :compact nil :narrow 80 :timestamp t))
+      '(:link t :maxlevel 8 :compact nil :narrow 80 :timestamp t))
 (setq org-agenda-columns-add-appointments-to-effort-sum t)
 (setq org-agenda-restore-windows-after-quit t)
 (setq org-agenda-window-setup 'current-window)
-;; 标签显示的位置，第80列往前右对齐
-(setq org-agenda-tags-column -80)
+;; 标签显示的位置，第100列往前右对齐
+(setq org-agenda-tags-column -100)
 ;; 从星期一开始作为一周第一天
 (setq org-agenda-start-on-weekday 1)
 ;; 是否使用am/pm
@@ -364,9 +365,9 @@
 
 ;; 通知提醒
 (defun appt-display-with-notification (min-to-app new-time appt-msg)
-  (notify-send :title (format "Appointment in %s minutes" min-to-app)
-               :body appt-msg
-               :urgency 'critical)
+  (notifications-notify :title (format "Appointment in %s minutes" min-to-app)
+                        :body appt-msg
+                        :urgency 'critical)
   (appt-disp-window min-to-app new-time appt-msg))
 
 ;; 每15分钟更新一次appt
@@ -382,10 +383,12 @@
 ;; 提前30分钟提醒
 (setq appt-message-warning-time 30)
 ;; 通知提醒函数
-(setq appt-disp-window-function #'appt-display-with-notification)
+;; linux下同时在emacs内部和系统通知中提醒; 其他环境下仅在emacs中提醒
+(when (eq system-type 'gnu/linux)
+  (setq appt-disp-window-function #'appt-display-with-notification))
 ;; 激活提醒
 (appt-activate 1)
-;; Add hook
+;; 自动同步org-agenda文件到appt
 (add-hook 'org-agenda-finalize-hook #'org-agenda-to-appt)
 
 ;;; Org capture设置 -------------------------------------------------------------
