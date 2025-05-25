@@ -120,12 +120,10 @@
 (setq org-pretty-entities t)
 ;; 高亮latex语法
 (setq org-highlight-latex-and-related '(native script entities))
-;; 关闭缩进模式
-(setq org-indent-mode nil)
-;; 当启用缩进模式时自动隐藏前置星号
-(setq org-indent-mode-turns-on-hiding-stars t)
-;; 关闭缩进
-(setq org-startup-indented nil)
+;; 开启缩进模式
+(setq org-indent-mode t)
+;; 隐藏标题星号
+(setq org-hide-leading-stars t)
 ;; 根据标题栏自动缩进文本
 (setq org-adapt-indentation t)
 ;; 自动显示图片
