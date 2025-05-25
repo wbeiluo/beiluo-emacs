@@ -202,3 +202,6 @@
 [submodule "extensions/transwin"]
 	path = extensions/transwin
 	url = https://github.com/jcs-elpa/transwin.git
+[submodule "extensions/lsp-pyright"]
+	path = extensions/lsp-pyright
+	url = https://github.com/emacs-lsp/lsp-pyright.git

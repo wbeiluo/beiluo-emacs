@@ -114,6 +114,7 @@
 (add-to-list 'extension-path (expand-file-name "extensions/flycheck/maint" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/lsp-mode" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/lsp-mode/clients" user-emacs-directory) t)
+(add-to-list 'extension-path (expand-file-name "extensions/lsp-pyright" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/lsp-ui" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/spinner" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/dape" user-emacs-directory) t)

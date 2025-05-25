@@ -27,6 +27,7 @@
 (require 'lsp-protocol)
 (require 'lsp-semantic-tokens)
 (require 'lsp-ui)
+(require 'lsp-ui-flycheck)
 (require 'spinner)
 (require 'dape)
 (require 'markdown-mode)

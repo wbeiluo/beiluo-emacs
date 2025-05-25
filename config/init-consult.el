@@ -51,6 +51,14 @@
 ;; relevant when you use the default completion UI.
 (add-hook 'completion-list-mode-hook 'consult-preview-at-point-mode)
 
+;; config ripgrep at point
+(consult-customize consult-ripgrep
+                   :initial (thing-at-point 'symbol))
+
+;; config consult-line at point
+(consult-customize consult-line
+                   :initial (thing-at-point 'symbol))
+
 (provide 'init-consult)
 
 ;;; init-consult.el ends here

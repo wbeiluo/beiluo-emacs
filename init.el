@@ -58,6 +58,7 @@
        (require 'init-highlight)
        (require 'init-edit)
        (require 'init-cc)
+       (require 'init-python)
        (require 'init-tempel)
        (require 'init-sdcv)
        (require 'init-music)

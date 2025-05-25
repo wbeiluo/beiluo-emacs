@@ -309,7 +309,9 @@
 (setq org-agenda-files
       (list (expand-file-name "diary.org" org-directory)
             (expand-file-name "tasks.org" org-directory)
-            (expand-file-name "work.org" org-directory)))
+            (expand-file-name "work.org" org-directory)
+            (expand-file-name "plan.org" org-directory)
+            (expand-file-name "capture.org" org-directory)))
 ;; 设置org的日记文件
 (setq org-agenda-diary-file (expand-file-name "diary.org" org-directory))
 ;; 日记插入精确时间戳
@@ -400,6 +402,11 @@
                                :prepend t)
                               ("w" "Work" entry (file+headline "work.org" "Reminders")
                                "* TODO %i%?"
+                               :empty-lines-after 1
+                               :prepend t)
+                              ;; Issue template
+                              ("i" "Issue" entry (file+headline "capture.org" "Issues")
+                               "* REPORT %i%?\n\n** 概述\n\n** 分析\n\n** 定位\n\n** 措施"
                                :empty-lines-after 1
                                :prepend t)
                               ("n" "Notes" entry (file+headline "capture.org" "Notes")

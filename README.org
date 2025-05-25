@@ -15,7 +15,7 @@
 
   3. 安装依赖软件
     #+BEGIN_SRC shell
-    sudo pacman -S ripgrep sdcv stardict 
+    sudo pacman -S ripgrep sdcv stardict pyright
     #+END_SRC
 
 ** 更新扩展包
