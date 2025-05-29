@@ -307,7 +307,8 @@
 (setq org-agenda-files
       (list (expand-file-name "diary.org" org-directory)
             (expand-file-name "tasks.org" org-directory)
-            (expand-file-name "work.org" org-directory)
+            (expand-file-name "wdiary.org" org-directory)
+            (expand-file-name "wtasks.org" org-directory)
             (expand-file-name "plan.org" org-directory)
             (expand-file-name "capture.org" org-directory)))
 ;; 设置org的日记文件
@@ -398,7 +399,7 @@
                                "* TODO %i%?"
                                :empty-lines-after 1
                                :prepend t)
-                              ("w" "Work" entry (file+headline "work.org" "Reminders")
+                              ("w" "Work Tasks" entry (file+headline "wtasks.org" "Reminders")
                                "* TODO %i%?"
                                :empty-lines-after 1
                                :prepend t)
@@ -418,6 +419,10 @@
                               ("d" "Diary")
                               ("dt" "Today's TODO list" entry (file+olp+datetree "diary.org")
                                "* Today's todo list [/]\n%T\n\n** TODO %?"
+                               :empty-lines 1
+                               :jump-to-captured t)
+                              ("dw" "Today's work TODO list" entry (file+olp+datetree "wdiary.org")
+                               "* Today's work todo list [/]\n%T\n\n** TODO %?"
                                :empty-lines 1
                                :jump-to-captured t)
                               ("do" "Other stuff" entry (file+olp+datetree "diary.org")
