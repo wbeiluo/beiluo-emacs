@@ -104,6 +104,8 @@
 
 ;; 设置Org mode的目录
 (setq org-directory "~/Org")
+;; 设置org-id存储位置
+(setq org-id-locations-file (concat org-directory "/.org-id-locations"))
 ;; 设置笔记的默认存储位置
 (setq org-default-notes-file (expand-file-name "capture.org" org-directory))
 ;; 启用一些子模块
@@ -557,7 +559,11 @@
 
 ;; 笔记链接
 (setq org-super-links-related-into-drawer t)
-(setq	org-super-links-link-prefix 'org-super-links-link-prefix-timestamp)
+(setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp)
+
+;; 自动生成ID链接标题
+(require 'org-id)
+(setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
 
 (provide 'init-org)
 
