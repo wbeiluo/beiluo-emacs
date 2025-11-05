@@ -94,6 +94,7 @@
 (add-to-list 'extension-path (expand-file-name "extensions/transient/lisp" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/with-editor/lisp" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/llama" user-emacs-directory) t)
+(add-to-list 'extension-path (expand-file-name "extensions/cond-let" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/diff-hl" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/pfuture" user-emacs-directory) t)
 (add-to-list 'extension-path (expand-file-name "extensions/cfrs" user-emacs-directory) t)

@@ -26,7 +26,7 @@
 
 ;; Corfu popupinfo
 (corfu-popupinfo-mode 1)               ;; 启用 corfu-popupinfo
-(setq corfu-popupinfo-delay 0.25)      ;; 延迟显示(秒)
+(setq corfu-popupinfo-delay 1)         ;; 延迟显示(秒)
 (setq corfu-popupinfo-position 'right) ;; 信息显示位置（可选 'right, 'left, 'top, 'bottom, 'posframe）
 ;; 使用 ElDoc 提供信息
 (setq corfu-popupinfo-documentation-function #'eldoc-documentation-function)

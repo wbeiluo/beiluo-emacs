@@ -72,7 +72,7 @@
 ;; Disable show doc frame boeder
 (setq lsp-ui-doc-border nil)
 ;; Position if doc display(top, bottom or at-point)
-(setq lsp-ui-doc-position 'at-point)
+(setq lsp-ui-doc-position 'top)
 ;; Number of seconds before showing the doc
 (setq lsp-ui-doc-delay 1)
 ;; When non-nil, move the cursor over a symbol to show the doc

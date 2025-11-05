@@ -43,9 +43,23 @@
 (setq x-underline-at-descent-line t)
 
 ;;; Modus-themes setting
-;; Add all your customizations prior to loading the themes
-(setq modus-themes-italic-constructs t
-      modus-themes-bold-constructs nil)
+(modus-themes-include-derivatives-mode 1)
+
+(setq modus-themes-to-toggle '(modus-operandi modus-vivendi)
+      modus-themes-to-rotate modus-themes-items
+      modus-themes-mixed-fonts t
+      modus-themes-variable-pitch-ui t
+      modus-themes-italic-constructs t
+      modus-themes-bold-constructs t
+      modus-themes-completions '((t . (bold)))
+      modus-themes-prompts '(bold)
+      ;; modus-themes-headings
+      ;; '((agenda-structure . (variable-pitch light 2.2))
+      ;;   (agenda-date . (variable-pitch regular 1.3))
+      ;;   (t . (regular 1.15)))
+      )
+
+(setq modus-themes-common-palette-overrides nil)
 
 ;; switch to light theme
 (defun light-modus ()
@@ -54,35 +68,18 @@
 
   (mapc #'disable-theme custom-enabled-themes)
 
-  (load-theme 'modus-operandi t)
+  ;; 修改部分背景颜色
+  (setq modus-themes-common-palette-overrides
+      '((bg-mode-line-active "#efefef")
+        (fg-mode-line-active "#000000")
+        (bg-mode-line-inactive "#ffffff")
+        (fg-mode-line-inactive "#000000")
+        (bg-line-number-active "#e9e9e9")
+        (fg-line-number-active 'fg-main)
+        (bg-line-number-inactive 'bg-dim)
+        (fg-line-number-inactive 'fg-dim)))
 
-  ;; 设置modeline颜色
-  (set-face-attribute 'mode-line nil
-                      :background "#e6e6e6")
-
-  ;; 设置选中区域背景色
-  ;; (set-face-attribute 'region nil
-  ;;                     :distant-foreground 'unspecified
-  ;;                     ;; :foreground "grey"
-  ;;                     :background "#b6bfc5")
-
-  ;; 取消Modeline边框
-  ;;   (set-face-attribute 'mode-line nil
-  ;;                       :box nil
-  ;;                       :overline nil
-  ;;                       :underline nil
-  ;;                       :background "#eee9e9")
-  ;;
-  ;;   (set-face-attribute 'mode-line-inactive nil
-  ;;                       :box nil
-  ;;                       :overline nil
-  ;;                       :underline nil)
-  
-  ;;   (set-face-attribute 'header-line t
-  ;;                       :box nil
-  ;;                       :overline nil
-  ;;                       :underline nil)
-  )
+  (modus-themes-load-theme 'modus-operandi))
 
 ;; switch to dark theme
 (defun dark-modus ()
@@ -91,39 +88,18 @@
 
   (mapc #'disable-theme custom-enabled-themes)
 
-  (load-theme 'modus-vivendi t)
+  ;; 修改部分背景颜色
+  (setq modus-themes-common-palette-overrides
+      '((bg-mode-line-active "#191919")
+        (fg-mode-line-active "#ffffff")
+        (bg-mode-line-inactive "#000000")
+        (fg-mode-line-inactive "#ffffff")
+        (bg-line-number-active "#353535")
+        (fg-line-number-active "#ffffff")
+        (bg-line-number-inactive "#000000")
+        (fg-line-number-inactive "#ffffff")))
 
-  ;; 设置modeline背景颜色
-  (set-face-attribute 'mode-line nil
-                      :background "#000000")
-
-  ;; 设置line-number背景颜色
-  (set-face-attribute 'line-number nil
-                      :background "#000000")
-
-  ;; 设置选中区域背景色
-  ;; (set-face-attribute 'region nil
-  ;;                     :distant-foreground 'unspecified
-  ;;                     ;; :foreground "grey"
-  ;;                     :background "#45526b")
-
-  ;; 取消Modeline边框
-  ;;   (set-face-attribute 'mode-line nil
-  ;;                       :box nil
-  ;;                       :overline nil
-  ;;                       :underline nil
-  ;;                       :background "#242424")
-  ;;
-  ;;   (set-face-attribute 'mode-line-inactive nil
-  ;;                       :box nil
-  ;;                       :overline nil
-  ;;                       :underline nil)
-  ;;
-  ;;   (set-face-attribute 'header-line t
-  ;;                       :box nil
-  ;;                       :overline nil
-  ;;                       :underline nil)
-  )
+  (modus-themes-load-theme 'modus-vivendi))
 
 ;; switch to light theme
 (defun light-solarized ()

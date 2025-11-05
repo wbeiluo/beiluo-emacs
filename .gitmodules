@@ -205,3 +205,6 @@
 [submodule "extensions/lsp-pyright"]
 	path = extensions/lsp-pyright
 	url = https://github.com/emacs-lsp/lsp-pyright.git
+[submodule "extensions/cond-let"]
+	path = extensions/cond-let
+	url = https://github.com/tarsius/cond-let.git
