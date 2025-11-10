@@ -34,11 +34,12 @@
  '(org-level-7 ((t (:height 1.0 :weight bold))))
  '(org-level-8 ((t (:height 1.0 :weight bold))))
  '(org-level-9 ((t (:height 1.0 :weight bold))))
- ;; 设置org-table字体
- '(org-table ((t (:font "LXGW WenKai Mono:pixelsize=26")))))
+ '(org-table ((t (:font "LXGW WenKai Mono:pixelsize=26"))))
+ '(org-date ((t (:font "LXGW WenKai Mono:pixelsize=26")))))
 
 ;; 在org mode里美化字符串标志
 (defun my/org-prettify-symbols ()
+  "Set up prettify symbols icon."
   (setq prettify-symbols-alist
         (mapcan (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
                 '(("[#A]"            . "🅐")
@@ -450,23 +451,19 @@
 (setq org-modern-priority nil)
 ;; 关闭关键字美化，使用prettify-symbols-mode
 (setq org-modern-keyword nil)
-;; 修改样式
-;; (custom-set-face
-;;   ;; 设置label大小
-;;   '(org-modern-label ((t (:height 1.0 :width condensed :weight regular :underline nil)))))
 ;; 设置TODO样式
 (setq org-modern-todo-faces
-      '(("TODO"       . (:inherit org-verbatim :weight regular :foreground "IndianRed" :inverse-video t))
-        ("NEXT"       . (:inherit org-verbatim :weight regular :foreground "ForestGreen" :inverse-video t))
-        ("WAIT"       . (:inherit org-verbatim :weight regular :foreground "coral" :inverse-video t))
-        ("HOLD"       . (:inherit org-verbatim :weight regular :foreground "DarkOrange" :inverse-video t))
-        ("DONE"       . (:inherit org-verbatim :weight regular :foreground "dim gray" :inverse-video t))
-        ("CANCELLED"  . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))
-        ("REPORT"     . (:inherit org-verbatim :weight regular :foreground "coral" :inverse-video t))
-        ("BUG"        . (:inherit org-verbatim :weight regular :foreground "firebrick" :inverse-video t))
-        ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :foreground "DarkOrange" :inverse-video t))
-        ("FIXED"      . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))
-        ("CLOSED"     . (:inherit org-verbatim :weight regular :foreground "LightGray" :inverse-video t))))
+      '(("TODO"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "IndianRed" :inverse-video t))
+        ("NEXT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
+        ("WAIT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
+        ("HOLD"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
+        ("DONE"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "dim gray" :inverse-video t))
+        ("CANCELLED"  . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+        ("REPORT"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
+        ("BUG"        . (:inherit org-verbatim :weight regular :height 0.9 :foreground "firebrick" :inverse-video t))
+        ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
+        ("FIXED"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+        ("CLOSED"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))))
 
 ;; 设置优先级样式
 ;; (setq org-modern-priority-faces
