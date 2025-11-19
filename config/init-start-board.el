@@ -15,7 +15,7 @@
 (require 'dashboard)
 
 ;; 设置标题信息
-(setq dashboard-banner-logo-title "欢迎来到王北洛的Emacs!\n       V2.1.4")
+(setq dashboard-banner-logo-title "欢迎来到王北洛的Emacs!\n       V2.1.5")
 ;; 设置横幅Logo
 (setq dashboard-startup-banner "~/.emacs.d/logo.txt")
 

@@ -43,6 +43,9 @@
 (setq lsp-modeline-diagnostics-enable nil)
 ;; Disable snippet support.
 (setq lsp-enable-snippet nil)
+;; Disable on-type formatting
+;; 开启后可能出现回车后光标跳行首的情况
+(setq lsp-enable-on-type-formatting nil)
 
 ;; Add hook
 (add-hook 'c-mode-hook #'lsp)
