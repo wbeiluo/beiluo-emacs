@@ -12,32 +12,38 @@
 
 ;;; Code:
 
-;; Setup completion at point
-(defun tempel-setup-capf ()
-  ;; Add the Tempel Capf to `completion-at-point-functions'.
-  ;; `tempel-expand' only triggers on exact matches. Alternatively use
-  ;; `tempel-complete' if you want to see all matches, but then you
-  ;; should also configure `tempel-trigger-prefix', such that Tempel
-  ;; does not trigger too often when you don't expect it. NOTE: We add
-  ;; `tempel-expand' *before* the main programming mode Capf, such
-  ;; that it will be tried first.
-  (setq-local completion-at-point-functions
-              (cons #'tempel-expand
-                    completion-at-point-functions)))
+(defconst extensions-tempel-dir
+  (expand-file-name "extensions/tempel" user-emacs-directory))
+(defconst extensions-tempel-collection-dir
+  (expand-file-name "extensions/tempel-collection" user-emacs-directory))
 
-(add-hook 'conf-mode-hook 'tempel-setup-capf)
-(add-hook 'prog-mode-hook 'tempel-setup-capf)
-(add-hook 'text-mode-hook 'tempel-setup-capf)
+(use-package tempel
+  :ensure nil
+  :load-path extensions-tempel-dir
+  :bind (("M-+" . tempel-complete)
+         ("M-*" . tempel-insert)
+         :map tempel-map
+         ("TAB" . tempel-next)
+         ("S-TAB" . tempel-previous))
+  :init
+  ;; 将 Tempel 挂载到补全列表
+  (defun tempel-setup-capf ()
+    (require 'tempel)
+    ;; 将 tempf-expand 放入补全函数中
+    (setq-local completion-at-point-functions
+                (cons #'tempel-expand
+                      completion-at-point-functions)))
 
-;; Optionally make the Tempel templates available to Abbrev,
-;; either locally or globally. `expand-abbrev' is bound to C-x '.
-;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+  (add-hook 'conf-mode-hook 'tempel-setup-capf)
+  (add-hook 'prog-mode-hook 'tempel-setup-capf)
+  (add-hook 'text-mode-hook 'tempel-setup-capf)
+  :config
+  (setq tempel-trigger-prefix "<"))
 
-(require 'tempel)
-(require 'tempel-collection)
-
-;; Require trigger prefix before template name when completing.
-(setq tempel-trigger-prefix "<")
+(use-package tempel-collection
+  :ensure nil
+  :load-path extensions-tempel-collection-dir
+  :after tempel)
 
 (provide 'init-tempel)
 ;;; init-tempel.el ends here

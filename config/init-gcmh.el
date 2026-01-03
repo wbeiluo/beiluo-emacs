@@ -8,18 +8,24 @@
 ;;; Commentary:
 ;;; Code:
 
-(require 'gcmh)
+(defconst extensions-gcmh-dir
+  (expand-file-name "extensions/gcmh" user-emacs-directory))
 
-;; Adjust garbage collection threshold for early startup (see use of gcmh below)
-(setq gc-cons-threshold (* 512 1024 1024))
+(use-package gcmh
+  :ensure nil
+  :load-path extensions-gcmh-dir
+  :custom
+  ;; Adjust garbage collection threshold for early startup (see use of gcmh below)
+  (gc-cons-threshold (* 512 1024 1024))
 
-;; Process performance tuning
-(setq read-process-output-max (* 4 1024 1024))
-(setq process-adaptive-read-buffering nil)
+  ;; Process performance tuning
+  (read-process-output-max (* 4 1024 1024))
+  (process-adaptive-read-buffering nil)
 
-;; General performance tuning
-(setq gcmh-high-cons-threshold (* 512 1024 1024))
-(gcmh-mode 1)
+  ;; General performance tuning
+  (gcmh-high-cons-threshold (* 512 1024 1024))
+  :config
+  (gcmh-mode 1))
 
 (provide 'init-gcmh)
 

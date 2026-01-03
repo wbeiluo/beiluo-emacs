@@ -20,9 +20,6 @@
 (setq default-directory "~/")
 (add-to-list 'load-path (expand-file-name "config" user-emacs-directory))
 
-;; Load extensions path
-(require 'init-extensions)
-
 (with-temp-message ""   ; 抹掉插件启动的输出
   (require 'init-general)
   (require 'init-lib)
@@ -36,34 +33,27 @@
   (require 'init-embark)
   (require 'init-markdown)
   (require 'init-corfu)
-  (require 'init-lsp)
   (require 'init-flycheck)
+  (require 'init-lsp)
   (require 'init-git)
   (require 'init-treemacs)
   (require 'init-goto)
   (require 'init-window)
   (require 'init-org)
   (require 'init-program)
-  (require 'init-key)
+  (require 'init-tempel)
+  (require 'init-save-restore)
+  (require 'init-shell)
+  (require 'init-edit)
+  (require 'init-cc)
+  (require 'init-python)
+  (require 'init-sdcv)
+  (require 'init-music)
+  (require 'init-windows)
   (require 'init-screen)
+  (require 'init-key)
   (require 'init-start-board)
-
-  ;; 可以延后加载的
-  (run-with-idle-timer
-   1 nil
-   #'(lambda ()
-       (require 'init-undo)
-       (require 'init-auto-save)
-       (require 'init-shell)
-       (require 'init-highlight)
-       (require 'init-edit)
-       (require 'init-cc)
-       (require 'init-python)
-       (require 'init-tempel)
-       (require 'init-sdcv)
-       (require 'init-music)
-       (require 'init-windows)
-       )))
+)
 
 ;; change custom file location
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))

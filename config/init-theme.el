@@ -8,58 +8,62 @@
 ;;; Commentary:
 ;;; Code:
 
-(require 'solarized-theme)
-(require 'modus-themes)
+(defconst extensions-solarized-emacs-dir
+  (expand-file-name "extensions/solarized-emacs" user-emacs-directory))
+(defconst extensions-modus-themes-dir
+  (expand-file-name "extensions/modus-themes" user-emacs-directory))
 
-;;; Solarized-theme setting
-;; make the fringe stand out from the background
-(setq solarized-distinct-fringe-background nil)
+;;; Solarized-theme
+(use-package solarized-theme
+  :ensure nil
+  :load-path extensions-solarized-emacs-dir
+  :custom
+  ;; make the fringe stand out from the background
+  (solarized-distinct-fringe-background nil)
 
-;; Don't change the font for some headings and titles
-(setq solarized-use-variable-pitch nil)
+  ;; Don't change the font for some headings and titles
+  (solarized-use-variable-pitch nil)
 
-;; make the modeline high contrast
-(setq solarized-high-contrast-mode-line nil)
+  ;; make the modeline high contrast
+  (solarized-high-contrast-mode-line nil)
 
-;; Use less bolding
-(setq solarized-use-less-bold t)
+  ;; Use less bolding
+  (solarized-use-less-bold t)
 
-;; Use more italics
-(setq solarized-use-more-italic t)
+  ;; Use more italics
+  (solarized-use-more-italic t)
 
-;; Use less colors for indicators such as git:gutter, flycheck and similar
-(setq solarized-emphasize-indicators nil)
+  ;; Use less colors for indicators such as git:gutter, flycheck and similar
+  (solarized-emphasize-indicators nil)
 
-;; Don't change size of org-mode headlines (but keep other size-changes)
-(setq solarized-scale-org-headlines nil)
+  ;; Don't change size of org-mode headlines (but keep other size-changes)
+  (solarized-scale-org-headlines nil)
 
-;; Avoid all font-size changes
-(setq solarized-height-minus-1 1.0)
-(setq solarized-height-plus-1 1.0)
-(setq solarized-height-plus-2 1.0)
-(setq solarized-height-plus-3 1.0)
-(setq solarized-height-plus-4 1.0)
+  ;; Avoid all font-size changes
+  (solarized-height-minus-1 1.0)
+  (solarized-height-plus-1 1.0)
+  (solarized-height-plus-2 1.0)
+  (solarized-height-plus-3 1.0)
+  (solarized-height-plus-4 1.0)
 
-(setq x-underline-at-descent-line t)
+  (x-underline-at-descent-line t))
 
-;;; Modus-themes setting
-(modus-themes-include-derivatives-mode 1)
-
-(setq modus-themes-to-toggle '(modus-operandi modus-vivendi)
-      modus-themes-to-rotate modus-themes-items
-      modus-themes-mixed-fonts t
-      modus-themes-variable-pitch-ui t
-      modus-themes-italic-constructs t
-      modus-themes-bold-constructs t
-      modus-themes-completions '((t . (bold)))
-      modus-themes-prompts '(bold)
-      ;; modus-themes-headings
-      ;; '((agenda-structure . (variable-pitch light 2.2))
-      ;;   (agenda-date . (variable-pitch regular 1.3))
-      ;;   (t . (regular 1.15)))
-      )
-
-(setq modus-themes-common-palette-overrides nil)
+;;; Modus-themes
+(use-package modus-themes
+  :ensure nil
+  :load-path extensions-modus-themes-dir
+  :custom
+  (modus-themes-to-toggle '(modus-operandi modus-vivendi))
+  (modus-themes-to-rotate modus-themes-items)
+  (modus-themes-mixed-fonts t)
+  (modus-themes-variable-pitch-ui t)
+  (modus-themes-italic-constructs t)
+  (modus-themes-bold-constructs t)
+  (modus-themes-completions '((t . (bold))))
+  (modus-themes-prompts '(bold))
+  (modus-themes-common-palette-overrides nil)
+  :config
+  (modus-themes-include-derivatives-mode 1))
 
 ;; switch to light theme
 (defun light-modus ()

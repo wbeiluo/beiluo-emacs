@@ -12,77 +12,75 @@
 
 ;;; Code:
 
-(require 'avy)
-(require 'mwim)
-(require 'goto-chg)
-(require 'goto-last-point)
+(defconst extensions-mwim-dir
+  (expand-file-name "extensions/mwim" user-emacs-directory))
+(defconst extensions-goto-chg-dir
+  (expand-file-name "extensions/goto-chg" user-emacs-directory))
+(defconst extensions-avy-dir
+  (expand-file-name "extensions/avy" user-emacs-directory))
+
+(use-package mwim
+  :ensure nil
+  :load-path extensions-mwim-dir
+  :bind (("C-a" . mwim-beginning-of-code-or-line)
+         ("C-e" . mwim-end-of-code-or-line)))
+
+(use-package goto-chg
+  :ensure nil
+  :load-path extensions-goto-chg-dir
+  :bind (("C-," . goto-last-change)
+	 ("C-，" . goto-last-change)
+         ("C-M-," . goto-last-change-reverse)
+	 ("C-M-，" . goto-last-change-reverse)))
 
 ;; Jump to things in Emacs tree-style
+(use-package avy
+  :ensure nil
+  :load-path extensions-avy-dir
+  :bind
+  (("M-j" . avy-goto-char-timer) ;; 跳到单词 (字母)
+   ("M-g l" . avy-goto-line)     ;; 跳到行
+   ("M-g w" . avy-goto-word-1))  ;; 在所有窗口中跳转
+  :custom
+  ;; 让标签出现在字符上方，不替换字符
+  (avy-style 'at-full)
+  ;; 设置超时时间（0.5秒内输入的字符都会被当作搜索词）
+  (avy-timeout-secs 0.5)
+  ;; 优先级：优先使用左手容易按到的键作为标签
+  (avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  
+  (avy-handler-function 'avy-handler-default)
+  (avy-all-windows t)
+  :config
+  (defun avy-action-copy-and-stay (pt)
+    "拷贝目标处的单词，但光标保持在原处。"
+    (save-excursion
+      (goto-char pt)
+      (copy-region-as-kill (point) (progn (forward-word) (point))))
+    (select-window (posn-window (event-start last-input-event)))
+    t)
 
-(setq avy-timeout-seconds 0.6)
-;; (setq avy-keys '(?a ?s ?d ?f ?g ?h ?j ?l ?q ?e ?r ?u ?i ?p ?n))
+  (defun avy-action-kill-whole-line (pt)
+    "直接删除目标所在的整行。"
+    (save-excursion
+      (goto-char pt)
+      (kill-whole-line))
+    (select-window (posn-window (event-start last-input-event)))
+    t)
 
-(defun avy-action-kill-whole-line (pt)
-  "avy action: kill the whole line where avy selection is"
-  (save-excursion
-    (goto-char pt)
-    (kill-whole-line))
-  (select-window
-   (cdr
-    (ring-ref avy-ring 0)))
-  t)
+  (defun avy-action-embark (pt)
+    "对目标点调用 Embark 菜单。"
+    (unwind-protect
+        (save-excursion
+          (goto-char pt)
+          (embark-act))
+      (select-window (posn-window (event-start last-input-event))))
+    t)
 
-(defun avy-action-copy-whole-line (pt)
-  "avy action: copy the whole line where avy selection is"
-  (save-excursion
-    (goto-char pt)
-    (cl-destructuring-bind (start . end)
-        (bounds-of-thing-at-point 'line)
-      (copy-region-as-kill start end)))
-  (select-window
-   (cdr
-    (ring-ref avy-ring 0)))
-  t)
-
-(defun avy-action-yank-whole-line (pt)
-  "avy action: copy the line where avy selection is and paste to current point"
-  (avy-action-copy-whole-line pt)
-  (save-excursion (yank))
-  t)
-
-(defun avy-action-teleport-whole-line (pt)
-  "avy action: kill the line where avy selection is and paste to current point"
-  (avy-action-kill-whole-line pt)
-  (save-excursion (yank)) t)
-
-(defun avy-action-mark-to-char (pt)
-  "avy action: mark from current point to avy selection"
-  (activate-mark)
-  (goto-char pt))
-
-(defun avy-action-embark (pt)
-  "avy action: embark where avy selection is"
-  (unwind-protect
-      (save-excursion
-        (goto-char pt)
-        (embark-act))
-    (select-window
-     (cdr (ring-ref avy-ring 0))))
-  t)
-
-(setf (alist-get ?k avy-dispatch-alist) 'avy-action-kill-stay
-      (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line
-      (alist-get ?w avy-dispatch-alist) 'avy-action-copy
-      (alist-get ?W avy-dispatch-alist) 'avy-action-copy-whole-line
-      (alist-get ?y avy-dispatch-alist) 'avy-action-yank
-      (alist-get ?Y avy-dispatch-alist) 'avy-action-yank-whole-line
-      (alist-get ?t avy-dispatch-alist) 'avy-action-teleport
-      (alist-get ?T avy-dispatch-alist) 'avy-action-teleport-whole-line
-      (alist-get ?  avy-dispatch-alist) 'avy-action-mark-to-char
-      (alist-get ?o avy-dispatch-alist) 'avy-action-embark)
-
-;; Record and jump to the last point in the buffer
-(goto-last-point-mode 1)
+  ;; 将按键映射到动作
+  (setf (alist-get ?w avy-dispatch-alist) 'avy-action-copy-and-stay)
+  (setf (alist-get ?K avy-dispatch-alist) 'avy-action-kill-whole-line)
+  (setf (alist-get ?. avy-dispatch-alist) 'avy-action-embark))
 
 (provide 'init-goto)
 

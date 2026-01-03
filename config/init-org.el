@@ -8,17 +8,22 @@
 ;;; Commentary:
 ;;; Code:
 
+(defconst extensions-org-modern-dir
+  (expand-file-name "extensions/org-modern" user-emacs-directory))
+(defconst extensions-org-appear-dir
+  (expand-file-name "extensions/org-appear" user-emacs-directory))
+(defconst extensions-denote-dir
+  (expand-file-name "extensions/denote" user-emacs-directory))
+(defconst extensions-consult-notes-dir
+  (expand-file-name "extensions/consult-notes" user-emacs-directory))
+(defconst extensions-org-super-links-dir
+  (expand-file-name "extensions/org-super-links" user-emacs-directory))
+
 (require 'org)
 (require 'org-agenda)
 (require 'appt)
 (require 'notifications)
 (require 'org-capture)
-(require 'org-modern)
-(require 'org-appear)
-(require 'denote)
-(require 'consult-notes)
-(require 'consult-notes-denote)
-(require 'org-super-links)
 
 ;;; Org mode设置 ----------------------------------------------------------------
 
@@ -48,10 +53,10 @@
                   ("[ ]"             . "󰄱")
                   ("[X]"             . "󰄵")
                   ("[-]"             . "󰡖")
-                  ;;("#+begin_src"     . "")
-                  ;;("#+end_src"       . "")
-                  ;;("#+begin_example" . "")
-                  ;;("#+end_example"   . "")
+                  ("#+begin_src"     . "")
+                  ("#+end_src"       . "")
+                  ("#+begin_example" . "")
+                  ("#+end_example"   . "")
                   ("#+results:"      . "")
                   ("#+attr_latex:"   . "🄛")
                   ("#+attr_html:"    . "🄗")
@@ -408,7 +413,7 @@
                                :prepend t)
                               ;; Issue template
                               ("i" "Issue" entry (file+headline "capture.org" "Issues")
-                               "* REPORT %i%?\n\n** 概述\n\n** 分析\n\n** 定位\n\n** 措施"
+                               "* REPORT %i%?\n\n** 问题描述\n\n** 分析定位\n\n** 措施验证\n\n** 评审结论"
                                :empty-lines-after 1
                                :prepend t)
                               ("n" "Notes" entry (file+headline "capture.org" "Notes")
@@ -440,123 +445,186 @@
 ;;; Org extensions -------------------------------------------------------------
 
 ;; Org-modern
-;; 设置star样式
-(setq org-modern-replace-stars "☯☰☱☲☳☴☵☶☷")
-(setq org-modern-star 'replace)
-;; 关闭table美化
-(setq org-modern-table nil)
-;; 关闭时间戳美化，避免表格不对齐
-(setq org-modern-timestamp nil)
-;; 关闭优先级美化，使用prettify-symbols-mode
-(setq org-modern-priority nil)
-;; 关闭关键字美化，使用prettify-symbols-mode
-(setq org-modern-keyword nil)
-;; 设置TODO样式
-(setq org-modern-todo-faces
-      '(("TODO"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "IndianRed" :inverse-video t))
-        ("NEXT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
-        ("WAIT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
-        ("HOLD"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
-        ("DONE"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "dim gray" :inverse-video t))
-        ("CANCELLED"  . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
-        ("REPORT"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
-        ("BUG"        . (:inherit org-verbatim :weight regular :height 0.9 :foreground "firebrick" :inverse-video t))
-        ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
-        ("FIXED"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
-        ("CLOSED"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))))
+(use-package org-modern
+  :ensure nil
+  :load-path extensions-org-modern-dir
+  :custom
+  ;; 设置star样式
+  (org-modern-replace-stars "☯☰☱☲☳☴☵☶☷")
+  ;; (org-modern-replace-stars "一二三四五六七八九十")
+  ;; (org-modern-replace-stars "❶❷❸❹❺❻❼❽❾❿")
+  ;; (org-modern-replace-stars "⒈⒉⒊⒋⒌⒍⒎⒏⒐⒑")
+  (org-modern-star 'replace)
+  ;; 关闭table美化
+  (org-modern-table nil)
+  ;; 关闭时间戳美化，避免表格不对齐
+  (org-modern-timestamp nil)
+  ;; 关闭优先级美化，使用prettify-symbols-mode
+  (org-modern-priority nil)
+  ;; 关闭关键字美化，使用prettify-symbols-mode
+  (org-modern-keyword nil)
+  ;; 设置TODO样式
+  (org-modern-todo-faces
+   '(("TODO"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "IndianRed" :inverse-video t))
+     ("NEXT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
+     ("WAIT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
+     ("HOLD"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
+     ("DONE"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "dim gray" :inverse-video t))
+     ("CANCELLED"  . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+     ("REPORT"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
+     ("BUG"        . (:inherit org-verbatim :weight regular :height 0.9 :foreground "firebrick" :inverse-video t))
+     ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
+     ("FIXED"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+     ("CLOSED"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))))
 
-;; 设置优先级样式
-;; (setq org-modern-priority-faces
-;;       '((?A :inherit org-priority :weight regular :foreground "tomato" :inverse-video t)
-;;         (?B :inherit org-priority :weight regular :foreground "salmon" :inverse-video t)
-;;         (?C :inherit org-priority :weight regular :foreground "SandyBrown" :inverse-video t)))
-
-;; Add hook
-(add-hook 'org-mode-hook #'org-modern-mode)
-(add-hook 'org-agenda-finalize-hook #'org-modern-agenda)
+  ;; 设置优先级样式
+  ;; (setq org-modern-priority-faces
+  ;;       '((?A :inherit org-priority :weight regular :foreground "tomato" :inverse-video t)
+  ;;         (?B :inherit org-priority :weight regular :foreground "salmon" :inverse-video t)
+  ;;         (?C :inherit org-priority :weight regular :foreground "SandyBrown" :inverse-video t)))
+  :hook ((org-mode . org-modern-mode)
+	 (org-agenda-finalize . org-modern-agenda)))
 
 ;; 自动显示隐藏符号
-(setq org-appear-autolinks t)
-(setq org-appear-autosubmarkers t)
-(setq org-appear-autoentities t)
-(setq org-appear-autokeywords t)
-(setq org-appear-inside-latex t)
-(setq org-appear-delay 0.5)
-;; Add hook
-(add-hook 'org-mode-hook #'org-appear-mode)
+(use-package org-appear
+  :ensure nil
+  :load-path extensions-org-appear-dir
+  :custom
+  (org-appear-autolinks t)
+  (org-appear-autosubmarkers t)
+  (org-appear-autoentities t)
+  (org-appear-autokeywords t)
+  (org-appear-inside-latex t)
+  (org-appear-delay 0.5)
+  :hook (org-mode . org-appear-mode))
 
 ;; 笔记管理
-;; Create note using Org capture
-(with-eval-after-load 'org-capture
-  (setq denote-org-capture-specifiers "%l\n%i\n%?")
-  (add-to-list 'org-capture-templates
-               '("N" "New note (with Denote)" plain
-                 (file denote-last-path)
-                 #'denote-org-capture
-                 :no-save t
-                 :immediate-finish nil
-                 :kill-buffer t
-                 :jump-to-captured t)))
+(use-package denote
+  :ensure nil
+  :load-path extensions-denote-dir
+  :hook
+  ((text-mode . denote-fontify-links-mode-maybe)
+   (dired-mode . denote-dired-mode))
+  :bind
+  ( :map global-map
+    ("C-c n n" . denote)
+    ("C-c n d" . denote-dired)
+    ("C-c n g" . denote-grep)
+    ;; If you intend to use Denote with a variety of file types, it is
+    ;; easier to bind the link-related commands to the `global-map', as
+    ;; shown here.  Otherwise follow the same pattern for `org-mode-map',
+    ;; `markdown-mode-map', and/or `text-mode-map'.
+    ("C-c n l" . denote-link)
+    ("C-c n L" . denote-add-links)
+    ("C-c n b" . denote-backlinks)
+    ("C-c n q c" . denote-query-contents-link) ; create link that triggers a grep
+    ("C-c n q f" . denote-query-filenames-link) ; create link that triggers a dired
+    ;; Note that `denote-rename-file' can work from any context, not just
+    ;; Dired bufffers.  That is why we bind it here to the `global-map'.
+    ("C-c n r" . denote-rename-file)
+    ("C-c n R" . denote-rename-file-using-front-matter)
 
-(setq denote-directory (expand-file-name "~/Org/notes/"))
-(setq denote-save-buffers nil)
-(setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project" "misc"))
-(setq denote-infer-keywords t)
-(setq denote-sort-keywords t)
-(setq denote-prompts '(title keywords))
-(setq denote-excluded-directories-regexp nil)
-(setq denote-excluded-keywords-regexp nil)
-(setq denote-rename-confirmations '(rewrite-front-matter modify-file-name))
+    ;; Key bindings specifically for Dired.
+    :map dired-mode-map
+    ("C-c C-d C-i" . denote-dired-link-marked-notes)
+    ("C-c C-d C-r" . denote-dired-rename-files)
+    ("C-c C-d C-k" . denote-dired-rename-marked-files-with-keywords)
+    ("C-c C-d C-R" . denote-dired-rename-marked-files-using-front-matter))
 
-;; Pick dates, where relevant, with Org's advanced interface:
-(setq denote-date-prompt-use-org-read-date t)
+  :config
+  ;; Create note using Org capture
+  (with-eval-after-load 'org-capture
+    (setq denote-org-capture-specifiers "%l\n%i\n%?")
+    (add-to-list 'org-capture-templates
+		 '("N" "New note (with Denote)" plain
+                   (file denote-last-path)
+                   #'denote-org-capture
+                   :no-save t
+                   :immediate-finish nil
+                   :kill-buffer t
+                   :jump-to-captured t)))
 
-;; Automatically rename Denote buffers using the `denote-rename-buffer-format'.
-(denote-rename-buffer-mode 1)
+  (setq denote-directory (expand-file-name "~/Org/notes/"))
+  (setq denote-save-buffers nil)
+  (setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project" "misc"))
+  (setq denote-infer-keywords t)
+  (setq denote-sort-keywords t)
+  (setq denote-prompts '(title keywords))
+  (setq denote-excluded-directories-regexp nil)
+  (setq denote-excluded-keywords-regexp nil)
+  (setq denote-rename-confirmations '(rewrite-front-matter modify-file-name))
 
-;; Add hook
-(add-hook 'dired-mode-hook #'denote-dired-mode)
+  ;; Pick dates, where relevant, with Org's advanced interface:
+  (setq denote-date-prompt-use-org-read-date t)
+
+  ;; Automatically rename Denote buffers using the `denote-rename-buffer-format'.
+  (denote-rename-buffer-mode 1))
 
 ;; 笔记搜索
-(setq consult-notes-file-dir-sources
-      `(("org"     ?o ,(concat org-directory "/"))
-        ("notes"   ?n ,(concat org-directory "/notes/"))
-        ("work"    ?w ,(concat org-directory "/work/"))
-        ("article" ?a ,(concat org-directory "/article/"))
-        ("study"   ?s ,(concat org-directory "/study/"))
-        ("books"   ?b ,(concat org-directory "/books/"))))
+(use-package consult-notes
+  :ensure nil
+  :load-path extensions-consult-notes-dir
+  :commands (consult-notes consult-notes-search-in-all-notes)
+  :bind (("C-c n f" . consult-notes)                      ;; 快速查找并打开笔记
+         ("C-c n s" . consult-notes-search-in-all-notes)) ;; 全局搜索笔记内容
+  :custom
+  ;; 设置笔记源 (可以是多个目录)
+  (consult-notes-file-dir-sources
+   `(("org"     ?o ,(concat org-directory "/"))
+     ("notes"   ?n ,(concat org-directory "/notes/"))
+     ("work"    ?w ,(concat org-directory "/work/"))
+     ("article" ?a ,(concat org-directory "/article/"))
+     ("study"   ?s ,(concat org-directory "/study/"))
+     ("books"   ?b ,(concat org-directory "/books/"))))
+  
+  :config 
+  ;; Embark support
+  (with-eval-after-load 'embark
+    (defun consult-notes-open-dired (cand)
+      "Open notes directory dired with point on file CAND."
+      (interactive "fNote: ")
+      ;; dired-jump is in dired-x.el but is moved to dired in Emacs 28
+      (dired-jump nil cand))
+
+    (defun consult-notes-grep (cand)
+      "Run grep in directory of notes file CAND."
+      (interactive "fNote: ")
+      (consult-grep (file-name-directory cand)))
+
+    (defvar-keymap consult-notes-map
+      :doc "Keymap for Embark notes actions."
+      :parent embark-file-map
+      "d" #'consult-notes-dired
+      "g" #'consult-notes-grep)
+
+    (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))
+
+    ;; make embark-export use dired for notes
+    (setf (alist-get consult-notes-category embark-exporters-alist) #'embark-export-dired)))
 
 ;; Denote suppory
-(when (locate-library "denote")
-  (consult-notes-denote-mode))
-
-;; Embark support
-(with-eval-after-load 'embark
-  (defun consult-notes-open-dired (cand)
-    "Open notes directory dired with point on file CAND."
-    (interactive "fNote: ")
-    ;; dired-jump is in dired-x.el but is moved to dired in Emacs 28
-    (dired-jump nil cand))
-
-  (defun consult-notes-grep (cand)
-    "Run grep in directory of notes file CAND."
-    (interactive "fNote: ")
-    (consult-grep (file-name-directory cand)))
-
-  (defvar-keymap consult-notes-map
-    :doc "Keymap for Embark notes actions."
-    :parent embark-file-map
-    "d" #'consult-notes-dired
-    "g" #'consult-notes-grep)
-
-  (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))
-
-  ;; make embark-export use dired for notes
-  (setf (alist-get consult-notes-category embark-exporters-alist) #'embark-export-dired))
+(use-package consult-notes-denote
+  :ensure nil
+  :load-path extensions-consult-notes-dir
+  :config
+  (when (locate-library "denote")
+    (setq consult-notes-denote-display-id nil) ;; 保持界面简洁
+    (consult-notes-denote-mode 1)))
 
 ;; 笔记链接
-(setq org-super-links-related-into-drawer t)
-(setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp)
+(use-package org-super-links
+  :ensure nil
+  :load-path extensions-org-super-links-dir
+  :bind (("C-c s l" . org-super-links-link)
+         ("C-c s i" . org-super-links-insert-link)
+         ("C-c s s" . org-super-links-store-link)
+         ("C-c s i" . org-super-links-quick-insert-inline-link)
+         ("C-c s d" . org-super-links-quick-insert-drawer))
+  :custom
+  (org-super-links-related-into-drawer "LINKS")
+  ;; 自动为链接的目标添加 ID（如果目标没有 ID）
+  ;; (org-super-links-link-prefix 'org-super-links-link-prefix-timestamp)
+  (org-super-links-link-prefix 'org-super-links-link-id))
 
 ;; 自动生成ID链接标题
 (require 'org-id)

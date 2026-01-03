@@ -12,26 +12,38 @@
 
 ;;; Code:
 
-(require 'dashboard)
+(defconst extensions-emacs-dashboard-dir
+  (expand-file-name "extensions/emacs-dashboard" user-emacs-directory))
 
-;; 设置标题信息
-(setq dashboard-banner-logo-title "欢迎来到王北洛的Emacs!\n       V2.1.5")
-;; 设置横幅Logo
-(setq dashboard-startup-banner "~/.emacs.d/logo.txt")
+(use-package dashboard
+  :ensure nil
+  :load-path extensions-emacs-dashboard-dir
+  :init
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-set-navigator-icons t)
+  (setq dashboard-display-icons-p t)
+  (setq dashboard-icon-type 'nerd-icons)
+  :config
+  ;; 启动并初始化
+  (dashboard-setup-startup-hook)
+  
+  ;; 设置内容项目
+  (setq dashboard-items '((recents  . 10)   ;; 最近文件
+                          (projects . 10)   ;; 项目列表
+                          (agenda .   20))) ;; 日程
 
-;; 居中显示内容
-(setq dashboard-center-content t)
-;; vertically center content
-(setq dashboard-vertically-center-content t)
-;; 显示图标
-(setq dashboard-set-heading-icons t)
-(setq dashboard-set-file-icons t)
-;; 设置显示项目
-(setq dashboard-items '((recents  . 15)
-                        (projects . 15)
-                        (agenda   . 30)))
+  ;; 视觉优化
+  (setq dashboard-banner-logo-title "Happy hacking with 王北洛's Emacs!")  ;; 设置标题信息
+  (setq dashboard-startup-banner "~/.emacs.d/logo.txt")       ;; 设置横幅Logo
+  (setq dashboard-center-content t)             ;; 居中显示
+  (setq dashboard-vertically-center-content t)  ;; vertically center content
+  (setq dashboard-show-shortcuts t)             ;; 显示快捷键提示
 
-(dashboard-setup-startup-hook)
+  ;; 设置Footer (页脚)
+  (setq dashboard-footer-messages '("BLEmacs 2.2.0"))
+  (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face))
+)
 
 (provide 'init-start-board)
 ;;; init-start-board.el ends here

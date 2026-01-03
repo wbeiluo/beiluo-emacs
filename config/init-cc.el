@@ -12,8 +12,8 @@
 
 ;;; Code:
 
-(require 'c-eldoc)
-(require 'modern-cpp-font-lock)
+(defconst extensions-modern-cpp-font-lock-dir
+  (expand-file-name "extensions/modern-cpp-font-lock" user-emacs-directory))
 
 ;; 设置缩进为4
 (setq-default c-basic-offset 4)
@@ -45,12 +45,14 @@
 (font-lock-add-keywords 'c++-mode
                         '(("\\<Q[A-Z][A-Za-z]\\>" . 'qt-keywords-face)))
 
-;; c-eldoc hook
-(add-hook 'c-mode-hook #'c-turn-on-eldoc-mode)
-(add-hook 'c++-mode-hook #'c-turn-on-eldoc-mode)
-
-;; modern-cpp-font-lock hook
-(add-hook 'c++-mode-hook #'modern-c++-font-lock-mode)
+;; modern-cpp-font-lock
+(use-package modern-cpp-font-lock
+  :ensure nil
+  :load-path extensions-drag-stuff-dir
+  :diminish
+  :hook (c++-mode . modern-cpp-font-lock-mode)
+  :config
+  (setq modern-cpp-font-lock-keywords-modern-p t))
 
 (provide 'init-cc)
 

@@ -25,19 +25,25 @@
 
 ;; config lsp-mode for python.
 
-;;; Require
-(require 'python)
-
 ;;; Code:
 
-;;设置缩进为4
-(setq python-indent-offset 4)
+(defconst extensions-lsp-pyright-dir
+  (expand-file-name "extensions/lsp-pyright" user-emacs-directory))
 
-(setq lsp-pyright-langserver-command "pyright")
-
-(add-hook 'python-mode-hook (lambda ()
-                              (require 'lsp-pyright)
-                              (lsp)))
+(use-package lsp-pyright
+  :ensure nil
+  :load-path extensions-lsp-pyright-dir
+  :custom
+  (python-indent-offset 4)
+  (lsp-pyright-langserver-command "pyright")  
+  (lsp-pyright-typechecking-mode "basic")
+  (lsp-pyright-auto-import-completions t)
+  (lsp-pyright-diagnostic-mode "workspace")
+  
+  :hook (python-mode . (lambda ()
+                         (require 'python)
+                         (require 'lsp-pyright)
+                         (lsp-deferred))))
 
 (provide 'init-python)
 ;;; init-python.el ends here
