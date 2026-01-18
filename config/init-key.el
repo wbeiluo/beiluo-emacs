@@ -31,6 +31,11 @@
 ;; Org-capture
 (global-set-key (kbd "\e\e c") #'org-capture)
 
+;; Org link
+(global-set-key (kbd "C-c M-s") #'org-store-link)
+(global-set-key (kbd "C-c C-l") #'org-insert-link)
+(global-set-key (kbd "C-c C-M-l") #'org-insert-all-links)
+
 ;; 时间
 (global-set-key (kbd "C-c t t") 'insert-current-time)
 (global-set-key (kbd "C-c t d") 'insert-current-data-time)

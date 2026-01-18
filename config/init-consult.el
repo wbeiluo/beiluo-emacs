@@ -1,6 +1,6 @@
 ;;; init-consult.el --- Consult Completion Configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -57,6 +57,8 @@
          ("M-s l" . consult-line-multi)
          ("M-s k" . consult-keep-lines)
          ("M-s u" . consult-focus-lines)
+         ("M-s h" . consult-org-heading)
+         ("M-s a" . consult-org-agenda)
          ;; Isearch integration
          ("C-s" . consult-line)
          ;; Minibuffer history

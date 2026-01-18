@@ -8,6 +8,10 @@
 ;;; Commentary:
 ;;; Code:
 
+(defconst extensions-ts-dir
+  (expand-file-name "extensions/ts" user-emacs-directory))
+(defconst extensions-org-super-agenda-dir
+  (expand-file-name "extensions/org-super-agenda" user-emacs-directory))
 (defconst extensions-org-modern-dir
   (expand-file-name "extensions/org-modern" user-emacs-directory))
 (defconst extensions-org-appear-dir
@@ -71,6 +75,9 @@
                   ("#+options:"      . "")
                   ("#+title:"        . "")
                   ("#+subtitle:"     . "󰨖")
+                  ("#+description:"  . "🅘")
+                  ("#+filetags:"     . "󰓻")
+                  ("#+identifier:"   . "󰻾")
                   ("#+downloaded:"   . "")
                   ("#+language:"     . "")
                   ("#+begin_quote"   . "")
@@ -110,14 +117,12 @@
 
 ;; 设置Org mode的目录
 (setq org-directory "~/Org")
-;; 设置org-id存储位置
-(setq org-id-locations-file (concat org-directory "/.org-id-locations"))
 ;; 设置笔记的默认存储位置
-(setq org-default-notes-file (expand-file-name "capture.org" org-directory))
+(setq org-default-notes-file (expand-file-name "inbox.org" org-directory))
 ;; 启用一些子模块
 (setq org-modules '(ol-bibtex ol-gnus ol-info ol-eww org-habit org-protocol))
 ;; 设置标题行折叠符号
-(setq org-ellipsis "..")
+(setq org-ellipsis "⋯")
 ;; 在活动区域内的所有标题栏执行某些命令
 (setq org-loop-over-headlines-in-active-region t)
 ;; 隐藏宏标记
@@ -163,23 +168,73 @@
 (setq org-yank-adjusted-subtrees t)
 
 ;; TOOD的关键词设置，可以设置不同的组
-(setq org-todo-keywords '((sequence "TODO(t)" "NEXT(n)" "HOLD(h!)" "WAIT(w!)" "|" "DONE(d!)" "CANCELLED(c@/!)")
-                          (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f@/!)" "CLOSED(c@/!)")))
+(setq org-todo-keywords
+      '(;; --- 日程管理任务状态 ---
+        ;; TODO      : 普通待办
+        ;; NEXT      : 可立即执行的任务
+        ;; WAIT      : 等待中（他人/条件/环境）
+        ;; DONE      : 已完成
+        ;; CANCELLED : 取消
+        (sequence "TODO(t)" "NEXT(n)" "WAIT(w!)" "|" "DONE(d!)" "CANCELLED(q@/!)")
+
+        ;; --- 项目问题跟踪状态 ---
+        ;; REPORT     : 新报告/待确认
+        ;; BUG        : 已确认缺陷
+        ;; KNOWNCAUSE : 已知原因，待修复
+        ;; FIXED      : 已修复，待关闭
+        ;; CLOSED     : 已关闭
+        ;; WONTFIX    : 不修复
+        (sequence "REPORT(r)" "BUG(b!)" "KNOWNCAUSE(k!)" "FIXED(f!)" "|" "CLOSED(c@/!)" "WONTFIX(x@/!)")
+
+        ;; --- 代码控制状态 ---
+        ;; DESIGN    : 设计中
+        ;; DEVELOP   : 新功能开发中
+        ;; MODIFY    : 修改已有代码
+        ;; CONFIRMED : 已确认(完成测试及验证)
+        ;; DEPRECATED: 已废弃，不再维护
+        ;; ARCHIVED  : 已归档
+        (sequence "DESIGN(s)" "DEVELOP(p!)" "MODIFY(m!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
+
+        ;; --- 长期规划状态 ---
+        ;; VISION    : 方向与目标
+        ;; FOCUS     : 聚焦选择
+        ;; BUILD     : 能力建设
+        ;; PRACTICE  : 持续实践
+        ;; REVIEW    : 评估
+        ;; ACHIEVED  : 实现目标
+        (sequence "VISION(v)" "FOCUS(o!)" "BUILD(u!)" "PRACTICE(t!)" "REVIEW(i!)" "|" "ACHIEVED(g)")
+        ))
+
 
 ;; 当标题行状态变化时标签同步发生的变化
-;; Moving a task to CANCELLED adds a CANCELLED tag
-;; Moving a task to WAIT adds a WAIT tag
-;; Moving a task to HOLD adds WAIT and HOLD tags
-;; Moving a task to a done state removes WAIT and HOLD tags
-;; Moving a task to TODO removes WAIT, CANCELLED, and HOLD tags
-;; Moving a task to DONE removes WAIT, CANCELLED, and HOLD tags
 (setq org-todo-state-tags-triggers
-      (quote (("CANCELLED" ("CANCELLED" . t))
-              ("WAIT" ("WAIT" . t))
-              ("HOLD" ("WAIT") ("HOLD" . t))
-              (done ("WAIT") ("HOLD"))
-              ("TODO" ("WAIT") ("CANCELLED") ("HOLD"))
-              ("DONE" ("WAIT") ("CANCELLED") ("HOLD")))))
+      (quote (("CANCELLED" ("cancelled" . t) ("wait"))
+              ("WAIT" ("wait" . t))
+              (done ("wait"))
+              ("TODO" ("wait") ("cancelled"))
+              ("DONE" ("wait") ("cancelled"))
+
+              ("REPORT" ("report" . t) ("fixed") ("closed"))
+              ("BUG" ("bug" . t) ("fixed") ("closed"))
+              ("KNOWNCAUSE" ("knowncause" . t) ("fixed") ("closed"))
+              ("FIXED" ("fixed" . t) ("report") ("bug") ("knowncause"))
+              ("CLOSED" ("closed" . t) ("report") ("bug") ("knowncause") ("fixed"))
+
+              ("DESIGN" ("design" . t) ("develop") ("modify") ("confirmed"))
+              ("DEVELOP" ("develop" . t) ("design") ("modify") ("confirmed"))
+              ("MODIFY" ("modify" . t) ("design") ("develop") ("confirmed"))
+              ("CONFIRMED" ("confirmed" . t) ("design") ("develop") ("modify"))
+              ("DEPRECATED" ("deprecated" . t) ("design") ("develop") ("modify") ("confirmed"))
+              ("ARCHIVED" ("archived" . t) ("design") ("develop") ("modify") ("confirmed"))
+
+              ;; -------- 长期规划阶段 --------
+              ("VISION" ("vision" . t) ("focus") ("build") ("practice") ("review") ("achieved"))
+              ("FOCUS" ("focus" . t) ("vision") ("build") ("practice") ("review") ("achieved"))
+              ("BUILD" ("build" . t) ("vision") ("focus") ("practice") ("review") ("achieved"))
+              ("PRACTICE" ("practice" . t) ("vision") ("focus") ("build") ("review") ("achieved"))
+              ("REVIEW" ("review" . t) ("vision") ("focus") ("build") ("practice") ("achieved"))
+              ("ACHIEVED" ("achieved" . t) ("vision") ("focus") ("build") ("practice") ("review"))
+              )))
 
 ;; 始终存在的的标签
 (setq org-tag-persistent-alist '(("read"     . ?r)
@@ -234,8 +289,8 @@
 (setq org-refile-allow-creating-parent-nodes 'confirm)
 ;; 设置标签的默认位置，第100列右对齐
 (setq org-tags-column -100)
-;; 不自动对齐标签
-(setq org-auto-align-tags t);nil
+;; 自动对齐标签
+(setq org-auto-align-tags t)
 ;; 标签继承
 (setq org-use-tag-inheritance t)
 ;; 在日程视图的标签继承
@@ -278,34 +333,54 @@
 (setq org-agenda-deadline-leaders
       '("截止 " "%02d天后截止 " "过期%02d天 "))
 
-;; =====================
-;; 自定义日程视图，分别显示TODO，NEXT-LINE，NEXT中的任务
-;; n键显示自定义视图，p键纯文本视图，a键默认视图
-;; =====================
-;; (defvar my-org-custom-daily-agenda
-;;   `((todo "TODO"
-;;           ((org-agenda-block-separator nil)
-;;            (org-agenda-overriding-header "所有待办任务\n")))
-;;     (todo "NEXT"
-;;           ((org-agenda-block-separator nil)
-;;            (org-agenda-overriding-header "\n进行中的任务\n")))
-;;     (todo "WAIT"
-;;           ((org-agenda-block-separator nil)
-;;            (org-agenda-overriding-header "\n等待中的任务\n")))
-;;     (agenda "" ((org-agenda-block-separator nil)
-;;                 (org-agenda-overriding-header "\n今日日程\n"))))
-;;   "Custom agenda for use in `org-agenda-custom-commands'.")
-;; (setq org-agenda-custom-commands
-;;       `(("n" "Daily agenda and top priority tasks"
-;;          ,my-org-custom-daily-agenda)
-;;         ("p" "Plain text daily agenda and top priorities"
-;;          ,my-org-custom-daily-agenda
-;;          ((org-agenda-with-colors nil)
-;;           (org-agenda-prefix-format "%t %s")
-;;           (org-agenda-current-time-string ,(car (last org-agenda-time-grid)))
-;;           (org-agenda-fontify-priorities nil)
-;;           (org-agenda-remove-tags t))
-;;          ("agenda.txt"))))
+;; 自定义视图
+(use-package ts
+  :ensure nil
+  :load-path extensions-ts-dir)
+
+(use-package org-super-agenda
+  :ensure nil
+  :load-path extensions-org-super-agenda-dir
+  :after org
+  :init
+  (setq org-super-agenda-header-map nil) ; 防止 agenda buffer 中出现折叠错乱
+  :config
+  (org-super-agenda-mode 1)
+
+  (defconst my/org-super-agenda-workflow-groups
+    '(
+      ;; 日程任务
+      (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
+      (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
+      (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
+
+      ;; 问题处理
+      (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
+      (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
+      (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
+      (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
+
+      ;; 代码控制
+      (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
+      (:name "◎ 代码控制 ➜ 开发🄓/修改🄜" :todo ("DEVELOP" "MODIFY"))
+      (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
+
+      ;; 长期规划
+      (:name "◎ 长期规划 ➜ 目标🄥/聚焦🄞" :todo ("VISION" "FOCUS"))
+      (:name "◎ 长期规划 ➜ 能力建设🄤" :todo "BUILD")
+      (:name "◎ 长期规划 ➜ 持续实践🄣" :todo "PRACTICE")
+      (:name "◎ 长期规划 ➜ 评估🄘" :todo "REVIEW")
+
+      ;; 其他
+      (:discard (:anything t))))
+
+  (add-to-list
+   'org-agenda-custom-commands
+   '("w" "Workflow View"
+     ((alltodo ""
+               ((org-agenda-overriding-header "◉ 工作流视图")
+                (org-super-agenda-groups
+                 my/org-super-agenda-workflow-groups)))))))
 
 ;; 时间戳格式设置: <2022-12-24 星期六> 或 <2022-12-24 星期六 06:53>
 (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))
@@ -313,12 +388,17 @@
 (setq org-cycle-separator-lines 2)
 ;; 设置需要被日程监控的org文件
 (setq org-agenda-files
-      (list (expand-file-name "diary.org" org-directory)
-            (expand-file-name "tasks.org" org-directory)
-            (expand-file-name "wdiary.org" org-directory)
-            (expand-file-name "wtasks.org" org-directory)
-            (expand-file-name "plan.org" org-directory)
-            (expand-file-name "capture.org" org-directory)))
+      (append
+       (list (expand-file-name "diary.org" org-directory)
+             (expand-file-name "plan.org" org-directory)
+             (expand-file-name "inbox.org" org-directory)
+             (expand-file-name "work.org" org-directory))
+       (seq-filter
+        (lambda (f)
+          ;; 过滤archive/assets/trash目录
+          (not (string-match-p "/\\(archive\\|assets\\|trash\\)/" f)))
+        (directory-files-recursively (expand-file-name "projects" org-directory) "\\.org$"))))
+
 ;; 设置org的日记文件
 (setq org-agenda-diary-file (expand-file-name "diary.org" org-directory))
 ;; 日记插入精确时间戳
@@ -357,7 +437,7 @@
 (setq org-agenda-skip-timestamp-if-deadline-is-shown t)
 ;; 设置工时记录报告格式
 (setq org-agenda-clockreport-parameter-plist
-      '(:link t :maxlevel 8 :compact nil :narrow 80 :timestamp t))
+      '(:link t :maxlevel 8 :compact nil :narrow 80 :timestamp t :fileskip0 t))
 (setq org-agenda-columns-add-appointments-to-effort-sum t)
 (setq org-agenda-restore-windows-after-quit t)
 (setq org-agenda-window-setup 'current-window)
@@ -403,40 +483,46 @@
 ;;; Org capture设置 -------------------------------------------------------------
 (setq org-capture-use-agenda-date nil)
 ;; define common template
-(setq org-capture-templates `(("t" "Tasks" entry (file+headline "tasks.org" "Reminders")
-                               "* TODO %i%?"
+(setq org-capture-templates `((;; Inbox 收集箱
+                               "i" "Inbox Task" entry (file+headline "inbox.org" "Tasks")
+                               "* TODO %i%?\n  %U\n  %a"
                                :empty-lines-after 1
                                :prepend t)
-                              ("w" "Work Tasks" entry (file+headline "wtasks.org" "Reminders")
-                               "* TODO %i%?"
-                               :empty-lines-after 1
-                               :prepend t)
-                              ;; Issue template
-                              ("i" "Issue" entry (file+headline "capture.org" "Issues")
-                               "* REPORT %i%?\n\n** 问题描述\n\n** 分析定位\n\n** 措施验证\n\n** 评审结论"
-                               :empty-lines-after 1
-                               :prepend t)
-                              ("n" "Notes" entry (file+headline "capture.org" "Notes")
+                              ;; Diary 日常日程
+                              ("d" "Diary" entry (file+olp+datetree "diary.org")
+                               "* TODO %?\n  SCHEDULED: %^t\n"
+                               :empty-lines 1
+                               :jump-to-captured t)
+                              ;; Notes 笔记
+                              ("n" "Notes" entry (file+headline "inbox.org" "Notes")
                                "* %? %^g\n%i\n"
                                :empty-lines-after 1)
-                              ;; For EWW
-                              ("b" "Bookmarks" entry (file+headline "capture.org" "Bookmarks")
+                              ;; Bookmarks 书签记录
+                              ("b" "Bookmarks" entry (file+headline "inbox.org" "Bookmarks")
                                "* %:description\n\n%a%?"
                                :empty-lines 1
                                :immediate-finish t)
-                              ("d" "Diary")
-                              ("dt" "Today's TODO list" entry (file+olp+datetree "diary.org")
-                               "* Today's todo list [/]\n%T\n\n** TODO %?"
-                               :empty-lines 1
-                               :jump-to-captured t)
-                              ("dw" "Today's work TODO list" entry (file+olp+datetree "wdiary.org")
-                               "* Today's work todo list [/]\n%T\n\n** TODO %?"
-                               :empty-lines 1
-                               :jump-to-captured t)
-                              ("do" "Other stuff" entry (file+olp+datetree "diary.org")
-                               "* %?\n%T\n\n%i"
-                               :empty-lines 1
-                               :jump-to-captured t)))
+                              ;; Plan 计划
+                              ("p" "Plan" entry
+                               (file+headline "plan.org" "Plan")
+                               "* VISION %?\n  SCHEDULED: %^t  DEADLINE: %^t\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n\n  %a"
+                               :empty-lines 1)
+                              ;; Plan 长期计划
+                              ("P" "Long-term Plan" entry
+                               (file+headline "plan.org" "Long-term Plan")
+                               "* VISION %?\n  SCHEDULED: %^t  DEADLINE: %^t\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n\n  %a"
+                               :empty-lines 1)
+                              ;; Issue 问题报告
+                              ("I" "Issue" entry (file+headline "inbox.org" "Issues")
+                               "* REPORT %i%?\n\n  一、问题描述\n\n  二、分析定位\n\n  三、措施验证\n\n  四、结论\n"
+                               :empty-lines-after 1
+                               :prepend t)
+                              (;; Project Inbox
+                               "t" "Project Inbox" entry (file+headline "inbox.org" "Projects")
+                               "* TODO %i%?\n  %U\n  :PROPERTIES:\n  :PROJECT: %^{Project name}\n  :TYPE: %^{类型|需求|任务|风险|议题|日志|其他}\n  :END:\n"
+                               :empty-lines-after 1
+                               :prepend t)))
+
 ;; Add hook
 (add-hook 'org-capture-mode-hook #'(lambda ()
                                      (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
@@ -449,8 +535,9 @@
   :ensure nil
   :load-path extensions-org-modern-dir
   :custom
-  ;; 设置star样式
-  (org-modern-replace-stars "☯☰☱☲☳☴☵☶☷")
+  ;; 设置star样式 ☰☱☲☳☴☵☶☷
+  (org-modern-replace-stars "☰☱☲☳☴☵☶☷")
+  ;; (org-modern-replace-stars "◉◎○◈◇*")
   ;; (org-modern-replace-stars "一二三四五六七八九十")
   ;; (org-modern-replace-stars "❶❷❸❹❺❻❼❽❾❿")
   ;; (org-modern-replace-stars "⒈⒉⒊⒋⒌⒍⒎⒏⒐⒑")
@@ -465,23 +552,34 @@
   (org-modern-keyword nil)
   ;; 设置TODO样式
   (org-modern-todo-faces
-   '(("TODO"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "IndianRed" :inverse-video t))
+   '(;; --- 日程管理 Keyword ---
+     ("TODO"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
      ("NEXT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
-     ("WAIT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
-     ("HOLD"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
-     ("DONE"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "dim gray" :inverse-video t))
+     ("WAIT"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
+     ("DONE"       . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))
      ("CANCELLED"  . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+     ;; --- 项目问题 Keyword ---
      ("REPORT"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "coral" :inverse-video t))
      ("BUG"        . (:inherit org-verbatim :weight regular :height 0.9 :foreground "firebrick" :inverse-video t))
      ("KNOWNCAUSE" . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkOrange" :inverse-video t))
      ("FIXED"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
-     ("CLOSED"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))))
+     ("CLOSED"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))
+     ;; --- 代码控制 Keyword ---
+     ("DESIGN"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "SteelBlue" :inverse-video t))
+     ("DEVELOP"    . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
+     ("MODIFY"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
+     ("CONFIRMED"  . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkSeaGreen" :inverse-video t))
+     ("DEPRECATED" . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+     ("ARCHIVED"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))
+     ;; --- 长期规划 Keyword ---
+     ("VISION"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "SteelBlue" :inverse-video t))
+     ("FOCUS"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
+     ("BUILD"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
+     ("PRACTICE"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkSeaGreen" :inverse-video t))
+     ("REVIEW"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
+     ("ACHIEVED"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))
+     ))
 
-  ;; 设置优先级样式
-  ;; (setq org-modern-priority-faces
-  ;;       '((?A :inherit org-priority :weight regular :foreground "tomato" :inverse-video t)
-  ;;         (?B :inherit org-priority :weight regular :foreground "salmon" :inverse-video t)
-  ;;         (?C :inherit org-priority :weight regular :foreground "SandyBrown" :inverse-video t)))
   :hook ((org-mode . org-modern-mode)
 	 (org-agenda-finalize . org-modern-agenda)))
 
@@ -618,17 +716,19 @@
   :bind (("C-c s l" . org-super-links-link)
          ("C-c s i" . org-super-links-insert-link)
          ("C-c s s" . org-super-links-store-link)
-         ("C-c s i" . org-super-links-quick-insert-inline-link)
-         ("C-c s d" . org-super-links-quick-insert-drawer))
-  :custom
-  (org-super-links-related-into-drawer "LINKS")
+         ("C-c s d" . org-super-links-quick-insert-drawer)
+         ("C-c s C-i" . org-super-links-quick-insert-inline-link)
+         ("C-c s C-d" . org-super-links-delete-link))
+  :config
+  (setq org-super-links-related-into-drawer t)
   ;; 自动为链接的目标添加 ID（如果目标没有 ID）
-  ;; (org-super-links-link-prefix 'org-super-links-link-prefix-timestamp)
-  (org-super-links-link-prefix 'org-super-links-link-id))
+  (setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
 
 ;; 自动生成ID链接标题
 (require 'org-id)
 (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
+;; 设置org-id存储位置
+(setq org-id-locations-file (concat org-directory "/.org-id-locations"))
 
 (provide 'init-org)
 

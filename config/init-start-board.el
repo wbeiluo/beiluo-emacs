@@ -1,6 +1,6 @@
 ;; init-start-board.el --- Start board configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -34,13 +34,13 @@
                           (agenda .   20))) ;; 日程
 
   ;; 视觉优化
-  (setq dashboard-banner-logo-title "Happy hacking with 王北洛's Emacs!")  ;; 设置标题信息
-  (setq dashboard-startup-banner "~/.emacs.d/logo.txt")       ;; 设置横幅Logo
-  (setq dashboard-center-content t)             ;; 居中显示
-  (setq dashboard-vertically-center-content t)  ;; vertically center content
-  (setq dashboard-show-shortcuts t)             ;; 显示快捷键提示
+  (setq dashboard-banner-logo-title "Happy hacking with 王北洛's Emacs!")
+  (setq dashboard-startup-banner (expand-file-name "logo.txt" user-emacs-directory))
+  (setq dashboard-center-content t)
+  (setq dashboard-vertically-center-content t)
+  (setq dashboard-show-shortcuts t)
 
-  ;; 设置Footer (页脚)
+  ;; 设置页脚
   (setq dashboard-footer-messages '("BLEmacs 2.2.0"))
   (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face))
 )

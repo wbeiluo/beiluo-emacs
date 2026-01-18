@@ -208,3 +208,9 @@
 [submodule "extensions/consult-flycheck"]
 	path = extensions/consult-flycheck
 	url = https://github.com/minad/consult-flycheck.git
+[submodule "extensions/org-super-agenda"]
+	path = extensions/org-super-agenda
+	url = https://github.com/alphapapa/org-super-agenda.git
+[submodule "extensions/ts"]
+	path = extensions/ts
+	url = https://github.com/alphapapa/ts.el.git
