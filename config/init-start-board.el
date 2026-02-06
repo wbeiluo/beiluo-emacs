@@ -29,7 +29,7 @@
   (dashboard-setup-startup-hook)
   
   ;; 设置内容项目
-  (setq dashboard-items '((recents  . 10)   ;; 最近文件
+  (setq dashboard-items '((recents  . 10)    ;; 最近文件
                           (projects . 10)   ;; 项目列表
                           (agenda .   20))) ;; 日程
 
@@ -41,7 +41,7 @@
   (setq dashboard-show-shortcuts t)
 
   ;; 设置页脚
-  (setq dashboard-footer-messages '("BLEmacs 2.2.0"))
+  (setq dashboard-footer-messages '("BLEmacs 2.2.1"))
   (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face))
 )
 

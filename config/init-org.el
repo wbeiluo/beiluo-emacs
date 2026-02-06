@@ -42,9 +42,7 @@
  '(org-level-6 ((t (:height 1.0 :weight bold))))
  '(org-level-7 ((t (:height 1.0 :weight bold))))
  '(org-level-8 ((t (:height 1.0 :weight bold))))
- '(org-level-9 ((t (:height 1.0 :weight bold))))
- '(org-table ((t (:font "LXGW WenKai Mono:pixelsize=26"))))
- '(org-date ((t (:font "LXGW WenKai Mono:pixelsize=26")))))
+ '(org-level-9 ((t (:height 1.0 :weight bold)))))
 
 ;; 在org mode里美化字符串标志
 (defun my/org-prettify-symbols ()
@@ -485,7 +483,7 @@
 ;; define common template
 (setq org-capture-templates `((;; Inbox 收集箱
                                "i" "Inbox Task" entry (file+headline "inbox.org" "Tasks")
-                               "* TODO %i%?\n  %U\n  %a"
+                               "* TODO %i%?\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n\n"
                                :empty-lines-after 1
                                :prepend t)
                               ;; Diary 日常日程
@@ -519,7 +517,7 @@
                                :prepend t)
                               (;; Project Inbox
                                "t" "Project Inbox" entry (file+headline "inbox.org" "Projects")
-                               "* TODO %i%?\n  %U\n  :PROPERTIES:\n  :PROJECT: %^{Project name}\n  :TYPE: %^{类型|需求|任务|风险|议题|日志|其他}\n  :END:\n"
+                               "* TODO %i%?\n  :PROPERTIES:\n  :PROJECT: %^{Project name}\n  :TYPE: %^{类型|需求|任务|风险|议题|日志|其他}\n  :CREATED: %U\n  :END:\n"
                                :empty-lines-after 1
                                :prepend t)))
 
