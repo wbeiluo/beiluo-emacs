@@ -1,6 +1,6 @@
 ;;; init-program.el --- Program config -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021~2025 王北洛
+;; Copyright (C) 2021~2026 王北洛
 
 ;; Author: 王北洛 <beiluo.wang@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -47,7 +47,7 @@
   ;; 使用字符描绘线条
   (highlight-indent-guides-method 'character)
   ;; 设置指引线字符
-  (highlight-indent-guides-char ?┆)
+  (highlight-indent-guides-character ?|)
   ;; 仅高亮当前光标所在的缩进层级
   (highlight-indent-guides-responsive 'stack)
   ;; 延迟更新以提升性能

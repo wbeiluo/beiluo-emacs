@@ -29,7 +29,7 @@
   (dashboard-setup-startup-hook)
   
   ;; 设置内容项目
-  (setq dashboard-items '((recents  . 10)    ;; 最近文件
+  (setq dashboard-items '((recents  . 10)   ;; 最近文件
                           (projects . 10)   ;; 项目列表
                           (agenda .   20))) ;; 日程
 
@@ -39,6 +39,11 @@
   (setq dashboard-center-content t)
   (setq dashboard-vertically-center-content t)
   (setq dashboard-show-shortcuts t)
+
+  ;; 单独设置dashboard-banner字体，避免出现双宽字符导致logo变形
+  (set-face-attribute 'dashboard-text-banner nil
+                      :family "Maple Mono"
+                      :weight 'regular)
 
   ;; 设置页脚
   (setq dashboard-footer-messages '("BLEmacs 2.2.1"))
