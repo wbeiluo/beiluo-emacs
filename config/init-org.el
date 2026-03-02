@@ -32,7 +32,7 @@
 ;;; Org mode设置 ----------------------------------------------------------------
 
 (custom-set-faces
- ;; 设置Org mode标题以及每级标题行的大小
+ ;; 设置Org mode每级标题行的大小
  '(org-document-title ((t (:height 1.2 :weight bold))))
  '(org-level-1 ((t (:height 1.15 :weight bold))))
  '(org-level-2 ((t (:height 1.10 :weight bold))))
@@ -42,7 +42,17 @@
  '(org-level-6 ((t (:height 1.0 :weight bold))))
  '(org-level-7 ((t (:height 1.0 :weight bold))))
  '(org-level-8 ((t (:height 1.0 :weight bold))))
- '(org-level-9 ((t (:height 1.0 :weight bold)))))
+ '(org-level-9 ((t (:height 1.0 :weight bold))))
+ ;; 设置Org字体和大小
+ '(org-table ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-date ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-tag ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-meta-line ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-document-info ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-document-info-keyword ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-drawer ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-special-keyword ((t (:family "LXGW WenKai Mono" :height 0.9))))
+ '(org-property-value ((t (:family "LXGW WenKai Mono" :height 0.9)))))
 
 ;; 在org mode里美化字符串标志
 (defun my/org-prettify-symbols ()
@@ -672,8 +682,8 @@
      ("article" ?a ,(concat org-directory "/article/"))
      ("study"   ?s ,(concat org-directory "/study/"))
      ("books"   ?b ,(concat org-directory "/books/"))))
-  
-  :config 
+
+  :config
   ;; Embark support
   (with-eval-after-load 'embark
     (defun consult-notes-open-dired (cand)

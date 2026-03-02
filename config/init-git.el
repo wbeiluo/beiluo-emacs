@@ -73,6 +73,10 @@
   :config
   ;; Highlighting uncommitted changes
   (global-diff-hl-mode 1)
+
+  (require 'diff-hl-dired)
+  (require 'diff-hl-margin)
+
   ;; When Emacs runs in terminal, show the indicators in margin instead.
   (unless (display-graphic-p)
     (diff-hl-margin-mode 1))

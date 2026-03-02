@@ -46,7 +46,7 @@
                       :weight 'regular)
 
   ;; 设置页脚
-  (setq dashboard-footer-messages '("BLEmacs 2.2.1"))
+  (setq dashboard-footer-messages '("BLEmacs 2.2.2-beta"))
   (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face))
 )
 
