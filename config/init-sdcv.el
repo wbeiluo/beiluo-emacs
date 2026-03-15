@@ -43,14 +43,11 @@
 
   ;; 完整查询列表
   (setq sdcv-dictionary-complete-list
-        '("懒虫简明英汉词典"
-          "懒虫简明汉英词典"
-          "英汉汉英专业词典"
+        '("stardict1.3英汉辞典"
           "XDICT英汉辞典"
           "XDICT汉英辞典"
-          "stardict1.3英汉辞典"
+          "英汉汉英专业词典"
           "牛津英汉双解美化版"
-          "CDICT5英汉辞典"
           )))
 
 (provide 'init-sdcv)
