@@ -38,7 +38,7 @@
 (global-set-key (kbd "C-c t -") #'my/decrease-background-alpha)
 (global-set-key (kbd "C-c t s") #'my/set-background-alpha)
 
-(my/set-background-alpha 95) ;; 设置初始透明度为95
+;; (my/set-background-alpha 95) ;; 设置初始透明度为95
 
 (fullscreen)
 

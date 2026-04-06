@@ -23,6 +23,8 @@
   (expand-file-name "extensions/f" user-emacs-directory))
 (defconst extensions-ht-dir
   (expand-file-name "extensions/ht" user-emacs-directory))
+(defconst extensions-ov-dir
+  (expand-file-name "extensions/ov" user-emacs-directory))
 (defconst extensions-hydra-dir
   (expand-file-name "extensions/hydra" user-emacs-directory))
 
@@ -41,6 +43,10 @@
 (use-package ht
   :ensure nil
   :load-path extensions-ht-dir)
+
+(use-package ov
+  :ensure nil
+  :load-path extensions-ov-dir)
 
 (use-package hydra
   :ensure nil

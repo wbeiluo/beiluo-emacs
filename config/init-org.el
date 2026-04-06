@@ -1,6 +1,6 @@
 ;;; init-org.el --- Org Mode Configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2025 王北洛
+;; Copyright (C) 2020~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -28,6 +28,7 @@
 (require 'appt)
 (require 'notifications)
 (require 'org-capture)
+(require 'org-element)
 
 ;;; Org mode设置 ----------------------------------------------------------------
 
@@ -83,6 +84,7 @@
                   ("#+options:"      . "")
                   ("#+title:"        . "")
                   ("#+subtitle:"     . "󰨖")
+                  ("#+category:"     . "")
                   ("#+description:"  . "🅘")
                   ("#+filetags:"     . "󰓻")
                   ("#+identifier:"   . "󰻾")
@@ -336,10 +338,10 @@
                                  (search . " %i %-25:c ")))
 ;; 对于计划中的任务在视图里的显示
 (setq org-agenda-scheduled-leaders
-      '("计划 " "%02d天前开始 "))
+      '("       计划 " "%3d天前开始 "))
 ;; 对于截止日期的任务在视图里的显示
 (setq org-agenda-deadline-leaders
-      '("截止 " "%02d天后截止 " "过期%02d天 "))
+      '("       截止 " "%3d天后截止 " "%3d天前过期 "))
 
 ;; 自定义视图
 (use-package ts
@@ -355,40 +357,69 @@
   :config
   (org-super-agenda-mode 1)
 
-  (defconst my/org-super-agenda-workflow-groups
-    '(
-      ;; 日程任务
-      (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
-      (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
-      (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
+  ;; org super agenda视图
+  (setq org-agenda-custom-commands
+        '(("w" "Workflow Agenda"
+           ((agenda ""
+                    ((org-agenda-span 'day)
+                     (org-super-agenda-groups
+                      '((;; 今日完成任务
+                         :name "◎ 今日完成" :log t)
 
-      ;; 问题处理
-      (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
-      (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
-      (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
-      (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
+                        ;; 日程任务
+                        (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
+                        (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
+                        (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
 
-      ;; 代码控制
-      (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
-      (:name "◎ 代码控制 ➜ 开发🄓/修改🄜" :todo ("DEVELOP" "MODIFY"))
-      (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
+                        ;; 问题处理
+                        (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
+                        (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
+                        (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
+                        (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
 
-      ;; 长期规划
-      (:name "◎ 长期规划 ➜ 目标🄥/聚焦🄞" :todo ("VISION" "FOCUS"))
-      (:name "◎ 长期规划 ➜ 能力建设🄤" :todo "BUILD")
-      (:name "◎ 长期规划 ➜ 持续实践🄣" :todo "PRACTICE")
-      (:name "◎ 长期规划 ➜ 评估🄘" :todo "REVIEW")
+                        ;; 代码控制
+                        (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
+                        (:name "◎ 代码控制 ➜ 开发🄓/修改🄜" :todo ("DEVELOP" "MODIFY"))
+                        (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
 
-      ;; 其他
-      (:discard (:anything t))))
+                        ;; 长期规划
+                        (:name "◎ 长期规划 ➜ 目标🄥/聚焦🄞" :todo ("VISION" "FOCUS"))
+                        (:name "◎ 长期规划 ➜ 能力建设🄤" :todo "BUILD")
+                        (:name "◎ 长期规划 ➜ 持续实践🄣" :todo "PRACTICE")
+                        (:name "◎ 长期规划 ➜ 评估🄘" :todo "REVIEW")
 
-  (add-to-list
-   'org-agenda-custom-commands
-   '("w" "Workflow View"
-     ((alltodo ""
-               ((org-agenda-overriding-header "◉ 工作流视图")
-                (org-super-agenda-groups
-                 my/org-super-agenda-workflow-groups)))))))
+                        ;; 其他
+                        (:discard (:anything t))))))))
+
+          ("W" "Workflow All Todo"
+           ((alltodo ""
+                    ((org-agenda-span 'day)
+                     (org-super-agenda-groups
+                      '(;; 日程任务
+                        (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
+                        (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
+                        (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
+
+                        ;; 问题处理
+                        (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
+                        (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
+                        (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
+                        (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
+
+                        ;; 代码控制
+                        (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
+                        (:name "◎ 代码控制 ➜ 开发🄓/修改🄜" :todo ("DEVELOP" "MODIFY"))
+                        (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
+
+                        ;; 长期规划
+                        (:name "◎ 长期规划 ➜ 目标🄥/聚焦🄞" :todo ("VISION" "FOCUS"))
+                        (:name "◎ 长期规划 ➜ 能力建设🄤" :todo "BUILD")
+                        (:name "◎ 长期规划 ➜ 持续实践🄣" :todo "PRACTICE")
+                        (:name "◎ 长期规划 ➜ 评估🄘" :todo "REVIEW")
+
+                        ;; 其他
+                        (:discard (:anything t))))))))
+          )))
 
 ;; 时间戳格式设置: <2022-12-24 星期六> 或 <2022-12-24 星期六 06:53>
 (setq org-time-stamp-formats '("<%Y-%m-%d %A>" . "<%Y-%m-%d %A %H:%M>"))

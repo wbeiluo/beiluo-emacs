@@ -214,3 +214,6 @@
 [submodule "extensions/ts"]
 	path = extensions/ts
 	url = https://github.com/alphapapa/ts.el.git
+[submodule "extensions/ov"]
+	path = extensions/ov
+	url = https://github.com/emacsorphanage/ov.git

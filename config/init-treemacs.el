@@ -125,6 +125,12 @@
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
 
+;; add hydras support
+(use-package treemacs-hydras
+  :after treemacs
+  :ensure nil
+  :load-path extensions-treemacs-dir)
+
 (use-package treemacs-magit
   :after (treemacs magit)
   :ensure nil
