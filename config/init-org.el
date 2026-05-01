@@ -212,7 +212,7 @@
         ;; PRACTICE  : 持续实践
         ;; REVIEW    : 评估
         ;; ACHIEVED  : 实现目标
-        (sequence "VISION(v)" "FOCUS(o!)" "BUILD(u!)" "PRACTICE(t!)" "REVIEW(i!)" "|" "ACHIEVED(g)")
+        (sequence "VISION(v)" "FOCUS(o!)" "BUILD(u!)" "PRACTICE(l!)" "REVIEW(i!)" "|" "ACHIEVED(g)")
         ))
 
 
