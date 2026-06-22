@@ -217,3 +217,12 @@
 [submodule "extensions/ov"]
 	path = extensions/ov
 	url = https://github.com/emacsorphanage/ov.git
+[submodule "extensions/gptel"]
+	path = extensions/gptel
+	url = https://github.com/karthink/gptel.git
+[submodule "extensions/compat"]
+	path = extensions/compat
+	url = https://github.com/emacs-compat/compat.git
+[submodule "extensions/ob-gptel"]
+	path = extensions/ob-gptel
+	url = https://github.com/jwiegley/ob-gptel.git

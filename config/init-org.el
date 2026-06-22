@@ -769,6 +769,34 @@
 ;; 设置org-id存储位置
 (setq org-id-locations-file (concat org-directory "/.org-id-locations"))
 
+;; LaTeX 配置
+(setq org-startup-with-latex-preview t)
+(setq org-preview-latex-default-process 'xelatex)
+(setq org-preview-latex-process-alist
+      '((xelatex
+         :programs ("xelatex" "dvisvgm")
+         :description "XeLaTeX -> SVG"
+         :message "Install xelatex and dvisvgm."
+         :image-input-type "xdv"
+         :image-output-type "svg"
+         :image-size-adjust (1.7 . 1.5)
+         :latex-compiler
+         ("xelatex -no-pdf -interaction=nonstopmode -halt-on-error -output-directory=%o %f")
+         :image-converter
+         ("dvisvgm %f --no-fonts --exact-bbox --scale=%S --output=%O"))))
+
+(setq org-format-latex-options
+      (plist-put org-format-latex-options
+                 :scale 1.8))
+;; 字体颜色默认使用当前颜色
+(setq org-format-latex-options
+      (plist-put org-format-latex-options
+                 :foreground 'default))
+;; 设置SVG背景透明
+(setq org-format-latex-options
+      (plist-put org-format-latex-options
+                 :background "Transparent"))
+
 (provide 'init-org)
 
 ;;; init-org.el ends here

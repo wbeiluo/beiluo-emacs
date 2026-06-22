@@ -18,12 +18,14 @@
     sudo pacman -S ripgrep sdcv stardict pyright
     #+END_SRC
 
+  4. 安装LaTeX
+    #+BEGIN_SRC shell
+    sudo pacman -S texlive texlive-langchinese
+    #+END_SRC
+
 ** 更新扩展包
    执行如下命令，更新所有扩展包：
    #+BEGIN_SRC shell
    git submodule update --remote --recursive
    #+END_SRC
-
-** 快捷键
-  常用快捷键定义在[[https://github.com/wbeiluo/beiluo-emacs/tree/master/config/init-key.el][init-key.el]]文件中。
 

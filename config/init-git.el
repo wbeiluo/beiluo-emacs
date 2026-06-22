@@ -19,8 +19,6 @@
   (expand-file-name "extensions/transient/lisp" user-emacs-directory))
 (defconst extensions-with-editor-dir
   (expand-file-name "extensions/with-editor/lisp" user-emacs-directory))
-(defconst extensions-pfuture-dir
-  (expand-file-name "extensions/pfuture" user-emacs-directory))
 (defconst extensions-posframe-dir
   (expand-file-name "extensions/posframe" user-emacs-directory))
 (defconst extensions-cfrs-dir

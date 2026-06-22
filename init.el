@@ -49,6 +49,7 @@
   (require 'init-python)
   (require 'init-sdcv)
   (require 'init-music)
+  (require 'init-ai)
   (require 'init-windows)
   (require 'init-screen)
   (require 'init-key)

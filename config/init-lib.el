@@ -1,6 +1,6 @@
 ;;; init-lib.el --- Library configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -27,6 +27,8 @@
   (expand-file-name "extensions/ov" user-emacs-directory))
 (defconst extensions-hydra-dir
   (expand-file-name "extensions/hydra" user-emacs-directory))
+(defconst extensions-compat-dir
+  (expand-file-name "extensions/compat" user-emacs-directory))
 
 (use-package dash
   :ensure nil
@@ -51,6 +53,10 @@
 (use-package hydra
   :ensure nil
   :load-path extensions-hydra-dir)
+
+(use-package compat
+  :ensure nil
+  :load-path extensions-compat-dir)
 
 (require 'which-key)
 (which-key-mode 1)
