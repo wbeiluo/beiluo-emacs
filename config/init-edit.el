@@ -33,9 +33,9 @@
   :ensure nil
   :load-path extensions-multiple-cursors-dir
   :bind (("C-c C-c SPC" . mc/edit-lines)
-	 ("C-c C-c n" . mc/mark-next-like-this)
-	 ("C-c C-c p" . mc/mark-previous-like-thisc)
-	 ("C-c C-c a" . mc/mark-all-like-this)))
+         ("C-c C-c n" . mc/mark-next-like-this)
+         ("C-c C-c p" . mc/mark-previous-like-thisc)
+         ("C-c C-c a" . mc/mark-all-like-this)))
 
 (provide 'init-edit)
 

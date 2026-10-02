@@ -40,7 +40,7 @@
   (setq chatgpt-backend
         (gptel-make-openai "ChatGPT"
           :stream t
-          :models '("gpt-5.4-mini" "gpt-5.4")
+          :models '("gpt-5.6-luna" "gpt-5.6-terra")
           :key #'gptel-api-key))
 
   (setq deepseek-backend
@@ -54,11 +54,11 @@
           :host "api.xiaomimimo.com"
           :endpoint "/v1/chat/completions"
           :stream t
-          :models '("mimo-v2.5" "mimo-v2.5-pro")
+          :models '("mimo-v2.6-flash" "mimo-v2.6-pro")
           :key #'gptel-api-key))
 
-  (setq gptel-model 'gpt-5.4-mini
-        gptel-backend chatgpt-backend 
+  (setq gptel-model 'mimo-v2.6-flash
+        gptel-backend mimo-backend 
         gptel-use-curl t)
 
   ;; Preset system message
@@ -70,20 +70,20 @@
           (writing     . "You are a large language model and a writing assistant. Respond concisely.")
           (chat        . "You are a large language model and a conversation partner. Respond concisely.")))
 
-  ;; Preset model: ChatGPT/gpt-5.4-mini
-  (gptel-make-preset 'chatgpt-gpt-5.4-mini
-    :description "Using ChatGPT/gpt-5.4-mini"
+  ;; Preset model: ChatGPT/gpt-5.6-luna
+  (gptel-make-preset 'chatgpt-gpt-5.6-luna
+    :description "Using ChatGPT/gpt-5.6-luna"
     :system (alist-get 'default gptel-directives)
-    :model 'gpt-5.4-mini
+    :model 'gpt-5.6-luna
     :backend chatgpt-backend
     :include-reasoning 'ignore
     :request-params nil)
 
-  ;; Preset model: ChatGPT/gpt-5.4
-  (gptel-make-preset 'chatgpt-gpt-5.4
-    :description "Using ChatGPT/gpt-5.4"
+  ;; Preset model: ChatGPT/gpt-5.6-terra
+  (gptel-make-preset 'chatgpt-gpt-5.6-terra
+    :description "Using ChatGPT/gpt-5.6-terra"
     :system (alist-get 'default gptel-directives)
-    :model 'gpt-5.4
+    :model 'gpt-5.6-terra
     :backend chatgpt-backend
     :include-reasoning 'ignore
     :request-params nil)
@@ -106,11 +106,11 @@
     :include-reasoning 'ignore
     :request-params '(:reasoning_effort "max"))
 
-  ;; Preset model: Xiaomi/mimo-v2.5
-  (gptel-make-preset 'mimo-v2.5
-    :description "Using Xiaomi/mimo-v2.5"
+  ;; Preset model: Xiaomi/mimo-v2.6-flash
+  (gptel-make-preset 'mimo-v2.6-flash
+    :description "Using Xiaomi/mimo-v2.6-flash"
     :system (alist-get 'default gptel-directives)
-    :model 'mimo-v2.5
+    :model 'mimo-v2.6-flash
     :backend mimo-backend
     :include-reasoning 'ignore
     :request-params '(:temperature 1.0
@@ -119,11 +119,11 @@
                       :presence_penalty 0
                       :thinking (:type "disabled")))
 
-  ;; Preset model: Xiaomi/mimo-v2.5-pro
-  (gptel-make-preset 'mimo-v2.5-pro
-    :description "Using Xiaomi/mimo-v2.5-pro"
+  ;; Preset model: Xiaomi/mimo-v2.6-pro
+  (gptel-make-preset 'mimo-v2.6-pro
+    :description "Using Xiaomi/mimo-v2.6-pro"
     :system (alist-get 'default gptel-directives)
-    :model 'mimo-v2.5-pro
+    :model 'mimo-v2.6-pro
     :backend mimo-backend
     :include-reasoning 'ignore
     :request-params '(:temperature 1.0
