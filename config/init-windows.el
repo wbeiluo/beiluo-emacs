@@ -1,6 +1,6 @@
 ;;; init-windows.el --- Windows system configs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -20,11 +20,7 @@
   (setq shell-file-name (executable-find "C:\\msys64\\usr\\bin\\zsh.exe"))
 
   ;; 解决粘贴中文出现乱码的问题
-  (set-selection-coding-system 'utf-16le-dos)
-
-  ;; 解决sdcv词典识别和乱码问题
-  (add-to-list 'process-coding-system-alist '("sdcv" . (utf-8-dos . chinese-gbk-dos)))
-  )
+  (set-selection-coding-system 'utf-16le-dos))
 
 (provide 'init-windows)
 

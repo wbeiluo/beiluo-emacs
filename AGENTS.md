@@ -11,7 +11,7 @@ Verification = batch startup smoke test (below). Docs: `README.org` (Chinese, in
   auto-discovered. Order matters: `init-lib` provides dash/s/f/ht/ov/ts/hydra/posframe used later.
 - Module file convention: `;;; init-foo.el --- ... -*- lexical-binding: t -*-` header, copyright
   block, Chinese commentary, `(provide 'init-foo)` + `;;; init-foo.el ends here` footer.
-- `init-windows.el` is **Windows platform support** (windows-nt: PATH/MSYS2, sdcv coding);
+- `init-windows.el` is **Windows platform support** (windows-nt: PATH/MSYS2, clipboard coding);
   `init-window.el` is **window management**. Easy to confuse.
 - Platform gates found in code: `display-graphic-p` (fonts, theme), `system-type 'windows-nt`
   (`init-windows.el`, parts of `init-fonts.el`), `gnu/linux` (`init-org.el`). The config targets
