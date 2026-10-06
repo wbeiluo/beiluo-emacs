@@ -36,7 +36,7 @@
   ;; 让标签出现在字符上方，不替换字符
   (avy-style 'at-full)
   ;; 设置超时时间（0.5秒内输入的字符都会被当作搜索词）
-  (avy-timeout-secs 0.5)
+  (avy-timeout-seconds 0.5)
   ;; 优先级：优先使用左手容易按到的键作为标签
   (avy-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   

@@ -23,16 +23,16 @@
   ;; 将 Tempel 挂载到补全列表
   (defun tempel-setup-capf ()
     (require 'tempel)
-    ;; 将 tempf-expand 放入补全函数中
+    ;; 将 tempel-expand 放入补全函数中；要求 "<" 触发前缀才展开，
+    ;; 避免模板名与普通单词相同导致误展开（tempel 无 tempel-trigger-prefix，
+    ;; 按官方 README 用 cape-capf-trigger 实现）
     (setq-local completion-at-point-functions
-                (cons #'tempel-expand
+                (cons (cape-capf-trigger #'tempel-expand ?<)
                       completion-at-point-functions)))
 
   (add-hook 'conf-mode-hook 'tempel-setup-capf)
   (add-hook 'prog-mode-hook 'tempel-setup-capf)
-  (add-hook 'text-mode-hook 'tempel-setup-capf)
-  :config
-  (setq tempel-trigger-prefix "<"))
+  (add-hook 'text-mode-hook 'tempel-setup-capf))
 
 (use-package tempel-collection
   :ensure t

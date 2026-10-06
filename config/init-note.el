@@ -102,7 +102,7 @@
     (defvar-keymap consult-notes-map
       :doc "Keymap for Embark notes actions."
       :parent embark-file-map
-      "d" #'consult-notes-dired
+      "d" #'consult-notes-open-dired
       "g" #'consult-notes-grep)
 
     (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))

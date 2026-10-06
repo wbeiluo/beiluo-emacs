@@ -16,7 +16,7 @@
   :ensure t
   :bind (("M-g n" . flycheck-next-error)       ;; 跳转到下一个错误
          ("M-g p" . flycheck-previous-error))  ;; 跳转到上一个错误
-  :hook (after-init. global-flycheck-mode)
+  :hook (after-init . global-flycheck-mode)
   :config
   (define-key flycheck-mode-map flycheck-keymap-prefix nil)
   (setq flycheck-keymap-prefix (kbd "C-c !"))

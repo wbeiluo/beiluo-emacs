@@ -26,10 +26,10 @@
 
   (corfu-auto-delay 0.2)
   (corfu-popupinfo-delay '(0.5 . 0.2)) ;; 设置文档弹窗的延迟（不建议设为 0，否则由于查询文档会有卡顿感）
-  (corfu-popupinfo-position 'right)    ;; 显示位置（可选 'right, 'left, 'top, 'bottom, 'posframe）
+  (corfu-popupinfo-direction '(right)) ;; 弹窗优先显示在右侧（列表按优先级排列，可选 left/right/vertical/force-*）
 
   (corfu-history-max-entries 20)             ;; 最多保留 20 条历史记录
-  (corfu-sort-function #'corfu-sort-history)
+  (corfu-sort-function #'corfu-sort-length-alpha) ;; 基础排序；历史排序由 corfu-history-mode 自动接管
   :init
   (global-corfu-mode)
   (corfu-popupinfo-mode)

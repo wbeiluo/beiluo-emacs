@@ -20,7 +20,6 @@
   :init
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
-  (setq dashboard-set-navigator-icons t)
   (setq dashboard-display-icons-p t)
   (setq dashboard-icon-type 'nerd-icons)
   :config

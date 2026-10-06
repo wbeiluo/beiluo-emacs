@@ -79,7 +79,7 @@
   :ensure t
   :custom
   (completion-styles '(orderless basic))
-  (Completion-category-overrides '((file (styles partial-completion))))
+  (completion-category-overrides '((file (styles partial-completion))))
   ;; Disable defaults, use our settings
   (completion-category-defaults nil)
   ;; Emacs 31: partial-completion behaves like substring

@@ -82,9 +82,6 @@
         (?B :inherit org-priority :weight regular :foreground "DarkOrange" :inverse-video nil)
         (?C :inherit org-priority :weight regular :foreground "ForestGreen" :inverse-video nil)))
 
-;; 提升latex预览的图片清晰度
-(plist-put org-format-latex-options :scale 1.8)
-
 ;; 设置标题行之间总是有空格；列表之间根据情况自动加空格
 (setq org-blank-before-new-entry '((heading . t)
                                    (plain-list-item . auto)))
@@ -121,11 +118,11 @@
 (setq org-pretty-entities t)
 ;; 高亮latex语法
 (setq org-highlight-latex-and-related '(native script entities))
-;; 开启缩进模式
-(setq org-indent-mode t)
 ;; 隐藏标题星号
 (setq org-hide-leading-stars t)
-;; 根据标题栏自动缩进文本
+;; 根据标题栏自动缩进文本（真实缩进，对齐到标题星号之后）
+;; 注意：与 org-indent-mode 的虚拟缩进互斥——二者叠加会错位，
+;; 故此处不启用 org-startup-indented，缩进完全交给 org-adapt-indentation。
 (setq org-adapt-indentation t)
 ;; 自动显示图片
 (setq org-startup-with-inline-images t)

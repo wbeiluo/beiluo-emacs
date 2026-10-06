@@ -172,8 +172,9 @@
   ;; Whether display the icon of check segment. It respects option `doom-modeline-icon'.
   (setq doom-modeline-check-icon t)
 
-  ;; If non-nil, only display one number for check information if applicable.
-  (setq doom-modeline-check-simple-format nil)
+  ;; How to display the check segment (auto/full/simple/nil).
+  ;; `full' keeps all detailed error info (= old check-simple-format nil).
+  (setq doom-modeline-check 'full)
 
   ;; The maximum number displayed for notifications.
   (setq doom-modeline-number-limit 99)

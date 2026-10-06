@@ -96,7 +96,7 @@
 	      ("C-<tab> o" . origami-open-node)
 	      ("C-<tab> c" . origami-close-node)
 	      ("C-<tab> n" . origami-next-fold)
-	      ("C-<tab> p" . origami-next-fold)
+	      ("C-<tab> p" . origami-previous-fold)
 	      ("C-<tab> t" . origami-recursively-toggle-node)))
 
 (use-package lsp-origami
