@@ -1,6 +1,6 @@
 ;; init-lsp.el --- lsp configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,31 +12,19 @@
 
 ;;; Code:
 
-(defconst extensions-lsp-mode-dir
-  (list (expand-file-name "extensions/lsp-mode" user-emacs-directory)
-	(expand-file-name "extensions/lsp-mode/clients" user-emacs-directory)))
-(defconst extensions-lsp-ui-dir
-  (expand-file-name "extensions/lsp-ui" user-emacs-directory))
-(defconst extensions-spinner-dir
-  (expand-file-name "extensions/spinner" user-emacs-directory))
-(defconst extensions-dape-dir
-  (expand-file-name "extensions/dape" user-emacs-directory))
-
 (use-package spinner
-  :ensure nil
-  :load-path extensions-spinner-dir)
+  :ensure t)
 
+;; Emacs client/library for the Language Server Protocol
 (use-package lsp-mode
-  :ensure nil
-  :load-path extensions-lsp-mode-dir
+  :ensure t
   :hook ((c-mode . lsp)
          (c++-mode . lsp)
-	 (python-mode . lsp)
-	 (lsp-mode . lsp-enable-which-key-integration))
+         (python-mode . lsp)
+         (lsp-mode . lsp-enable-which-key-integration))
   :init
   ;; Set prefix for lsp-command-keymap
-  (global-unset-key (kbd "M-l"))
-  (setq lsp-keymap-prefix "M-l")
+  (setq lsp-keymap-prefix "C-c l")
   :custom
   (lsp-completion-provider :none)
   ;; Disable headerline
@@ -51,41 +39,26 @@
   (lsp-enable-on-type-formatting nil)
   :commands lsp)
 
-(use-package lsp-modeline
-  :ensure nil
-  :load-path extensions-lsp-mode-dir)
+(use-package lsp-modeline)
 
-(use-package lsp-lens
-  :ensure nil
-  :load-path extensions-lsp-mode-dir)
+(use-package lsp-lens)
 
-(use-package lsp-completion
-  :ensure nil
-  :load-path extensions-lsp-mode-dir)
+(use-package lsp-completion)
 
 (use-package lsp-diagnostics
-  :ensure nil
-  :load-path extensions-lsp-mode-dir
   :custom
   ;; 配置 lsp 使用 flycheck
   (lsp-diagnostics-provider :flycheck)
   :hook (lsp-mode . lsp-diagnostics-mode))
 
-(use-package lsp-dired
-  :ensure nil
-  :load-path extensions-lsp-mode-dir)
+(use-package lsp-dired)
 
-(use-package lsp-icons
-  :ensure nil
-  :load-path extensions-lsp-mode-dir)
+(use-package lsp-icons)
 
-(use-package lsp-semantic-tokens
-  :ensure nil
-  :load-path extensions-lsp-mode-dir)
+(use-package lsp-semantic-tokens)
 
 (use-package lsp-ui
-  :ensure nil
-  :load-path extensions-lsp-ui-dir
+  :ensure t
   :commands lsp-ui-mode
   :hook (lsp-mode . lsp-ui-mode)
   :bind (:map lsp-ui-mode-map
@@ -98,7 +71,7 @@
   (lsp-ui-doc-header t)
   (lsp-ui-doc-include-signature t)
   ;; Position if doc display(top, bottom or at-point)
-  (lsp-ui-doc-position 'top)
+  (lsp-ui-doc-position 'at-point)
   (lsp-ui-doc-delay 0.5)
   (lsp-ui-doc-use-childframe t)
   (lsp-ui-doc-show-with-cursor t)
@@ -122,8 +95,7 @@
 
 ;; Debug Adapter Protocol
 (use-package dape
-  :ensure nil
-  :load-path extensions-dape-dir
+  :ensure t
   :preface
   (setq dape-buffer-window-arrangement 'right) ;; 调试窗口布局在右侧
   :hook ((dape-on-start . dape-info-setup)     ;; 启动时显示变量/堆栈面板
@@ -140,7 +112,6 @@
     (add-hook 'after-init-hook 'dape-breakpoint-load)))
 
 (use-package repeat
-  :ensure nil
   :config
   ;; Enable repeat mode for more ergonomic `dape' use
   (repeat-mode 1))

@@ -1,6 +1,6 @@
 ;; init-edit.el --- edit configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2025 王北洛
+;; Copyright (C) 2020~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,16 +12,10 @@
 
 ;;; Code:
 
-(defconst extensions-drag-stuff-dir
-  (expand-file-name "extensions/drag-stuff" user-emacs-directory))
-(defconst extensions-multiple-cursors-dir
-  (expand-file-name "extensions/multiple-cursors" user-emacs-directory))
-
 ;; 文本移动
 ;; Drag stuff (lines, words, region, etc...) around
 (use-package drag-stuff
-  :ensure nil
-  :load-path extensions-drag-stuff-dir
+  :ensure t
   :config
   ;; <M-up> <M-down> <M-right> <M-left>
   (drag-stuff-define-keys)
@@ -30,8 +24,7 @@
 
 ;; 多行同步编辑
 (use-package multiple-cursors
-  :ensure nil
-  :load-path extensions-multiple-cursors-dir
+  :ensure t
   :bind (("C-c C-c SPC" . mc/edit-lines)
          ("C-c C-c n" . mc/mark-next-like-this)
          ("C-c C-c p" . mc/mark-previous-like-thisc)

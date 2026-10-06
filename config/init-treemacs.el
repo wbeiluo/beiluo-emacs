@@ -1,6 +1,6 @@
 ;; init-treemacs.el --- treemacs configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2025 王北洛
+;; Copyright (C) 2020~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,34 +12,15 @@
 
 ;;; Code:
 
-(defconst extensions-cfrs-dir
-  (expand-file-name "extensions/cfrs" user-emacs-directory))
-(defconst extensions-pfuture-dir
-  (expand-file-name "extensions/pfuture" user-emacs-directory))
-(defconst extensions-treemacs-dir
-  (list (expand-file-name "extensions/treemacs/src/elisp" user-emacs-directory)
-        (expand-file-name "extensions/treemacs/src/extra" user-emacs-directory)))
-(defconst extensions-treemacs-nerd-icons-dir
-  (expand-file-name "extensions/treemacs-nerd-icons" user-emacs-directory))
-(defconst extensions-lsp-treemacs-dir
-  (expand-file-name "extensions/lsp-treemacs" user-emacs-directory))
-
-(use-package cfrs
-  :ensure nil
-  :load-path extensions-cfrs-dir)
-
 (use-package pfuture
-  :ensure nil
-  :load-path extensions-pfuture-dir)
+  :ensure t)
 
 (use-package treemacs
-  :ensure nil
-  :load-path extensions-treemacs-dir
+  :ensure t
   :defer t
-  :bind ("M-0" . treemacs-select-window)
-  ;; :init
-  ;; (with-eval-after-load 'winum
-  ;;   (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
   :config
   (progn
     (setq treemacs-buffer-name-function            #'treemacs-default-buffer-name
@@ -125,36 +106,12 @@
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
 
-;; add hydras support
-(use-package treemacs-hydras
-  :after treemacs
-  :ensure nil
-  :load-path extensions-treemacs-dir)
-
-(use-package treemacs-magit
-  :after (treemacs magit)
-  :ensure nil
-  :load-path extensions-treemacs-dir)
-
+;; Nerd icons for treemacs
 (use-package treemacs-nerd-icons
+  :ensure t
   :after treemacs
-  :ensure nil
-  :load-path extensions-treemacs-nerd-icons-dir
   :config
   (treemacs-nerd-icons-config))
-
-(use-package lsp-treemacs
-  :ensure nil
-  :load-path extensions-lsp-treemacs-dir
-  :after (lsp-mode treemacs)
-  :config
-  (lsp-treemacs-sync-mode 1)
-  :bind
-  (:map lsp-mode-map
-        ("M-l t e" . lsp-treemacs-errors-list)
-        ("M-l t s" . lsp-treemacs-symbols)
-        ("M-l t r" . lsp-treemacs-references)
-        ("M-l t i" . lsp-treemacs-implementations)))
 
 (provide 'init-treemacs)
 

@@ -1,6 +1,6 @@
 ;; init-modeline.el --- modeline configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,18 +12,11 @@
 
 ;;; Code:
 
-(defconst extensions-shrink-path-dir
-  (expand-file-name "extensions/shrink-path" user-emacs-directory))
-(defconst extensions-doom-modeline-dir
-  (expand-file-name "extensions/doom-modeline" user-emacs-directory))
-
 (use-package shrink-path
-  :ensure nil
-  :load-path extensions-shrink-path-dir)
+  :ensure t)
 
 (use-package doom-modeline
-  :ensure nil
-  :load-path extensions-doom-modeline-dir
+  :ensure t
   :init
   ;; If non-nil, cause imenu to see `doom-modeline' declarations.
   ;; This is done by adjusting `lisp-imenu-generic-expression' to

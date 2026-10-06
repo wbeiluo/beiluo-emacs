@@ -8,26 +8,12 @@
 ;;; Commentary:
 ;;; Code:
 
-
-(defconst extensions-symbol-overlay-dir
-  (expand-file-name "extensions/symbol-overlay" user-emacs-directory))
-(defconst extensions-highlight-indent-guides-dir
-  (expand-file-name "extensions/highlight-indent-guides" user-emacs-directory))
-(defconst extensions-rainbow-delimiters-dir
-  (expand-file-name "extensions/rainbow-delimiters" user-emacs-directory))
-(defconst extensions-colorful-mode-dir
-  (expand-file-name "extensions/colorful-mode" user-emacs-directory))
-(defconst extensions-smartparens-dir
-  (expand-file-name "extensions/smartparens" user-emacs-directory))
-(defconst extensions-origami-dir
-  (expand-file-name "extensions/origami" user-emacs-directory))
-(defconst extensions-lsp-origami-dir
-  (expand-file-name "extensions/lsp-origami" user-emacs-directory))
+;;; 快捷键(默认C-x p)，增加C-c p
+(global-set-key (kbd "C-c p") project-prefix-map)
 
 ;; Highlight symbols
 (use-package symbol-overlay
-  :ensure nil
-  :load-path extensions-symbol-overlay-dir
+  :ensure t
   :bind (("M-i" . symbol-overlay-put)
          ("M-n" . symbol-overlay-jump-next)
          ("M-p" . symbol-overlay-jump-prev)
@@ -40,8 +26,7 @@
 
 ;; Highlight indent
 (use-package highlight-indent-guides
-  :ensure nil
-  :load-path extensions-highlight-indent-guides-dir
+  :ensure t
   :hook (prog-mode . highlight-indent-guides-mode)
   :custom
   ;; 使用字符描绘线条
@@ -58,14 +43,12 @@
 
 ;; Highlight parentheses
 (use-package rainbow-delimiters
-  :ensure nil
-  :load-path extensions-rainbow-delimiters-dir
+  :ensure t
   :hook (prog-mode . rainbow-delimiters-mode))
 
 ;; Colorful mode
 (use-package colorful-mode
-  :ensure nil
-  :load-path extensions-colorful-mode-dir
+  :ensure t
   :custom
   (colorful-use-prefix t)
   (colorful-only-strings 'only-prog)
@@ -82,11 +65,8 @@
 
 ;; Auto parentheses
 (use-package smartparens
-  :ensure nil
-  :load-path extensions-smartparens-dir
-  :hook ((prog-mode . smartparens-mode)
-	 ;;(emacs-lisp-mode . smartparens-strict-mode)
-	 )
+  :ensure t
+  :hook (prog-mode . smartparens-mode)
   :bind
   (:map sp-keymap
         ("M-<right>" . sp-forward-slurp-sexp) ;; 向右吞噬：将后面的符号吸进括号
@@ -108,8 +88,7 @@
 
 ;; 代码折叠
 (use-package origami
-  :ensure nil
-  :load-path extensions-origami-dir
+  :ensure t
   :hook (prog-mode . origami-mode)
   :bind (:map origami-mode-map
 	      ("C-<tab> <tab>" . origami-toggle-node)
@@ -121,8 +100,7 @@
 	      ("C-<tab> t" . origami-recursively-toggle-node)))
 
 (use-package lsp-origami
-  :ensure nil
-  :load-path extensions-lsp-origami-dir
+  :ensure t
   :after (lsp-mode origami)
   :hook (lsp-configure . lsp-origami-try-enable))
 

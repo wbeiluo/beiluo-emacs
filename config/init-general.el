@@ -1,6 +1,6 @@
 ;;; init-general.el --- General configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,6 +12,26 @@
 
 ;;; Code:
 
+;; 设置国内镜像源
+(setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
+                         ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
+                         ("melpa-stable" . "http://mirrors.ustc.edu.cn/elpa/melpa-stable/")
+                         ("org" . "http://mirrors.ustc.edu.cn/elpa/org/")))
+
+;; Encoding
+(set-language-environment 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-selection-coding-system 'utf-8)
+(set-clipboard-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-buffer-file-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+(modify-coding-system-alist 'process "*" 'utf-8)
+(when (display-graphic-p)
+  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
+
 ;; 让窗口启动更平滑
 (setq frame-inhibit-implied-resize t)
 (setq-default inhibit-redisplay t
@@ -21,6 +41,13 @@
             (setq-default inhibit-redisplay nil
                           inhibit-message nil)
             (redisplay)))
+
+;; 禁用工具栏
+(tool-bar-mode -1)
+;; 禁用菜单栏
+(menu-bar-mode -1)
+;; 禁用滚动条
+(scroll-bar-mode -1)
 
 ;; 不加载启动画面
 (setq inhibit-startup-screen t)
@@ -48,8 +75,6 @@
 (global-hl-line-mode t)
 ;; 不显示平均负载
 (setq display-time-default-load-average nil)
-                                        ; 打开电池显示
-;; (display-battery-mode nil)
 ;; 在modeline上显示列号
 (column-number-mode t)
 ;; 显示行号
@@ -91,26 +116,16 @@
 ;; 避免默认自动选择
 (setq completion-auto-select nil)
 
-;; Encoding
-;; 配置所有的编码为UTF-8
-(set-language-environment 'utf-8)
-(set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(set-selection-coding-system 'utf-8)
-(set-clipboard-coding-system 'utf-8)
-(set-file-name-coding-system 'utf-8)
-(set-buffer-file-coding-system 'utf-8)
-(prefer-coding-system 'utf-8)
-(modify-coding-system-alist 'process "*" 'utf-8)
-(when (display-graphic-p)
-  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
-
-;; 设置国内镜像源
-(setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
-                         ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
-                         ("melpa-stable" . "http://mirrors.ustc.edu.cn/elpa/melpa-stable/")
-                         ("org" . "http://mirrors.ustc.edu.cn/elpa/org/")))
+;; 打开日期显示
+(setq display-time-day-and-date t)
+;; 打开时间显示
+(display-time-mode 1)
+;; 打开24小时显示模式
+(setq display-time-24hr-format t)
+;; 设置时间显示格式
+(setq display-time-format "%H:%M")
+;; 显示时间
+(display-time)
 
 (provide 'init-general)
 

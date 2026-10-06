@@ -1,6 +1,6 @@
 ;;; init-window.el --- Window configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2025 王北洛
+;; Copyright (C) 2020~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -13,23 +13,15 @@
 
 ;;; Code:
 
-(defconst extensions-ace-window-dir
-  (expand-file-name "extensions/ace-window" user-emacs-directory))
-
 ;; Quickly switch windows
 (use-package ace-window
-  :ensure nil
-  :load-path extensions-ace-window-dir
+  :ensure t
   :bind (("M-o" . ace-window))
   :custom
   (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   (aw-dispatch-always t)
   (aw-background t)
   :config
-  (custom-set-faces
-   '(aw-leading-char-face ((t (:inherit 'error :bold t :height 1.2))))
-   '(aw-mode-line-face ((t (:inherit 'mode-line-emphasis :bold t)))))
-
   (defun toggle-window-split ()
     (interactive)
     (if (= (count-windows) 2)
@@ -71,10 +63,6 @@
 		(windmove-down)))))
 
   (ace-window-display-mode 1))
-
-(use-package ace-window-posframe
-  :ensure nil
-  :load-path extensions-ace-window-dir)
 
 (provide 'init-window)
 

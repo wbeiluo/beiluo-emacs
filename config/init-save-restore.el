@@ -1,6 +1,6 @@
 ;;; init-save-restore.el --- Auto save and restore configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,15 +12,9 @@
 
 ;;; Code:
 
-(defconst extensions-super-save-dir
-  (expand-file-name "extensions/super-save" user-emacs-directory))
-(defconst extensions-vundo-dir
-  (expand-file-name "extensions/vundo" user-emacs-directory))
-
 ;; 自动保存文件
 (use-package super-save
-  :ensure nil
-  :load-path extensions-super-save-dir
+  :ensure t
   :custom
   (auto-save-default nil)
   (super-save-auto-save-when-idle t)
@@ -36,7 +30,6 @@
 
 ;; 保存光标位置
 (use-package saveplace
-  :ensure nil
   :custom
   (save-place-limit 100)
   :config
@@ -44,8 +37,7 @@
 
 ;; Undo
 (use-package vundo
-  :ensure nil
-  :load-path extensions-vundo-dir
+  :ensure t
   :bind ("C-x u" . vundo)
   :custom
   (vundo-glyph-alist vundo-unicode-symbols))

@@ -8,21 +8,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst extensions-ts-dir
-  (expand-file-name "extensions/ts" user-emacs-directory))
-(defconst extensions-org-super-agenda-dir
-  (expand-file-name "extensions/org-super-agenda" user-emacs-directory))
-(defconst extensions-org-modern-dir
-  (expand-file-name "extensions/org-modern" user-emacs-directory))
-(defconst extensions-org-appear-dir
-  (expand-file-name "extensions/org-appear" user-emacs-directory))
-(defconst extensions-denote-dir
-  (expand-file-name "extensions/denote" user-emacs-directory))
-(defconst extensions-consult-notes-dir
-  (expand-file-name "extensions/consult-notes" user-emacs-directory))
-(defconst extensions-org-super-links-dir
-  (expand-file-name "extensions/org-super-links" user-emacs-directory))
-
 (require 'org)
 (require 'org-agenda)
 (require 'appt)
@@ -30,30 +15,23 @@
 (require 'org-capture)
 (require 'org-element)
 
+;;; Global Keyword
+;; Org-agenda
+(global-set-key (kbd "\e\e a") #'org-agenda)
+(define-key org-agenda-mode-map (kbd "i") #'(lambda () (interactive) (org-capture nil "d")))
+(define-key org-agenda-mode-map (kbd "J") #'consult-org-agenda)
+
+;; Org-capture
+(global-set-key (kbd "\e\e c") #'org-capture)
+
 ;;; Org mode设置 ----------------------------------------------------------------
 
-(custom-set-faces
- ;; 设置Org mode每级标题行的大小
- '(org-document-title ((t (:height 1.2 :weight bold))))
- '(org-level-1 ((t (:height 1.15 :weight bold))))
- '(org-level-2 ((t (:height 1.10 :weight bold))))
- '(org-level-3 ((t (:height 1.05 :weight bold))))
- '(org-level-4 ((t (:height 1.0 :weight bold))))
- '(org-level-5 ((t (:height 1.0 :weight bold))))
- '(org-level-6 ((t (:height 1.0 :weight bold))))
- '(org-level-7 ((t (:height 1.0 :weight bold))))
- '(org-level-8 ((t (:height 1.0 :weight bold))))
- '(org-level-9 ((t (:height 1.0 :weight bold))))
- ;; 设置Org字体和大小
- '(org-table ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-date ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-tag ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-meta-line ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-document-info ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-document-info-keyword ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-drawer ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-special-keyword ((t (:family "LXGW WenKai Mono" :height 0.9))))
- '(org-property-value ((t (:family "LXGW WenKai Mono" :height 0.9)))))
+;; 设置Org字体
+(dolist (face '(org-table org-date org-tag org-meta-line org-document-info
+                          org-document-info-keyword org-drawer org-special-keyword org-property-value))
+  (set-face-attribute face nil
+                      :family "LXGW WenKai Mono"
+                      :height 0.9))
 
 ;; 在org mode里美化字符串标志
 (defun my/org-prettify-symbols ()
@@ -203,18 +181,7 @@
         ;; CONFIRMED : 已确认(完成测试及验证)
         ;; DEPRECATED: 已废弃，不再维护
         ;; ARCHIVED  : 已归档
-        (sequence "DESIGN(s)" "DEVELOP(p!)" "MODIFY(m!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
-
-        ;; --- 长期规划状态 ---
-        ;; VISION    : 方向与目标
-        ;; FOCUS     : 聚焦选择
-        ;; BUILD     : 能力建设
-        ;; PRACTICE  : 持续实践
-        ;; REVIEW    : 评估
-        ;; ACHIEVED  : 实现目标
-        (sequence "VISION(v)" "FOCUS(o!)" "BUILD(u!)" "PRACTICE(l!)" "REVIEW(i!)" "|" "ACHIEVED(g)")
-        ))
-
+        (sequence "DESIGN(s)" "DEVELOP(p!)" "MODIFY(m!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")))
 
 ;; 当标题行状态变化时标签同步发生的变化
 (setq org-todo-state-tags-triggers
@@ -235,16 +202,7 @@
               ("MODIFY" ("modify" . t) ("design") ("develop") ("confirmed"))
               ("CONFIRMED" ("confirmed" . t) ("design") ("develop") ("modify"))
               ("DEPRECATED" ("deprecated" . t) ("design") ("develop") ("modify") ("confirmed"))
-              ("ARCHIVED" ("archived" . t) ("design") ("develop") ("modify") ("confirmed"))
-
-              ;; -------- 长期规划阶段 --------
-              ("VISION" ("vision" . t) ("focus") ("build") ("practice") ("review") ("achieved"))
-              ("FOCUS" ("focus" . t) ("vision") ("build") ("practice") ("review") ("achieved"))
-              ("BUILD" ("build" . t) ("vision") ("focus") ("practice") ("review") ("achieved"))
-              ("PRACTICE" ("practice" . t) ("vision") ("focus") ("build") ("review") ("achieved"))
-              ("REVIEW" ("review" . t) ("vision") ("focus") ("build") ("practice") ("achieved"))
-              ("ACHIEVED" ("achieved" . t) ("vision") ("focus") ("build") ("practice") ("review"))
-              )))
+              ("ARCHIVED" ("archived" . t) ("design") ("develop") ("modify") ("confirmed")))))
 
 ;; 始终存在的的标签
 (setq org-tag-persistent-alist '(("read"     . ?r)
@@ -344,13 +302,8 @@
       '("       截止 " "%3d天后截止 " "%3d天前过期 "))
 
 ;; 自定义视图
-(use-package ts
-  :ensure nil
-  :load-path extensions-ts-dir)
-
 (use-package org-super-agenda
-  :ensure nil
-  :load-path extensions-org-super-agenda-dir
+  :ensure t
   :after org
   :init
   (setq org-super-agenda-header-map nil) ; 防止 agenda buffer 中出现折叠错乱
@@ -382,12 +335,6 @@
                         (:name "◎ 代码控制 ➜ 开发🄓/修改🄜" :todo ("DEVELOP" "MODIFY"))
                         (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
 
-                        ;; 长期规划
-                        (:name "◎ 长期规划 ➜ 目标🄥/聚焦🄞" :todo ("VISION" "FOCUS"))
-                        (:name "◎ 长期规划 ➜ 能力建设🄤" :todo "BUILD")
-                        (:name "◎ 长期规划 ➜ 持续实践🄣" :todo "PRACTICE")
-                        (:name "◎ 长期规划 ➜ 评估🄘" :todo "REVIEW")
-
                         ;; 其他
                         (:discard (:anything t))))))))
 
@@ -410,12 +357,6 @@
                         (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
                         (:name "◎ 代码控制 ➜ 开发🄓/修改🄜" :todo ("DEVELOP" "MODIFY"))
                         (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
-
-                        ;; 长期规划
-                        (:name "◎ 长期规划 ➜ 目标🄥/聚焦🄞" :todo ("VISION" "FOCUS"))
-                        (:name "◎ 长期规划 ➜ 能力建设🄤" :todo "BUILD")
-                        (:name "◎ 长期规划 ➜ 持续实践🄣" :todo "PRACTICE")
-                        (:name "◎ 长期规划 ➜ 评估🄘" :todo "REVIEW")
 
                         ;; 其他
                         (:discard (:anything t))))))))
@@ -571,15 +512,11 @@
 
 ;; Org-modern
 (use-package org-modern
-  :ensure nil
-  :load-path extensions-org-modern-dir
+  :ensure t
   :custom
-  ;; 设置star样式 ☰☱☲☳☴☵☶☷
-  (org-modern-replace-stars "☰☱☲☳☴☵☶☷")
-  ;; (org-modern-replace-stars "◉◎○◈◇*")
-  ;; (org-modern-replace-stars "一二三四五六七八九十")
-  ;; (org-modern-replace-stars "❶❷❸❹❺❻❼❽❾❿")
-  ;; (org-modern-replace-stars "⒈⒉⒊⒋⒌⒍⒎⒏⒐⒑")
+  ;; 设置star样式
+  ;; (org-modern-replace-stars "☰☱☲☳☴☵☶☷")
+  (org-modern-replace-stars "◉◎○◈◇✳")
   (org-modern-star 'replace)
   ;; 关闭table美化
   (org-modern-table nil)
@@ -609,23 +546,14 @@
      ("MODIFY"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
      ("CONFIRMED"  . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkSeaGreen" :inverse-video t))
      ("DEPRECATED" . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
-     ("ARCHIVED"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))
-     ;; --- 长期规划 Keyword ---
-     ("VISION"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "SteelBlue" :inverse-video t))
-     ("FOCUS"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
-     ("BUILD"      . (:inherit org-verbatim :weight regular :height 0.9 :foreground "ForestGreen" :inverse-video t))
-     ("PRACTICE"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DarkSeaGreen" :inverse-video t))
-     ("REVIEW"     . (:inherit org-verbatim :weight regular :height 0.9 :foreground "LightGray" :inverse-video t))
-     ("ACHIEVED"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))
-     ))
+     ("ARCHIVED"   . (:inherit org-verbatim :weight regular :height 0.9 :foreground "DimGrey" :inverse-video t))))
 
   :hook ((org-mode . org-modern-mode)
 	 (org-agenda-finalize . org-modern-agenda)))
 
 ;; 自动显示隐藏符号
 (use-package org-appear
-  :ensure nil
-  :load-path extensions-org-appear-dir
+  :ensure t
   :custom
   (org-appear-autolinks t)
   (org-appear-autosubmarkers t)
@@ -635,139 +563,28 @@
   (org-appear-delay 0.5)
   :hook (org-mode . org-appear-mode))
 
-;; 笔记管理
-(use-package denote
-  :ensure nil
-  :load-path extensions-denote-dir
-  :hook
-  ((text-mode . denote-fontify-links-mode-maybe)
-   (dired-mode . denote-dired-mode))
-  :bind
-  ( :map global-map
-    ("C-c n n" . denote)
-    ("C-c n d" . denote-dired)
-    ("C-c n g" . denote-grep)
-    ;; If you intend to use Denote with a variety of file types, it is
-    ;; easier to bind the link-related commands to the `global-map', as
-    ;; shown here.  Otherwise follow the same pattern for `org-mode-map',
-    ;; `markdown-mode-map', and/or `text-mode-map'.
-    ("C-c n l" . denote-link)
-    ("C-c n L" . denote-add-links)
-    ("C-c n b" . denote-backlinks)
-    ("C-c n q c" . denote-query-contents-link) ; create link that triggers a grep
-    ("C-c n q f" . denote-query-filenames-link) ; create link that triggers a dired
-    ;; Note that `denote-rename-file' can work from any context, not just
-    ;; Dired bufffers.  That is why we bind it here to the `global-map'.
-    ("C-c n r" . denote-rename-file)
-    ("C-c n R" . denote-rename-file-using-front-matter)
-
-    ;; Key bindings specifically for Dired.
-    :map dired-mode-map
-    ("C-c C-d C-i" . denote-dired-link-marked-notes)
-    ("C-c C-d C-r" . denote-dired-rename-files)
-    ("C-c C-d C-k" . denote-dired-rename-marked-files-with-keywords)
-    ("C-c C-d C-R" . denote-dired-rename-marked-files-using-front-matter))
-
-  :config
-  ;; Create note using Org capture
-  (with-eval-after-load 'org-capture
-    (setq denote-org-capture-specifiers "%l\n%i\n%?")
-    (add-to-list 'org-capture-templates
-		 '("N" "New note (with Denote)" plain
-                   (file denote-last-path)
-                   #'denote-org-capture
-                   :no-save t
-                   :immediate-finish nil
-                   :kill-buffer t
-                   :jump-to-captured t)))
-
-  (setq denote-directory (expand-file-name "~/Org/notes/"))
-  (setq denote-save-buffers nil)
-  (setq denote-known-keywords '("emacs" "entertainment" "reading" "studying" "project" "misc"))
-  (setq denote-infer-keywords t)
-  (setq denote-sort-keywords t)
-  (setq denote-prompts '(title keywords))
-  (setq denote-excluded-directories-regexp nil)
-  (setq denote-excluded-keywords-regexp nil)
-  (setq denote-rename-confirmations '(rewrite-front-matter modify-file-name))
-
-  ;; Pick dates, where relevant, with Org's advanced interface:
-  (setq denote-date-prompt-use-org-read-date t)
-
-  ;; Automatically rename Denote buffers using the `denote-rename-buffer-format'.
-  (denote-rename-buffer-mode 1))
-
-;; 笔记搜索
-(use-package consult-notes
-  :ensure nil
-  :load-path extensions-consult-notes-dir
-  :commands (consult-notes consult-notes-search-in-all-notes)
-  :bind (("C-c n f" . consult-notes)                      ;; 快速查找并打开笔记
-         ("C-c n s" . consult-notes-search-in-all-notes)) ;; 全局搜索笔记内容
-  :custom
-  ;; 设置笔记源 (可以是多个目录)
-  (consult-notes-file-dir-sources
-   `(("org"     ?o ,(concat org-directory "/"))
-     ("notes"   ?n ,(concat org-directory "/notes/"))
-     ("work"    ?w ,(concat org-directory "/work/"))
-     ("article" ?a ,(concat org-directory "/article/"))
-     ("study"   ?s ,(concat org-directory "/study/"))
-     ("books"   ?b ,(concat org-directory "/books/"))))
-
-  :config
-  ;; Embark support
-  (with-eval-after-load 'embark
-    (defun consult-notes-open-dired (cand)
-      "Open notes directory dired with point on file CAND."
-      (interactive "fNote: ")
-      ;; dired-jump is in dired-x.el but is moved to dired in Emacs 28
-      (dired-jump nil cand))
-
-    (defun consult-notes-grep (cand)
-      "Run grep in directory of notes file CAND."
-      (interactive "fNote: ")
-      (consult-grep (file-name-directory cand)))
-
-    (defvar-keymap consult-notes-map
-      :doc "Keymap for Embark notes actions."
-      :parent embark-file-map
-      "d" #'consult-notes-dired
-      "g" #'consult-notes-grep)
-
-    (add-to-list 'embark-keymap-alist `(,consult-notes-category . consult-notes-map))
-
-    ;; make embark-export use dired for notes
-    (setf (alist-get consult-notes-category embark-exporters-alist) #'embark-export-dired)))
-
-;; Denote suppory
-(use-package consult-notes-denote
-  :ensure nil
-  :load-path extensions-consult-notes-dir
-  :config
-  (when (locate-library "denote")
-    (setq consult-notes-denote-display-id nil) ;; 保持界面简洁
-    (consult-notes-denote-mode 1)))
-
-;; 笔记链接
-(use-package org-super-links
-  :ensure nil
-  :load-path extensions-org-super-links-dir
-  :bind (("C-c s l" . org-super-links-link)
-         ("C-c s i" . org-super-links-insert-link)
-         ("C-c s s" . org-super-links-store-link)
-         ("C-c s d" . org-super-links-quick-insert-drawer)
-         ("C-c s C-i" . org-super-links-quick-insert-inline-link)
-         ("C-c s C-d" . org-super-links-delete-link))
-  :config
-  (setq org-super-links-related-into-drawer t)
-  ;; 自动为链接的目标添加 ID（如果目标没有 ID）
-  (setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
-
 ;; 自动生成ID链接标题
 (require 'org-id)
 (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
 ;; 设置org-id存储位置
 (setq org-id-locations-file (concat org-directory "/.org-id-locations"))
+
+;; 双向链接
+(use-package org-super-links
+  :vc (:url "https://github.com/toshism/org-super-links"
+       :rev :last-release)
+  :bind (("C-c s l" . org-super-links-link)
+         ("C-c s s" . org-super-links-store-link)
+         ("C-c s i" . org-super-links-insert-link)
+         ("C-c s d" . org-super-links-quick-insert-drawer-link)
+         ("C-c s I" . org-super-links-quick-insert-inline-link)
+         ("C-c s C-d" . org-super-links-delete-link))
+  :config
+  ;; 不依赖Helm
+  (setq org-super-links-search-function 'org-super-links-get-location)
+  (setq org-super-links-related-into-drawer t)
+  ;; 自动为链接的目标添加 ID（如果目标没有 ID）
+  (setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
 
 ;; LaTeX 配置
 (setq org-startup-with-latex-preview t)

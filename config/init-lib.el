@@ -15,51 +15,50 @@
 (require 'use-package)
 (setq use-package-always-ensure nil)
 
-(defconst extensions-dash-dir
-  (expand-file-name "extensions/dash" user-emacs-directory))
-(defconst extensions-s-dir
-  (expand-file-name "extensions/s" user-emacs-directory))
-(defconst extensions-f-dir
-  (expand-file-name "extensions/f" user-emacs-directory))
-(defconst extensions-ht-dir
-  (expand-file-name "extensions/ht" user-emacs-directory))
-(defconst extensions-ov-dir
-  (expand-file-name "extensions/ov" user-emacs-directory))
-(defconst extensions-hydra-dir
-  (expand-file-name "extensions/hydra" user-emacs-directory))
-(defconst extensions-compat-dir
-  (expand-file-name "extensions/compat" user-emacs-directory))
-
+;; A modern list library for Emacs
 (use-package dash
-  :ensure nil
-  :load-path extensions-dash-dir)
+  :ensure t
+  :demand t)
 
+;; The long lost Emacs string manipulation library.
 (use-package s
-  :ensure nil
-  :load-path extensions-s-dir)
+  :ensure t)
 
+;; Modern API for working with files and directories in Emacs
 (use-package f
-  :ensure nil
-  :load-path extensions-f-dir)
+  :ensure t)
 
+;; The missing hash table library for Emacs
 (use-package ht
-  :ensure nil
-  :load-path extensions-ht-dir)
+  :ensure t)
 
+;; Simple way to manipulate overlay for Emacs
 (use-package ov
-  :ensure nil
-  :load-path extensions-ov-dir)
+  :ensure t)
 
+;; Emacs timestamp and date-time library
+(use-package ts
+  :ensure t)
+
+;; make Emacs bindings that stick around
 (use-package hydra
-  :ensure nil
-  :load-path extensions-hydra-dir)
+  :ensure t)
 
-(use-package compat
-  :ensure nil
-  :load-path extensions-compat-dir)
+;; COMPATibility Library for Emacs Lisp(built-in)
+(use-package compat)
 
-(require 'which-key)
-(which-key-mode 1)
+;; Child Frame Read String
+(use-package cfrs
+  :ensure t)
+
+;; Pop a posframe (just a frame) at point
+(use-package posframe
+  :ensure t)
+
+;; Display available keybindings in popup
+(use-package which-key
+  :config
+  (which-key-mode))
 
 (provide 'init-lib)
 

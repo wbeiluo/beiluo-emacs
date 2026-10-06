@@ -1,6 +1,6 @@
 ;;; init-embark.el --- Embark Configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020~2025 王北洛
+;; Copyright (C) 2020~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -8,18 +8,15 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst extensions-embark-dir
-  (expand-file-name "extensions/embark" user-emacs-directory))
-
 (use-package embark
-  :ensure nil
-  :load-path extensions-embark-dir
+  :ensure t
   :demand t  ;; 立即加载，不使用延迟加载
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
    ("M-." . embark-dwim)        ;; good alternative: M-.
    ("C-h B" . embark-bindings)  ;; alternative for `describe-bindings'
    ("C-c C-e" . embark-export))
+  :hook (embark-collect-mode . consult-preview-at-point-mode)
   :init
   ;; Optionally replace the key help with a completing-read interface
   (setq prefix-help-command #'embark-prefix-help-command)
@@ -44,17 +41,16 @@
           embark-isearch-highlight-indicator)) ; 在 isearch 模式下高亮显示与当前输入匹配的动作
 
   :config
+
   ;; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
                  (window-parameters (mode-line-format . none)))))
 
-;; Consult users will also want the embark-consult package.
 (use-package embark-consult
-  :ensure nil
-  :load-path extensions-embark-dir
-  :hook (embark-collect-mode . consult-preview-at-point-mode))
+  :ensure t
+  :after embark consult)
 
 (provide 'init-embark)
 

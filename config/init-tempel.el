@@ -1,6 +1,6 @@
 ;;; init-tempel.el --- Tempel configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,14 +12,8 @@
 
 ;;; Code:
 
-(defconst extensions-tempel-dir
-  (expand-file-name "extensions/tempel" user-emacs-directory))
-(defconst extensions-tempel-collection-dir
-  (expand-file-name "extensions/tempel-collection" user-emacs-directory))
-
 (use-package tempel
-  :ensure nil
-  :load-path extensions-tempel-dir
+  :ensure t
   :bind (("M-+" . tempel-complete)
          ("M-*" . tempel-insert)
          :map tempel-map
@@ -41,8 +35,7 @@
   (setq tempel-trigger-prefix "<"))
 
 (use-package tempel-collection
-  :ensure nil
-  :load-path extensions-tempel-collection-dir
+  :ensure t
   :after tempel)
 
 (provide 'init-tempel)

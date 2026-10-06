@@ -12,54 +12,54 @@
 
 ;;; Code:
 
-(tool-bar-mode -1)    ; 禁用工具栏
-(menu-bar-mode -1)    ; 禁用菜单栏
-(scroll-bar-mode -1)  ; 禁用滚动条
+;; Set the software name and version
+(setq blemacs-name    "BLEmacs")
+(setq blemacs-version "2.3.0")
 
 ;; Add configuration path
 (setq default-directory "~/")
 (add-to-list 'load-path (expand-file-name "config" user-emacs-directory))
 
+;; Change custom file location
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+
 (with-temp-message ""   ; 抹掉插件启动的输出
   (require 'init-general)
   (require 'init-lib)
   (require 'init-gcmh)
-  (require 'init-time)
+  (require 'init-func)
+  (require 'init-goto)
+  (require 'init-window)
   (require 'init-theme)
+  (require 'init-modeline)
   (require 'init-fonts)
   (require 'init-consult)
   (require 'init-vertico)
   (require 'init-org)
-  (require 'init-modeline)
+  (require 'init-note)
   (require 'init-embark)
   (require 'init-markdown)
+  (require 'init-shell)
+  (require 'init-edit)
+  (require 'init-git)
+  (require 'init-treemacs)
   (require 'init-corfu)
   (require 'init-flycheck)
   (require 'init-lsp)
-  (require 'init-git)
-  (require 'init-treemacs)
-  (require 'init-goto)
-  (require 'init-window)
-  (require 'init-program)
   (require 'init-tempel)
-  (require 'init-save-restore)
-  (require 'init-shell)
-  (require 'init-edit)
+  (require 'init-program)
   (require 'init-cc)
   (require 'init-python)
-  (require 'init-sdcv)
   (require 'init-music)
   (require 'init-ai)
   (require 'init-windows)
+  (require 'init-save-restore)
   (require 'init-screen)
-  (require 'init-key)
-  (require 'init-start-board)
-)
+  (require 'init-start-board))
 
-;; change custom file location
-(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+;; Load custom file
 (when (file-exists-p custom-file)
-  (load custom-file))
+  (load custom-file nil t))
 
 ;; Local Variables:
 ;; coding: utf-8

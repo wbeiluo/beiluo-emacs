@@ -1,27 +1,21 @@
-;; init-time.el --- Time Configurations. -*- lexical-binding: t -*-
+;; init-func.el --- Function Configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
 
 ;;; Commentary:
 ;;
-;; 时间相关设置
+;; 自定义函数
 ;;
 
 ;;; Code:
 
-;; 打开日期显示
-(setq display-time-day-and-date t)
-;; 打开时间显示
-(display-time-mode 1)
-;; 打开24小时显示模式
-(setq display-time-24hr-format t)
-;; 设置时间显示格式
-(setq display-time-format "%H:%M")
-;; 显示时间
-(display-time)
+;; 快捷键
+(global-set-key (kbd "C-c t t") 'insert-current-time)
+(global-set-key (kbd "C-c t d") 'insert-current-data-time)
+(global-set-key (kbd "C-c t w") 'insert-current-data-week-time)
 
 ;; 插入时间
 (defun insert-current-time ()
@@ -41,7 +35,7 @@
   (interactive)
   (insert (format-time-string "%Y-%m-%d %A %H:%M")))
 
-(provide 'init-time)
+(provide 'init-func)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; init-time.el ends here
+;;; init-func.el ends here

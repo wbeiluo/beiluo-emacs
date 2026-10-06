@@ -1,7 +1,7 @@
 ;;; init-python.el --- Python lsp configuration. -*- lexical-binding: t -*-
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: lsp-pyright
 ;; Homepage: https://github.com/wbeiluo/beiluo-emacs
 ;; Keywords: python lsp pyright
@@ -23,16 +23,12 @@
 
 ;;; Commentary:
 
-;; config lsp-mode for python.
+;; Config lsp-mode for python.
 
 ;;; Code:
 
-(defconst extensions-lsp-pyright-dir
-  (expand-file-name "extensions/lsp-pyright" user-emacs-directory))
-
 (use-package lsp-pyright
-  :ensure nil
-  :load-path extensions-lsp-pyright-dir
+  :ensure t
   :custom
   (python-indent-offset 4)
   (lsp-pyright-langserver-command "pyright")  

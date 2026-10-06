@@ -1,6 +1,6 @@
 ;; init-markdown.el --- markdown mode configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,12 +12,8 @@
 
 ;;; Code:
 
-(defconst extensions-markdown-mode-dir
-  (expand-file-name "extensions/markdown-mode" user-emacs-directory))
-
 (use-package markdown-mode
-  :ensure nil
-  :load-path extensions-markdown-mode-dir
+  :ensure t
   :bind (:map markdown-mode-map
          ("C-c C-e" . markdown-do))
   :config

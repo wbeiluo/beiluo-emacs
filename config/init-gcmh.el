@@ -1,6 +1,6 @@
 ;;; init-gcmh.el --- gc configurations -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -8,12 +8,9 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst extensions-gcmh-dir
-  (expand-file-name "extensions/gcmh" user-emacs-directory))
-
+;; The Garbage Collector Magic Hack
 (use-package gcmh
-  :ensure nil
-  :load-path extensions-gcmh-dir
+  :ensure t
   :custom
   ;; Adjust garbage collection threshold for early startup (see use of gcmh below)
   (gc-cons-threshold (* 512 1024 1024))

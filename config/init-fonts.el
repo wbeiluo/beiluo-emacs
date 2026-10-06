@@ -11,12 +11,12 @@
 ;;
 ;;; Code:
 
-(defconst extensions-nerd-icons-dir
-  (expand-file-name "extensions/nerd-icons" user-emacs-directory))
-
 (use-package nerd-icons
-  :ensure nil
-  :load-path extensions-nerd-icons-dir)
+  :ensure t
+  :custom
+  ;; (nerd-icons-scale-factor 1.0)
+  ;; FiraCode Nerd Font, Symbols Nerd Font Mono
+  (nerd-icons-font-family "Symbols Nerd Font Mono"))
 
 ;; (defun set-font (english chinese english-size chinese-size &optional english-weight chinese-weight)
 ;;   "Set ENGLISH, CHINESE font and ENGLISH-SIZE, CHINESE-SIZE."
@@ -86,11 +86,6 @@
                  (if (eq system-type 'windows-nt)
                      (set-font "LXGW WenKai Mono Medium" "霞鹜文楷等宽 Medium" 12 1.00)
                    (set-font "LXGW WenKai Mono" "霞鹜文楷等宽" 12 1.00 'medium 'regular)))))
-
-;; 设置图标字体
-;; FiraCode Nerd Font, Symbols Nerd Font Mono
-(setq nerd-icons-font-family "Symbols Nerd Font Mono")
-;; (setq nerd-icons-scale-factor 1.0)
 
 ;; 设置Uniclode字体
 (set-fontset-font "fontset-default" 'unicode "Symbols Nerd Font Mono")

@@ -8,13 +8,9 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst extensions-consult-dir
-  (expand-file-name "extensions/consult" user-emacs-directory))
-
 ;; Configuration for Consult
 (use-package consult
-  :ensure nil
-  :load-path extensions-consult-dir
+  :ensure t
   :bind (;; C-c bindings in `mode-specific-map'
          ("C-c M-x" . consult-mode-command)
          ("C-c h" . consult-history)
@@ -61,6 +57,11 @@
          ("M-s a" . consult-org-agenda)
          ;; Isearch integration
          ("C-s" . consult-line)
+	 :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
          ;; Minibuffer history
          :map minibuffer-local-map
          ("M-s" . consult-history)                 ;; orig. next-matching-history-element
@@ -85,41 +86,6 @@
   ;; Configure other variables and modes in the :config section,
   ;; after lazily loading the package.
   :config
-
-  (use-package consult-xref
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
-
-  (use-package consult-org
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
-
-  (use-package consult-imenu
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
-
-  (use-package consult-compile
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
-
-  (use-package consult-info
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
-
-  (use-package consult-kmacro
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
-
-  (use-package consult-register
-    :after consult
-    :ensure nil
-    :load-path extensions-consult-dir)
   
   ;; Optionally configure preview. The default value
   ;; is 'any, such that any key triggers the preview.
@@ -157,10 +123,10 @@
   ;; You may want to use `embark-prefix-help-command' or which-key instead.
   (keymap-set consult-narrow-map (concat consult-narrow-key " ?") #'consult-narrow-help))
 
+;; 使用 ripgrep 作为 xref 的后端搜索工具
 (use-package xref
   :ensure nil
   :custom
-  ;; 使用 ripgrep 作为 xref 的后端搜索工具
   (xref-search-program 'ripgrep))
 
 (provide 'init-consult)

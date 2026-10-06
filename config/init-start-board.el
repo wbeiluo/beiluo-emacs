@@ -12,12 +12,11 @@
 
 ;;; Code:
 
-(defconst extensions-emacs-dashboard-dir
-  (expand-file-name "extensions/emacs-dashboard" user-emacs-directory))
+(defvar blemacs-name)
+(defvar blemacs-version)
 
 (use-package dashboard
-  :ensure nil
-  :load-path extensions-emacs-dashboard-dir
+  :ensure t
   :init
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
@@ -29,8 +28,8 @@
   (dashboard-setup-startup-hook)
   
   ;; 设置内容项目
-  (setq dashboard-items '((recents  . 10)   ;; 最近文件
-                          (projects . 10)   ;; 项目列表
+  (setq dashboard-items '((recents  . 15)   ;; 最近文件
+                          (projects . 15)   ;; 项目列表
                           (agenda .   20))) ;; 日程
 
   ;; 视觉优化
@@ -46,9 +45,8 @@
                       :weight 'regular)
 
   ;; 设置页脚
-  (setq dashboard-footer-messages '("BLEmacs 2.2.3"))
-  (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face))
-)
+  (setq dashboard-footer-messages (list (format "%s %s" blemacs-name blemacs-version)))
+  (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face)))
 
 (provide 'init-start-board)
 ;;; init-start-board.el ends here

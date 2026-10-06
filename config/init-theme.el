@@ -1,6 +1,6 @@
 ;;; init-theme.el --- Config Theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -8,15 +8,9 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst extensions-solarized-emacs-dir
-  (expand-file-name "extensions/solarized-emacs" user-emacs-directory))
-(defconst extensions-modus-themes-dir
-  (expand-file-name "extensions/modus-themes" user-emacs-directory))
-
 ;;; Solarized-theme
 (use-package solarized-theme
-  :ensure nil
-  :load-path extensions-solarized-emacs-dir
+  :ensure t
   :custom
   ;; make the fringe stand out from the background
   (solarized-distinct-fringe-background nil)
@@ -50,8 +44,7 @@
 
 ;;; Modus-themes
 (use-package modus-themes
-  :ensure nil
-  :load-path extensions-modus-themes-dir
+  :ensure t
   :custom
   (modus-themes-to-toggle '(modus-operandi modus-vivendi))
   (modus-themes-to-rotate modus-themes-items)

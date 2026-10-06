@@ -1,6 +1,6 @@
 ;; init-goto.el --- Goto Anywhere Configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -12,22 +12,14 @@
 
 ;;; Code:
 
-(defconst extensions-mwim-dir
-  (expand-file-name "extensions/mwim" user-emacs-directory))
-(defconst extensions-goto-chg-dir
-  (expand-file-name "extensions/goto-chg" user-emacs-directory))
-(defconst extensions-avy-dir
-  (expand-file-name "extensions/avy" user-emacs-directory))
-
+;; Move to the beginning/end of line, code or comment
 (use-package mwim
-  :ensure nil
-  :load-path extensions-mwim-dir
+  :ensure t
   :bind (("C-a" . mwim-beginning-of-code-or-line)
          ("C-e" . mwim-end-of-code-or-line)))
 
 (use-package goto-chg
-  :ensure nil
-  :load-path extensions-goto-chg-dir
+  :ensure t
   :bind (("C-," . goto-last-change)
 	 ("C-，" . goto-last-change)
          ("C-M-," . goto-last-change-reverse)
@@ -35,8 +27,7 @@
 
 ;; Jump to things in Emacs tree-style
 (use-package avy
-  :ensure nil
-  :load-path extensions-avy-dir
+  :ensure t
   :bind
   (("M-j" . avy-goto-char-timer) ;; 跳到单词 (字母)
    ("M-g l" . avy-goto-line)     ;; 跳到行

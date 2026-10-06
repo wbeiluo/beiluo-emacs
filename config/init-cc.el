@@ -1,6 +1,6 @@
 ;; init-cc.el --- c/c++-mode configurations.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2022~2025 王北洛
+;; Copyright (C) 2022~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -11,9 +11,6 @@
 ;;
 
 ;;; Code:
-
-(defconst extensions-modern-cpp-font-lock-dir
-  (expand-file-name "extensions/modern-cpp-font-lock" user-emacs-directory))
 
 ;; 设置缩进为4
 (setq-default c-basic-offset 4)
@@ -47,8 +44,7 @@
 
 ;; modern-cpp-font-lock
 (use-package modern-cpp-font-lock
-  :ensure nil
-  :load-path extensions-drag-stuff-dir
+  :ensure t
   :diminish
   :hook (c++-mode . modern-cpp-font-lock-mode)
   :config

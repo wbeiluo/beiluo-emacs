@@ -1,6 +1,6 @@
 ;;; init-git.el --- Git Configurations. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025~2025 王北洛
+;; Copyright (C) 2025~2026 王北洛
 
 ;; Author: 王北洛 <beiluo.wang@139.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -11,50 +11,25 @@
 ;;
 ;;; Code:
 
-(defconst extensions-llama-dir
-  (expand-file-name "extensions/llama" user-emacs-directory))
-(defconst extensions-cond-let-dir
-  (expand-file-name "extensions/cond-let" user-emacs-directory))
-(defconst extensions-transient-dir
-  (expand-file-name "extensions/transient/lisp" user-emacs-directory))
-(defconst extensions-with-editor-dir
-  (expand-file-name "extensions/with-editor/lisp" user-emacs-directory))
-(defconst extensions-posframe-dir
-  (expand-file-name "extensions/posframe" user-emacs-directory))
-(defconst extensions-cfrs-dir
-  (expand-file-name "extensions/cfrs" user-emacs-directory))
-(defconst extensions-magit-dir
-  (expand-file-name "extensions/magit/lisp" user-emacs-directory))
-(defconst extensions-diff-hl-dir
-  (expand-file-name "extensions/diff-hl" user-emacs-directory))
-
+;; Compact syntax for short lambda
 (use-package llama
-  :ensure nil
-  :load-path extensions-llama-dir)
+  :ensure t)
 
+;; Additional and improved binding conditionals
 (use-package cond-let
-  :ensure nil
-  :load-path extensions-cond-let-dir)
+  :ensure t)
 
+;; Transient command menus
 (use-package transient
-  :ensure nil
-  :load-path extensions-transient-dir)
+  :ensure t)
 
+;; Use the Emacsclient as the $EDITOR of child processes
 (use-package with-editor
-  :ensure nil
-  :load-path extensions-with-editor-dir)
+  :ensure t)
 
-(use-package posframe
-  :ensure nil
-  :load-path extensions-posframe-dir)
-
-(use-package cfrs
-  :ensure nil
-  :load-path extensions-cfrs-dir)
-
+;; A Git Porcelain inside Emacs
 (use-package magit
-  :ensure nil
-  :load-path extensions-magit-dir
+  :ensure t
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch)
          ("C-c M-g" . magit-file-popup))
@@ -65,9 +40,9 @@
     (info-initialize)
     (add-to-list 'Info-directory-list (expand-file-name "extensions/magit/docs" user-emacs-directory))))
 
+;; highlighting uncommitted changes
 (use-package diff-hl
-  :ensure nil
-  :load-path extensions-diff-hl-dir
+  :ensure t
   :config
   ;; Highlighting uncommitted changes
   (global-diff-hl-mode 1)

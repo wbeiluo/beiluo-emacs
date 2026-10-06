@@ -1,6 +1,6 @@
 ;;; init-music.el --- Music Configuration -*- lexical-binding: t -*-
 
-;; Copyright (C) 2023~2025 王北洛
+;; Copyright (C) 2023~2026 王北洛
 
 ;; Author: 王北洛 <wbeiluo@gmail.com>
 ;; URL: https://github.com/wbeiluo/beiluo-emacs
@@ -11,13 +11,10 @@
 ;;
 ;;; Code:
 
-(defconst extensions-emms-dir
-  (expand-file-name "extensions/emms" user-emacs-directory))
-
 (use-package emms
-  :ensure nil
-  :load-path extensions-emms-dir
-  :bind (("C-c e s" .   emms-start)
+  :ensure t
+  :bind (("C-c e e" .   emms)
+         ("C-c e s" .   emms-start)
          ("C-c e x" .   emms-stop)
          ("C-c e SPC" . emms-pause)
          ("C-c e n" .   emms-next)
@@ -36,12 +33,6 @@
 
   (setq emms-source-file-default-directory "~/Music/")
 
-  (use-package emms-info-native
-  :ensure nil
-  :load-path extensions-emms-dir
-  :init
-  (add-to-list 'emms-info-functions 'emms-info-native))
-
   ;; 在modeline显示图标和歌曲名
   (setq emms-mode-line-format "    %s ")
   (setq emms-mode-line-mode-line-function #'emms-mode-line-playlist-current)
@@ -53,8 +44,9 @@
         '(((emms-last-played-time-days) . "%Y-%m-%d %H:%M")
           (t . "%H:%M")))
 
-  ;; modeline显示歌词
-  (setq emms-lyrics-display-on-modeline t)
+  ;; mimibuffer显示歌词
+  (setq emms-lyrics-display-on-modeline nil)
+  (setq emms-lyrics-display-on-minibuffer t)
   
   (emms-mode-line 1)
   (emms-playing-time 1))
