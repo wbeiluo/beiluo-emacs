@@ -2,30 +2,91 @@
 
   王北洛's Emacs for Org schedule, C/C++ development, etc...
 
+  版本：2.3.0 ｜ 平台：Linux、Windows ｜ 仓库：https://github.com/wbeiluo/beiluo-emacs
+
 ** 安装
+
   1. 下载配置文件
-    #+BEGIN_SRC shell
-    git clone https://github.com/wbeiluo/beiluo-emacs.git .emacs.d
-    #+END_SRC
+     #+BEGIN_SRC shell
+     git clone https://github.com/wbeiluo/beiluo-emacs.git .emacs.d
+     #+END_SRC
 
   2. 安装字体
-    #+BEGIN_SRC shell
-    sudo pacman -S ttf-maplemono ttf-maplemono-nf-unhinted ttf-lxgw-wenkai-mono ttf-jetbrains-mono ttf-nerd-fonts-symbols-common ttf-nerd-fonts-symbols-mono
-    #+END_SRC
+     #+BEGIN_SRC shell
+     sudo pacman -S ttf-maplemono ttf-maplemono-nf-unhinted ttf-lxgw-wenkai-mono ttf-jetbrains-mono ttf-nerd-fonts-symbols-common ttf-nerd-fonts-symbols-mono
+     #+END_SRC
 
   3. 安装依赖软件
-    #+BEGIN_SRC shell
-    sudo pacman -S ripgrep pyright
-    #+END_SRC
+     #+BEGIN_SRC shell
+     sudo pacman -S ripgrep pyright
+     #+END_SRC
 
-  4. 安装LaTeX
-    #+BEGIN_SRC shell
-    sudo pacman -S texlive texlive-langchinese
-    #+END_SRC
+     | 工具    | 用途                        |
+     |---------+-----------------------------|
+     | ripgrep | consult-ripgrep / grep 搜索 |
+     | pyright | Python LSP                  |
+     | mpv     | EMMS 音乐播放               |
+
+  4. 安装 LaTeX（org 导出与公式预览）
+     #+BEGIN_SRC shell
+     sudo pacman -S texlive texlive-langchinese
+     #+END_SRC
+
+  5. 启动 Emacs，首次启动自动从 ELPA（中科大镜像）安装全部插件
+
+** 目录结构
+
+  #+BEGIN_SRC
+  init.el            启动引导：按固定顺序 require config/ 下的模块，最后加载 custom.el
+  config/init-*.el   功能模块（33 个），每个以 (provide 'init-foo) 结尾
+  custom.el          Custom 生成，勿手写（不入库）
+  logo.txt           启动界面 logo
+  #+END_SRC
+
+  新增模块 = 创建 =config/init-foo.el=（含 =(provide 'init-foo)=）并在 =init.el= 的
+  require 列表中插入——模块不自动发现，加载顺序即依赖顺序（init-lib 提供公共库）。
+
+  插件声明用 =use-package=，注意 =use-package-always-ensure= 为 nil：
+  需要自动安装的包必须显式写 =:ensure t=。
+
+** 数据位置（不在本仓库内）
+
+  | 路径         | 内容                                                                 |
+  |--------------+----------------------------------------------------------------------|
+  | =~/Org/=       | agenda 数据：diary.org / plan.org / inbox.org / work.org + projects/ |
+  | =~/Org/notes/= | denote 笔记                                                          |
+  | =~/Music/=     | EMMS 音乐库                                                          |
+
+** 常用快捷键
+
+  | 按键                  | 功能                                          |
+  |-----------------------+-----------------------------------------------|
+  | =ESC ESC a= / =ESC ESC c= | org-agenda / org-capture                      |
+  | =C-c n=                 | denote 笔记（n 新建、f 查找、g 搜索、l 链接） |
+  | =C-c s=                 | org-super-links 双向链接                      |
+  | =C-c g=                 | gptel AI 对话（g 对话、s 发送、r 改写）       |
+  | =C-c l=                 | lsp 命令前缀                                  |
+  | =C-c e=                 | EMMS 音乐播放                                 |
+  | =C-c p=                 | project 命令前缀                              |
+  | =C-c t=                 | 插入时间 / 屏幕透明度                         |
+  | =M-o= / =M-j=             | ace-window 切窗 / avy 跳转                    |
+  | =C-x b= / =M-s r=         | consult-buffer / consult-ripgrep              |
 
 ** 更新
+
   #+BEGIN_SRC elisp
   M-x package-refresh-contents   ; 从ELPA拉取最新索引
   M-x package-upgrade-all        ; 升级所有包
   #+END_SRC
 
+** 验证配置
+
+  修改配置后可用 batch 启动自检（不打开图形界面）：
+
+  #+BEGIN_SRC shell
+  emacs --batch -Q --eval '(require (quote package))' --eval '(package-activate-all)' \
+        -l ~/.emacs.d/init.el
+  #+END_SRC
+
+  exit 0 表示正常；报错会打印回溯到 stderr。注意开头的 =package-activate-all=
+  不可省略（batch 模式不会自动激活 ELPA 包），且成功时无任何输出。
