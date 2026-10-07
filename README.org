@@ -39,6 +39,7 @@
   #+BEGIN_SRC
   init.el            启动引导：按固定顺序 require config/ 下的模块，最后加载 custom.el
   config/init-*.el   功能模块（33 个），每个以 (provide 'init-foo) 结尾
+  agents/*.md        gptel-agent 自定义子代理定义（Markdown/Org，含 YAML 头）
   custom.el          Custom 生成，勿手写（不入库）
   logo.txt           启动界面 logo
   #+END_SRC
@@ -56,6 +57,7 @@
   | =~/Org/=       | agenda 数据：diary.org / plan.org / inbox.org / work.org + projects/ |
   | =~/Org/notes/= | denote 笔记                                                          |
   | =~/Music/=     | EMMS 音乐库                                                          |
+  | =~/.emacs.d/agents/= | gptel-agent 子代理定义（.md/.org，自定义 agent 放这里）      |
 
 ** 常用快捷键
 
@@ -64,7 +66,7 @@
   | =ESC ESC a= / =ESC ESC c= | org-agenda / org-capture                      |
   | =C-c n=                 | denote 笔记（n 新建、f 查找、g 搜索、l 链接） |
   | =C-c s=                 | org-super-links 双向链接                      |
-  | =C-c g=                 | gptel AI 对话（g 对话、s 发送、r 改写）       |
+  | =C-c g=                 | gptel AI 对话（g 对话、s 发送、r 改写、A agent） |
   | =C-c l=                 | lsp 命令前缀                                  |
   | =C-c e=                 | EMMS 音乐播放                                 |
   | =C-c p=                 | project 命令前缀                              |

@@ -262,7 +262,30 @@ Use standard terminology for power electronics."
                      :include-reasoning 'ignore
                      :request-params '(:thinking (:type "disabled"))))
 
-;; Org-babel backend for running gptel queries 
+;;; Agentic LLM use for gptel
+;; 提供 Web 搜索/URL 抓取（含 YouTube 字幕）、本地文件读写改、Emacs 自省与
+;; Elisp 求值、Bash 执行等工具，并可委派 executor / researcher / introspector
+;; 等子代理。除搜索、抓取和读文件外的操作默认需要确认。
+(use-package gptel-agent
+  :ensure t
+  :demand t                                 ; 启动即注册预设，任何缓冲区可用 @gptel-agent
+  :bind (("C-c g A" . gptel-agent)          ; 在当前项目中启动 agent 会话
+         ("C-c g c" . gptel-agent-compact)) ; 压缩会话上下文
+  :config
+  ;; 自定义 agent 定义目录（.md/.org）：目录必须存在，且要追加到列表末尾——
+  ;; gptel-agent-dirs 中靠后的目录覆盖靠前的同名定义（内置定义在包目录里）
+  (let ((agent-dir (expand-file-name "agents/" user-emacs-directory)))
+    (make-directory agent-dir t)
+    (add-to-list 'gptel-agent-dirs agent-dir t))
+  ;; 扫描 agents/ 与 skills/ 目录，注册gptel-agent预设
+  ;; 定义文件 YAML 写错会中断注册，这里兜底避免影响启动，详见 *Warnings*
+  (condition-case err
+      (gptel-agent-update)
+    (error (display-warning 'init-ai
+                            (format "gptel-agent-update 失败: %s"
+                                    (error-message-string err))))))
+
+;; Org-babel backend for running gptel queries
 ;; (use-package ob-gptel
 ;;   :vc (:url "https://github.com/jwiegley/ob-gptel"
 ;;        :rev :newest

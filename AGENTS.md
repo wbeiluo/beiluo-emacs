@@ -44,9 +44,9 @@ emacs --batch -Q --eval '(require (quote package))' --eval '(package-activate-al
 
 ## Repo conventions
 
-- Git tracks only `init.el`, `config/*.el`, `README.org`, `logo.txt`, `.gitignore`, `LICENSE`.
-  Everything else at top level (`custom.el`, `recentf`, `places`, `history`, `elpa/`, `transient/`,
-  …) is machine state and gitignored — never commit it.
+- Git tracks only `init.el`, `config/*.el`, `agents/*.md`, `README.org`, `logo.txt`, `.gitignore`,
+  `LICENSE`.  Everything else at top level (`custom.el`, `recentf`, `places`, `history`, `elpa/`,
+  `transient/`, …) is machine state and gitignored — never commit it.
 - Commit messages are in Chinese (see `git log`); work happens on the `develop` branch.
 
 ## Runtime data and external dependencies
@@ -59,3 +59,8 @@ emacs --batch -Q --eval '(require (quote package))' --eval '(package-activate-al
   (pacman package names).
 - AI setup (`init-ai.el`, gptel): backends for ChatGPT, Deepseek, and Xiaomi MIMO; default model
   `mimo-v2.6-flash`. API keys come from auth-source — never hardcode keys in config files.
+- gptel-agent sub-agents live in `agents/*.md` (tracked): YAML front-matter + system prompt.  Plain
+  YAML scalars cannot contain `: ` (use `description: >`), and `backend:` is not parsed into a
+  backend object — use `model:` (models of the current backend) or `gptel-agent-preset`.  One
+  malformed file aborts registration of everything scanned after it, hence the `condition-case`
+  around `gptel-agent-update` in `init-ai.el`.
