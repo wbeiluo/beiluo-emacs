@@ -64,3 +64,15 @@ emacs --batch -Q --eval '(require (quote package))' --eval '(package-activate-al
   backend object — use `model:` (models of the current backend) or `gptel-agent-preset`.  One
   malformed file aborts registration of everything scanned after it, hence the `condition-case`
   around `gptel-agent-update` in `init-ai.el`.
+- gptel config in `init-ai.el` is layered: L0 backends → L1 model profiles (`llm-fast|strong|
+  reason|cheap`) → L2 personas (`gptel-directives`, generic voices only) → L3 task presets
+  (`:parents` + inline `:system` + tool whitelist).  Sub-agents live in `agents/*.md` as category
+  agents mirroring the preset task categories: `coder` (coding), `analyst` (explain/debugging/review,
+  read-only), `tech-researcher` (research), `writer` (writer/translate).  Presets are the
+  in-session single-step variant of a task, agents the autonomous multi-step variant; names may
+  repeat (`writer`).  Rules: no sampling params in backend `:request-params` (they override
+  `gptel-temperature` and preset `:request-params` — `gptel--merge-plists` gives later plists
+  precedence); agent files must not use `:parents` (overridden by `gptel-agent-preset`), use
+  explicit `backend:` + `model:` pairs instead; if a prompt ever moves into `gptel-directives`,
+  its name must not be an existing function name (`debug` is one — `:system 'debug` silently
+  skips the directive lookup).

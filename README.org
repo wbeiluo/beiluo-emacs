@@ -66,13 +66,31 @@
   | =ESC ESC a= / =ESC ESC c= | org-agenda / org-capture                      |
   | =C-c n=                 | denote 笔记（n 新建、f 查找、g 搜索、l 链接） |
   | =C-c s=                 | org-super-links 双向链接                      |
-  | =C-c g=                 | gptel AI 对话（g 对话、s 发送、r 改写、A agent） |
+  | =C-c g=                 | gptel AI（g 对话、s 发送、r 改写、A agent 会话）  |
   | =C-c l=                 | lsp 命令前缀                                  |
   | =C-c e=                 | EMMS 音乐播放                                 |
   | =C-c p=                 | project 命令前缀                              |
   | =C-c t=                 | 插入时间 / 屏幕透明度                         |
   | =M-o= / =M-j=             | ace-window 切窗 / avy 跳转                    |
   | =C-x b= / =M-s r=         | consult-buffer / consult-ripgrep              |
+
+** gptel 使用速查
+
+  只需回答三个问题：干什么（任务）→ 怎么干（自己指挥 / 外包 agent）→ 用什么档（默认跟任务）。
+
+  | 我想…              | 怎么做                                            |
+  |--------------------+---------------------------------------------------|
+  | 随便问一句          | =C-c g s= 发送，=C-c g g= 开对话                    |
+  | 做个任务            | 提示里写 =@任务名=，或 =C-c g m= 选 preset          |
+  | 换口吻（不换任务）   | =C-c g m= → System message（default/chat/analyst） |
+  | 让 AI 自己跑多步     | =C-c g A= 开 agent 会话（[Agent]/[Plan] 切换）      |
+  | 把复杂任务外包出去   | 说「用 coder 做 XX」「用 analyst 审 XX」              |
+  | 换模型档位          | =C-c g m= → 档位：fast / strong / reason / cheap    |
+
+  preset 是会话内**单步**执行版；复杂任务外包给**自主执行**的分类 agent
+  （定义在 =agents/*.md=）：=coder= 编程实现、=analyst= 分析诊断（只读）、
+  =tech-researcher= 专业技术调研、=writer= 文字产出。任务 preset 只用只读工具
+  （或不带工具），写/执行类工具只在 agent 层。
 
 ** 更新
 
