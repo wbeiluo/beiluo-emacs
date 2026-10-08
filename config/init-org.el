@@ -24,6 +24,12 @@
 ;; Org-capture
 (global-set-key (kbd "\e\e c") #'org-capture)
 
+;; Org 时间戳: `C-c .' 插入激活时间戳，`C-c _' 插入非激活时间戳。
+;; 默认的 `C-c !' 与 flycheck-keymap-prefix 同键，被 flycheck-mode-map
+;; 抢占（minor mode 优先于 major mode），故将非激活时间戳改绑到 `C-c _'。
+;; 新版 Org 中命令名为 `org-timestamp-inactive'，此处用别名保持兼容。
+(define-key org-mode-map (kbd "C-c _") #'org-time-stamp-inactive)
+
 ;;; Org mode设置 ----------------------------------------------------------------
 
 ;; 设置Org字体
