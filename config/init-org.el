@@ -643,6 +643,18 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
   ;; 自动为链接的目标添加 ID（如果目标没有 ID）
   (setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
 
+;; org 自带链接命令也统一挂到 C-c s 前缀下，与 org-super-links 放在一起。
+;; 打开链接保持默认的 `C-c C-o'（org-open-at-point），这里不重复绑定。
+;; l/s/i/d/I/C-d 由上面的 org-super-links 占用，此处只补剩下的常用命令。
+(global-set-key (kbd "C-c s L") #'org-insert-link)              ; 插入/编辑链接（默认 C-c C-l）
+(global-set-key (kbd "C-c s S") #'org-store-link)               ; 存储链接（默认 C-c l，与 lsp 前缀冲突）
+(global-set-key (kbd "C-c s u") #'org-insert-last-stored-link)  ; 插入最近存储的链接（默认 C-c M-l）
+(global-set-key (kbd "C-c s t") #'org-toggle-link-display)      ; 链接字面 <-> 描述显示切换
+(global-set-key (kbd "C-c s n") #'org-next-link)                ; 跳到下一个链接
+(global-set-key (kbd "C-c s p") #'org-previous-link)            ; 跳到上一个链接
+(global-set-key (kbd "C-c s b") #'org-mark-ring-goto)           ; 跳转后返回原处（默认 C-c &）
+(global-set-key (kbd "C-c s g") #'org-id-get-create)            ; 给当前标题生成 ID
+
 ;; LaTeX 配置
 (setq org-startup-with-latex-preview t)
 (setq org-preview-latex-default-process 'xelatex)

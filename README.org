@@ -65,7 +65,7 @@
   |-----------------------+-----------------------------------------------|
   | =ESC ESC a= / =ESC ESC c= | org-agenda / org-capture                      |
   | =C-c n=                 | denote 笔记（n 新建、f 查找、g 搜索、l 链接） |
-  | =C-c s=                 | org-super-links 双向链接                      |
+  | =C-c s=                 | org 链接 + org-super-links 双向链接           |
   | =C-c g=                 | gptel AI（g 对话、s 发送、r 改写、A agent 会话）  |
   | =C-c l=                 | lsp 命令前缀                                  |
   | =C-c e=                 | EMMS 音乐播放                                 |
@@ -73,6 +73,25 @@
   | =C-c t=                 | 插入时间 / 屏幕透明度                         |
   | =M-o= / =M-j=             | ace-window 切窗 / avy 跳转                    |
   | =C-x b= / =M-s r=         | consult-buffer / consult-ripgrep              |
+
+** org 链接速查（C-c s）
+
+  | 按键                  | 功能                                          |
+  |-----------------------+-----------------------------------------------|
+  | =C-c s l=             | 新建双向链接（org-super-links-link）           |
+  | =C-c s s=             | 存储双向链接（org-super-links-store-link）     |
+  | =C-c s i=             | 插入双向链接（org-super-links-insert-link）    |
+  | =C-c s d=             | 快速插入 :related: 抽屉链接                    |
+  | =C-c s I=             | 快速插入行内链接                               |
+  | =C-c s C-d=           | 删除链接                                       |
+  | =C-c s L=             | 插入 / 编辑链接（org-insert-link）             |
+  | =C-c s S=             | 存储链接（org-store-link）                     |
+  | =C-c s u=             | 插入最近存储的链接                             |
+  | =C-c s t=             | 链接字面 ↔ 描述显示切换                        |
+  | =C-c s n= / =C-c s p= | 跳到下一个 / 上一个链接                        |
+  | =C-c s b=             | 跳转后返回原处（org-mark-ring-goto）           |
+  | =C-c s g=             | 给当前标题生成 ID（org-id-get-create）         |
+  | =C-c C-o=             | 打开链接（保持 org 默认，未改动）              |
 
 ** gptel 使用速查
 
