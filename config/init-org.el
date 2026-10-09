@@ -18,7 +18,7 @@
 ;;; Global Keyword
 ;; Org-agenda
 (global-set-key (kbd "\e\e a") #'org-agenda)
-(define-key org-agenda-mode-map (kbd "i") #'(lambda () (interactive) (org-capture nil "d")))
+(define-key org-agenda-mode-map (kbd "i") #'(lambda () (interactive) (org-capture nil "jd")))
 (define-key org-agenda-mode-map (kbd "J") #'consult-org-agenda)
 
 ;; Org-capture
@@ -464,52 +464,106 @@
 (add-hook 'org-agenda-finalize-hook #'org-agenda-to-appt)
 
 ;;; Org capture设置 -------------------------------------------------------------
-(setq org-capture-use-agenda-date nil)
-;; define common template
-(setq org-capture-templates `((;; Inbox 收集箱
-                               "i" "Inbox Task" entry (file+headline "inbox.org" "Tasks")
-                               "* TODO %i%?\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n\n"
-                               :empty-lines-after 1
-                               :prepend t)
-                              ;; Diary 日常日程
-                              ("d" "Diary" entry (file+olp+datetree "diary.org")
-                               "* TODO %?\n  SCHEDULED: %^t\n"
-                               :empty-lines 1
-                               :jump-to-captured t)
-                              ;; Notes 笔记
-                              ("n" "Notes" entry (file+headline "inbox.org" "Notes")
-                               "* %? %^g\n%i\n"
-                               :empty-lines-after 1)
-                              ;; Bookmarks 书签记录
-                              ("b" "Bookmarks" entry (file+headline "inbox.org" "Bookmarks")
-                               "* %:description\n\n%a%?"
-                               :empty-lines 1
-                               :immediate-finish t)
-                              ;; Plan 计划
-                              ("p" "Plan" entry
-                               (file+headline "plan.org" "Plan")
-                               "* VISION %?\n  SCHEDULED: %^t  DEADLINE: %^t\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n\n  %a"
-                               :empty-lines 1)
-                              ;; Plan 长期计划
-                              ("P" "Long-term Plan" entry
-                               (file+headline "plan.org" "Long-term Plan")
-                               "* VISION %?\n  SCHEDULED: %^t  DEADLINE: %^t\n  :PROPERTIES:\n  :CREATED: %U\n  :END:\n\n  %a"
-                               :empty-lines 1)
-                              ;; Issue 问题报告
-                              ("I" "Issue" entry (file+headline "inbox.org" "Issues")
-                               "* REPORT %i%?\n\n  一、问题描述\n\n  二、分析定位\n\n  三、措施验证\n\n  四、结论\n"
-                               :empty-lines-after 1
-                               :prepend t)
-                              (;; Project Inbox
-                               "t" "Project Inbox" entry (file+headline "inbox.org" "Projects")
-                               "* TODO %i%?\n  :PROPERTIES:\n  :PROJECT: %^{Project name}\n  :TYPE: %^{类型|需求|任务|风险|议题|日志|其他}\n  :CREATED: %U\n  :END:\n"
-                               :empty-lines-after 1
-                               :prepend t)))
+;; 通用骨架: 统一的创建时间属性抽屉, 避免各模板重复书写
+(defconst my/org-capture--created
+  "  :PROPERTIES:\n  :CREATED: %U\n  :END:\n")
+
+(defun my/org-capture-source-link (&optional label)
+  "返回捕获来源链接块: \"\\n  LABEL 链接\\n\"; 无链接时返回 nil.
+仅书签(rb)/随笔(cn)模板使用, 其他模板不带链接(需要时手动插入).
+LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身."
+  (let ((annotation (org-capture-get :annotation)))
+    (when (and (stringp annotation)
+               (not (member annotation '("" "[[]]"))))
+      (concat "\n  " (or label "来源: ") annotation "\n"))))
+
+;; 从日程视图捕获时使用光标所在日期(决定 datetree 归档日期与 %U/%t 的展开)
+(setq org-capture-use-agenda-date t)
+
+(defun my/org-capture--top-headings (file)
+  "返回 FILE 中的顶级标题列表."
+  (with-current-buffer (org-capture-target-buffer file)
+    (org-with-wide-buffer
+     (goto-char (point-min))
+     (let (headings)
+       (while (re-search-forward "^\\* " nil t)
+         (push (org-get-heading t t t t) headings))
+       (nreverse headings)))))
+
+(defun my/org-capture-plan-target ()
+  "选择 plan.org 的计划类别并移动到对应顶级标题, 不存在则创建."
+  (set-buffer (org-capture-target-buffer "plan.org"))
+  (widen)
+  (let ((heading (completing-read
+                  "计划类别: "
+                  (delete-dups (append '("Plan" "Long-term Plan")
+                                       (my/org-capture--top-headings "plan.org")))
+                  nil nil nil nil "Plan")))
+    (goto-char (point-min))
+    (if (re-search-forward (concat "^\\* " (regexp-quote heading) "[ \t]*$") nil t)
+        (forward-line 0)
+      (goto-char (point-max))
+      (unless (bolp) (insert "\n"))
+      (insert "* " heading "\n")
+      (forward-line -1))))
+
+;; 模板按键分组: c=收集箱 j=日程计划 r=参考 x=计时备注
+(setq org-capture-templates
+      `(;; ---- 收集箱 Inbox ----
+        ("c" "收集箱 Inbox")
+        ("ct" "任务" entry (file+olp "inbox.org" "Tasks")
+         ,(concat "* TODO %?\n" my/org-capture--created "\n%i")
+         :empty-lines 1 :prepend t)
+        ("cp" "项目任务" entry (file+olp "inbox.org" "Projects")
+         ,(concat "* TODO %?\n"
+                  "  :PROPERTIES:\n  :PROJECT: %^{Project name}\n"
+                  "  :TYPE: %^{类型|需求|任务|风险|议题|日志|其他}\n"
+                  "  :CREATED: %U\n  :END:\n\n%i")
+         :empty-lines 1 :prepend t)
+        ("ci" "问题 Issue" entry (file+olp "inbox.org" "Issues")
+         ,(concat "* REPORT %?\n"
+                  "  :PROPERTIES:\n"
+                  ;; 第一项为默认值(回车选中), 同时保留在候选列表中; 也可直接手动输入
+                  "  :SOURCE: %^{问题来源|其他|客户反馈|现场问题|测试发现|代码评审|自查发现|其他}\n"
+                  "  :CREATED: %U\n  :END:\n"
+                  "\n  一、问题描述\n\n  二、分析定位\n\n  三、措施验证\n\n  四、结论\n")
+         :empty-lines 1 :prepend t)
+        ;; 随笔: 每次带来源链接
+        ("cn" "随笔 Notes" entry (file+olp "inbox.org" "Notes")
+         "* %? %^g\n%(my/org-capture-source-link)\n%i"
+         :empty-lines 1 :prepend t)
+
+        ;; ---- 日程 / 计划 Journal ----
+        ("j" "日程计划 Journal")
+        ("jd" "日记" entry (file+olp+datetree "diary.org")
+         ,(concat "* TODO %?\n  SCHEDULED: %^t\n" my/org-capture--created)
+         :empty-lines 1 :jump-to-captured t)
+        ("jp" "计划" entry (function my/org-capture-plan-target)
+         ,(concat "* TODO %?\n  SCHEDULED: %^t  DEADLINE: %^t\n"
+                  my/org-capture--created)
+         :empty-lines 1)
+
+        ;; ---- 参考 Reference ----
+        ("r" "参考 Reference")
+        ;; 书签: 每次带来源链接
+        ("rb" "书签" entry (file+olp "inbox.org" "Bookmarks")
+         "* %:description %?\n  %U\n%(my/org-capture-source-link \"\")"
+         :empty-lines 1 :prepend t)
+        ;; Denote 笔记: 内容格式见 init-note.el 的 denote-org-capture-specifiers
+        ("rn" "Denote 笔记" plain
+         (file (lambda () (require 'denote) denote-last-path))
+         #'denote-org-capture
+         :no-save t :kill-buffer t :jump-to-captured t)
+
+        ;; ---- 其他 ----
+        ("x" "计时任务备注" item (clock) "- %? %U")))
 
 ;; Add hook
 (add-hook 'org-capture-mode-hook #'(lambda ()
                                      (setq-local org-complete-tags-always-offer-all-agenda-tags t)))
 (add-hook 'org-capture-mode-hook #'delete-other-windows)
+;; 捕获完成后同步 appt 提醒, 避免新日程最长 15 分钟内不触发提醒
+(add-hook 'org-capture-after-finalize-hook #'org-agenda-to-appt)
 
 ;;; Org extensions -------------------------------------------------------------
 

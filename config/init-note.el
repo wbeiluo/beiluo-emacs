@@ -41,17 +41,9 @@
     ("C-c C-d C-R" . denote-dired-rename-marked-files-using-front-matter))
 
   :config
-  ;; Create note using Org capture
-  (with-eval-after-load 'org-capture
-    (setq denote-org-capture-specifiers "%l\n%i\n%?")
-    (add-to-list 'org-capture-templates
-		 '("N" "New note (with Denote)" plain
-                   (file denote-last-path)
-                   #'denote-org-capture
-                   :no-save t
-                   :immediate-finish nil
-                   :kill-buffer t
-                   :jump-to-captured t)))
+  ;; Org capture 集成: 模板 "rn" 统一定义在 init-org.el 的 org-capture-templates 中,
+  ;; 此处仅设置新建笔记正文的展开格式(%l 链接 %i 选区 %? 光标位置)
+  (setq denote-org-capture-specifiers "%l\n%i\n%?")
 
   (setq denote-directory (expand-file-name "~/Org/notes/"))
   (setq denote-save-buffers nil)
