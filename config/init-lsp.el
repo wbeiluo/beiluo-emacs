@@ -37,7 +37,12 @@
   (lsp-enable-snippet nil)
   ;; Disable on-type formatting，开启后可能出现回车后光标跳行首的情况
   (lsp-enable-on-type-formatting nil)
-  :commands lsp)
+  :commands lsp
+  :config
+  ;; lsp-mode 的候选过滤区分大小写（跟随 `completion-ignore-case'，默认 nil），
+  ;; 小写输入匹配不到 Lan_Data_Handler / PRODUCT_INFO 这类标识符，候选被过滤光
+  ;; 就不弹窗（现象是"输入不弹、重新输入又好了"）。设为 t 让过滤忽略大小写。
+  (add-hook 'lsp-mode-hook (lambda () (setq-local completion-ignore-case t))))
 
 (use-package lsp-modeline)
 
