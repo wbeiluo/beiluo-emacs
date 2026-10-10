@@ -115,8 +115,6 @@
 ;; GUI 下像素级平滑滚动（滚轮/触控板逐像素）
 (when (display-graphic-p)
   (pixel-scroll-precision-mode 1))
-;; 光标使用细竖条
-(setq-default cursor-type 'bar)
 ;; 避免magit报错
 (setq async-bytecomp-allowed-packages nil)
 ;; 按照中文折行

@@ -56,7 +56,8 @@
   ;; headerline 面包屑：项目 / 文件 / 符号 三级导航
   (lsp-headerline-breadcrumb-enable t)
   (lsp-headerline-breadcrumb-enable-diagnostics t)
-  (lsp-headerline-breadcrumb-icons-enable t)
+  ;; 不显示图标，纯文本路径更干净
+  (lsp-headerline-breadcrumb-icons-enable nil)
   (lsp-headerline-breadcrumb-segments '(project file symbols))
   ;; ---- 其它 ----
   ;; 调试用 dape（见下文），不自动配置 dap-mode
@@ -86,7 +87,8 @@
   ;; 诊断不重复显示在 modeline，doom-modeline 的 check 段已经展示
   (lsp-modeline-diagnostics-enable nil)
   (lsp-modeline-code-actions-enable t)
-  (lsp-modeline-code-action-icons-enable t))
+  ;; 不显示图标，只用文字提示
+  (lsp-modeline-code-action-icons-enable nil))
 
 ;;; 3. 诊断
 
