@@ -81,14 +81,13 @@
   :custom
   (lsp-semantic-tokens-enable t))
 
-;; modeline 上的 LSP 状态与 code action 提示（诊断由 flycheck 显示）
+;; modeline 上的 LSP 状态提示（诊断与 code action 不在 modeline 重复显示）
 (use-package lsp-modeline
   :custom
-  ;; 诊断不重复显示在 modeline，doom-modeline 的 check 段已经展示
+  ;; 诊断由 flycheck + doom-modeline check 段展示
   (lsp-modeline-diagnostics-enable nil)
-  (lsp-modeline-code-actions-enable t)
-  ;; 不显示图标，只用文字提示
-  (lsp-modeline-code-action-icons-enable nil))
+  ;; code action 由 lsp-ui sideline 行尾灯泡提示，不占 modeline
+  (lsp-modeline-code-actions-enable nil))
 
 ;;; 3. 诊断
 
