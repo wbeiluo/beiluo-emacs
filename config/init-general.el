@@ -69,6 +69,9 @@
 (recentf-mode 1)
 ;; 高亮另一个括号
 (show-paren-mode t)
+;; 光标在括号内时高亮整对括号；另一端在屏幕外时在 echo area 提示其上下文
+(setq show-paren-when-point-inside-paren t
+      show-paren-context-when-offscreen t)
 ;; 自动刷新buffer
 (global-auto-revert-mode t)
 ;; 高亮当前行
@@ -109,6 +112,11 @@
 ;; 平滑地进行半屏滚动，避免滚动后recenter操作
 (setq scroll-step 1
       scroll-conservatively 10000)
+;; GUI 下像素级平滑滚动（滚轮/触控板逐像素）
+(when (display-graphic-p)
+  (pixel-scroll-precision-mode 1))
+;; 光标使用细竖条
+(setq-default cursor-type 'bar)
 ;; 避免magit报错
 (setq async-bytecomp-allowed-packages nil)
 ;; 按照中文折行

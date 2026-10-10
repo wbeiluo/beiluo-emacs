@@ -36,10 +36,11 @@
   (lsp-pyright-auto-import-completions t)
   (lsp-pyright-diagnostic-mode "workspace")
   
+  ;; 启动由 init-lsp.el 的 python-mode 钩子（lsp-deferred）统一负责，
+  ;; 这里只需提前加载 python 运行时与 pyright 客户端，供 lsp-mode 选择
   :hook (python-mode . (lambda ()
                          (require 'python)
-                         (require 'lsp-pyright)
-                         (lsp-deferred))))
+                         (require 'lsp-pyright))))
 
 (provide 'init-python)
 ;;; init-python.el ends here

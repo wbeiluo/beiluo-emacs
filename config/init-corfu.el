@@ -31,6 +31,11 @@
   (corfu-preselect 'prompt)            ;; Preselect the prompt
   (corfu-on-exact-match 'insert)       ;; Configure handling of exact matches
 
+  ;; 弹窗几何：候选数与宽度适中，长候选截断显示，避免补全框盖住代码
+  (corfu-count 12)
+  (corfu-min-width 20)
+  (corfu-max-width 80)
+
   (corfu-auto-delay 0.5)
   (corfu-popupinfo-delay '(1.0 . 0.5))               ;; 文档弹窗延迟（lsp 需 completionItem/resolve，别太快）
   (corfu-popupinfo-direction '(right left vertical)) ;; 右侧放不下时按序回退

@@ -26,10 +26,11 @@
 
   ;; How tall the mode-line should be. It's only respected in GUI.
   ;; If the actual char height is larger, it respects the actual height.
-  (setq doom-modeline-height 40)
+  ;; 32：比默认略高以容纳图标，比 40 更紧凑
+  (setq doom-modeline-height 32)
 
   ;; How wide the mode-line bar should be. It's only respected in GUI.
-  (setq doom-modeline-bar-width 4)
+  (setq doom-modeline-bar-width 3)
 
   ;; Whether to use hud instead of default bar. It's only respected in GUI.
   (setq doom-modeline-hud nil)
@@ -223,7 +224,8 @@
   ;;(mu4e-alert-enable-mode-line-display)
 
   ;; Whether display the gnus notifications.
-  (setq doom-modeline-gnus t)
+  ;; 本配置不使用 gnus，关掉相关轮询
+  (setq doom-modeline-gnus nil)
 
   ;; Whether gnus should automatically be updated and how often (set to 0 or smaller than 0 to disable)
   (setq doom-modeline-gnus-timer 2)
@@ -232,7 +234,8 @@
   (setq doom-modeline-gnus-excluded-groups '("dummy.group"))
 
   ;; Whether display the IRC notifications. It requires `circe' or `erc' package.
-  (setq doom-modeline-irc t)
+  ;; 本配置不使用 IRC
+  (setq doom-modeline-irc nil)
 
   ;; Function to stylize the irc buffer names.
   (setq doom-modeline-irc-stylize 'identity)
@@ -276,7 +279,7 @@
 
   ;; By default, almost all segments are displayed only in the active window. To
   ;; display such segments in all windows, specify e.g.
-  (setq doom-modeline-always-visible-segments '(mu4e irc))
+  (setq doom-modeline-always-visible-segments nil)
 
   ;; Hooks that run before/after the modeline version string is updated
   (setq doom-modeline-before-update-env-hook nil)
