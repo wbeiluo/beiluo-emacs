@@ -13,10 +13,19 @@
 ;;; Code:
 
 ;; 设置国内镜像源
-(setq package-archives '(("gnu" . "http://mirrors.ustc.edu.cn/elpa/gnu/")
-                         ("melpa" . "http://mirrors.ustc.edu.cn/elpa/melpa/")
-                         ("melpa-stable" . "http://mirrors.ustc.edu.cn/elpa/melpa-stable/")
-                         ("org" . "http://mirrors.ustc.edu.cn/elpa/org/")))
+;; 注意(2026-10 实测):USTC 镜像的稳定版 MELPA 目录是 stable-melpa(而非
+;; melpa-stable),旧的 org ELPA 已退役(org 本体在 GNU ELPA)。这两个源的
+;; archive-contents 现在均返回 404,会让 package-refresh-contents 报错,
+;; 并拖垮 use-package 的首次自动安装。统一走 https,避免 http 被劫持。
+(setq package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
+                         ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")
+                         ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")))
+
+;; Windows 上若没有 GnuPG(签名验证依赖 gpg),GNU ELPA 包会因无法验签
+;; 而安装失败,此时跳过签名校验
+(when (and (eq system-type 'windows-nt)
+           (not (executable-find "gpg")))
+  (setq package-check-signature nil))
 
 ;; Encoding
 (set-language-environment 'utf-8)
