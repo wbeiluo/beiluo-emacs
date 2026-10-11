@@ -19,13 +19,12 @@ recentf
 history
 .last-package-update-day
 amx-items
-projectile-bookmarks.eld
+*.eld
 projectile.cache
 projects
 forge-database.sqlite
 .emacs.desktop
 bookmarks
-bookmarks.eld
 org-clock-save.el
 .lsp-session-v1
 dape-breakpoints
