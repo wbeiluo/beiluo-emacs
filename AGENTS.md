@@ -25,6 +25,8 @@ Verification = batch startup smoke test (below). Docs: `README.org` (Chinese, in
   packages must declare `:ensure t` explicitly or they won't install on a fresh machine.
 - ELPA archives are USTC China mirrors (`init-general.el`). `elpa/` is gitignored; packages are
   installed on first interactive start.
+- `init-general.el` sets `package-enable-at-startup nil` — batch runs never see ELPA unless you
+  activate packages yourself (see below).
 
 ## Verifying changes
 
@@ -52,27 +54,47 @@ emacs --batch -Q --eval '(require (quote package))' --eval '(package-activate-al
 ## Runtime data and external dependencies
 
 - Org data lives **outside the repo**: `~/Org` (agenda = `diary.org`, `plan.org`, `inbox.org`,
-  `work.org` + everything under `~/Org/projects/`), denote notes in `~/Org/notes/`. Never assume
-  org content is in-repo.
+  `work.org` + everything under `~/Org/projects/`), denote notes in `~/Org/notes/`. LaTeX preview
+  images cache to `~/Org/assets/org-latex-preview/`. Never assume org content is in-repo.
 - System tools the config expects (README.org + code): `ripgrep`, `pyright` (lsp-pyright), `mpv`
   (EMMS), texlive + texlive-langchinese (org LaTeX export), and the fonts listed in `README.org`
   (pacman package names).
 - AI setup (`init-ai.el`, gptel): backends for ChatGPT, Deepseek, and Xiaomi MIMO; default model
   `mimo-v2.6-flash`. API keys come from auth-source — never hardcode keys in config files.
-- gptel-agent sub-agents live in `agents/*.md` (tracked): YAML front-matter + system prompt.  Plain
-  YAML scalars cannot contain `: ` (use `description: >`), and `backend:` is not parsed into a
-  backend object — use `model:` (models of the current backend) or `gptel-agent-preset`.  One
-  malformed file aborts registration of everything scanned after it, hence the `condition-case`
-  around `gptel-agent-update` in `init-ai.el`.
-- gptel config in `init-ai.el` is layered: L0 backends → L1 model profiles (`llm-fast|strong|
-  reason|cheap`) → L2 personas (`gptel-directives`, generic voices only) → L3 task presets
-  (`:parents` + inline `:system` + tool whitelist).  Sub-agents live in `agents/*.md` as category
-  agents mirroring the preset task categories: `coder` (coding), `analyst` (explain/debugging/review,
-  read-only), `tech-researcher` (research), `writer` (writer/translate).  Presets are the
-  in-session single-step variant of a task, agents the autonomous multi-step variant; names may
-  repeat (`writer`).  Rules: no sampling params in backend `:request-params` (they override
-  `gptel-temperature` and preset `:request-params` — `gptel--merge-plists` gives later plists
-  precedence); agent files must not use `:parents` (overridden by `gptel-agent-preset`), use
-  explicit `backend:` + `model:` pairs instead; if a prompt ever moves into `gptel-directives`,
-  its name must not be an existing function name (`debug` is one — `:system 'debug` silently
-  skips the directive lookup).
+
+## gptel / gptel-agent
+
+Layered config in `init-ai.el`: L0 backends → L1 model profiles (`llm-fast|strong|reason|cheap`)
+→ L2 personas (`gptel-directives`, generic voices only) → L3 task presets (`:parents` + inline
+`:system` + tool whitelist).  Sub-agents live in `agents/*.md` as category agents mirroring the
+preset task categories: `coder` (coding), `analyst` (explain/debugging/review, read-only),
+`tech-researcher` (research), `writer` (writer/translate).  Presets are the in-session single-step
+variant of a task, agents the autonomous multi-step variant; names may repeat (`writer`).
+
+Rules that are easy to get wrong:
+
+- **No sampling params in backend `:request-params`** (they override `gptel-temperature` and
+  preset `:request-params` — `gptel--merge-plists` gives later plists precedence).
+- **Agent files must not use `:parents`.** `gptel-agent-preset` is merged after parent expansion
+  and wins over it (merge order: agent-file keys > `gptel-agent-preset` > `:parents`). Set an
+  explicit `backend: <name>` + `model: <name>` pair instead. `backend:` is a backend *name string*
+  resolved by `gptel-get-backend`; `model:` is interned to a symbol and must exist on that backend.
+- **Plain YAML scalars cannot contain `: `** — use a block scalar (`description: >`).
+- **One malformed agent file aborts registration of everything scanned after it** — hence the
+  `condition-case` around `gptel-agent-update` in `init-ai.el`. After editing `agents/*.md`,
+  re-run the batch smoke test (or `M-x gptel-agent-update`) and check `*Warnings*`.
+- Agent body may reference templates `{{AGENTS}}` (other agents) and `{{SKILLS}}` (skill list);
+  they are expanded at registration time, not at call time.
+- `gptel-agent-dirs` is order-sensitive: later dirs override same-named earlier ones. `agents/` is
+  appended to the end on purpose so local definitions win over package-builtin ones.
+- If a prompt ever moves into `gptel-directives`, its name must not be an existing function name
+  (`debug` is one — `:system 'debug` silently skips the directive lookup via `functionp`).
+
+## Cross-module gotchas
+
+- Org inactive timestamp is `C-c _`, not the default `C-c !`: flycheck's keymap prefix steals
+  `C-c !` (minor-mode maps beat major-mode maps). See comments in `init-org.el`.
+- Org table/date/tag faces are set via `face-override-spec`, not `set-face-attribute`, so they
+  survive theme switches (theme changes reset face attributes). Colors stay with the theme.
+- Completion is corfu + cape (`init-corfu.el`); `lsp-completion-provider` is `:none` and snippets
+  come from tempel. Turning lsp completion back on will fight this setup.
