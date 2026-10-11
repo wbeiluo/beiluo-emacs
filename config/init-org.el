@@ -466,8 +466,6 @@
   (org-agenda-sticky t)
   ;; 是否包含直接日期
   (org-agenda-include-deadlines t)
-  ;; 禁止日程启动画面
-  (org-agenda-inhibit-startup t)
   ;; 显示每一天，不管有没有条目
   (org-agenda-show-all-dates t)
   ;; 时间不足位时前面加 0
@@ -504,6 +502,24 @@
   (org-deadline-warning-days 3)
   ;; 在日程视图的标签继承
   (org-agenda-use-tag-inheritance t))
+
+;; 图片首开不显示的根因与修复：
+;; `org-agenda-prepare-buffers'（agenda/refile/时钟等预扫描文件时调用）会绑定
+;; `org-inhibit-startup'，其值取自 `org-agenda-inhibit-startup'；为 t 时整个 org
+;; 启动块被跳过，其中就包括 `org-startup-with-inline-images' 触发的图片预览
+;; （Org 9.8 走 `org-link-preview'，overlay + 空闲定时器队列）。
+;; 之后 find-file 复用这个预建缓冲时不会重跑启动 ⇒ 第一次打开看不到图片；
+;; 关掉缓冲重开（新建缓冲）才跑完整启动 ⇒ 有图。
+;; 这里恢复启动以生成图片预览与折叠（与正常打开文件一致），但单独关掉 LaTeX
+;; 预览：它要调 xelatex 逐片渲染，随 agenda 批量扫描执行会明显卡顿，
+;; 公式仍只在真正打开文件时预览（或手动 C-c C-x C-l）。
+(defun my/org-agenda-prepare-buffers-with-preview (old-fun files)
+  "用 OLD-FUN 处理 FILES：生成图片预览与折叠，跳过昂贵的 LaTeX 预览。"
+  (let ((org-inhibit-startup nil)
+        (org-startup-with-latex-preview nil))
+    (funcall old-fun files)))
+(advice-add 'org-agenda-prepare-buffers :around
+            #'my/org-agenda-prepare-buffers-with-preview)
 
 ;; 自定义视图
 (use-package org-super-agenda
