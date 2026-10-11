@@ -11,10 +11,10 @@
 ;;
 ;;   1. 按键 Keybindings —— 全局 / Agenda / Org 按键绑定
 ;;   2. 外观 Appearance  —— 字体、标题层级、符号美化（org-modern）、强调显示（org-appear）
-;;   3. 核心 Core        —— 目录文件、显示折叠、列表图片、TODO 关键字、标签、日志、refile
+;;   3. 核心 Core        —— 目录文件、显示折叠、列表图片、TODO 关键字、标签、日志、refile、LaTeX 预览
 ;;   4. 日程 Agenda      —— 时间线、视图定制（org-super-agenda）、appt 提醒
 ;;   5. 捕获 Capture     —— 模板、目标定位、收尾钩子
-;;   6. 扩展 Extensions  —— org-id、org-super-links、LaTeX 预览
+;;   6. 扩展 Extensions  —— org-id、org-super-links
 ;;
 ;; 显示风格为克制的现代感：颜色全部交给主题（modus / solarized），
 ;; 本文件只描述字体、字号、字重与符号；主题切换后由 `my/org-set-faces' 重新挂载样式。
@@ -404,7 +404,42 @@
   (org-refile-allow-creating-parent-nodes 'confirm)
 
   ;; ---- 归档 ----
-  (org-archive-location "%s_archive::datetree/"))
+  (org-archive-location "%s_archive::datetree/")
+
+  ;; ---- LaTeX 预览 ----
+  ;; 打开文件即预览公式（agenda 预建缓冲会跳过，见 my/org-agenda-prepare-buffers-with-preview）
+  (org-startup-with-latex-preview t)
+  ;; 预览走 xelatex -> dvisvgm：内置的 latex+dvipng 流程不含中文支持，
+  ;; 依赖 texlive + texlive-langchinese（见 README.org）
+  (org-preview-latex-default-process 'xelatex)
+  (org-preview-latex-process-alist
+   '((xelatex
+      :programs ("xelatex" "dvisvgm")
+      :description "XeLaTeX -> SVG"
+      :message "Install xelatex and dvisvgm."
+      :image-input-type "xdv"
+      :image-output-type "svg"
+      :image-size-adjust (1.7 . 1.5)
+      :latex-compiler
+      ("xelatex -no-pdf -interaction=nonstopmode -halt-on-error -output-directory=%o %f")
+      :image-converter
+      ("dvisvgm %f --no-fonts --exact-bbox --scale=%S --output=%O"))))
+  ;; 中文支持：org 默认的 LaTeX 头只有 amsmath/fontspec，中文字符会整片缺失
+  ;; （xelatex 逐字符报 Missing character，渲染成空白）。ctex 被注入头部
+  ;; [PACKAGES] 位置，公式预览与 LaTeX 导出同时生效。
+  (org-latex-packages-alist '(("" "ctex" t)))
+  ;; 预览图片缓存到 ~/Org/assets/（与 images/ 同级；agenda 扫描本就过滤 assets/），
+  ;; 图片名是内容哈希，多个 org 文件共用同一目录不会冲突
+  (org-preview-latex-image-directory
+   (expand-file-name "assets/org-latex-preview/" org-directory))
+  :config
+  ;; 预览样式：放大倍数、颜色跟随当前主题、SVG 背景透明。
+  ;; 只覆盖需要改的键，保留 org 默认的 :matchers 等。
+  ;; 尺寸一律用 :scale 调（原 1.8，现 0.8）：它参与预览缓存的哈希，
+  ;; 改动会自动重渲染；而 :image-size-adjust 不在哈希里，改它会命中旧缓存不生效。
+  (setf (plist-get org-format-latex-options :scale) 0.8)
+  (setf (plist-get org-format-latex-options :foreground) 'default)
+  (setf (plist-get org-format-latex-options :background) "Transparent"))
 
 ;;; 4. 日程 Agenda -------------------------------------------------------------
 
@@ -749,32 +784,6 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
 (global-set-key (kbd "C-c s p") #'org-previous-link)            ; 跳到上一个链接
 (global-set-key (kbd "C-c s b") #'org-mark-ring-goto)           ; 跳转后返回原处（默认 C-c &）
 (global-set-key (kbd "C-c s g") #'org-id-get-create)            ; 给当前标题生成 ID
-
-;; ---- LaTeX 预览 ----
-;; 启动时即预览 LaTeX 片段
-(setq org-startup-with-latex-preview t)
-(setq org-preview-latex-default-process 'xelatex)
-(setq org-preview-latex-process-alist
-      '((xelatex
-         :programs ("xelatex" "dvisvgm")
-         :description "XeLaTeX -> SVG"
-         :message "Install xelatex and dvisvgm."
-         :image-input-type "xdv"
-         :image-output-type "svg"
-         :image-size-adjust (1.7 . 1.5)
-         :latex-compiler
-         ("xelatex -no-pdf -interaction=nonstopmode -halt-on-error -output-directory=%o %f")
-         :image-converter
-         ("dvisvgm %f --no-fonts --exact-bbox --scale=%S --output=%O"))))
-
-(setq org-format-latex-options
-      (plist-put org-format-latex-options :scale 1.8))
-;; 字体颜色默认使用当前颜色
-(setq org-format-latex-options
-      (plist-put org-format-latex-options :foreground 'default))
-;; SVG 背景透明
-(setq org-format-latex-options
-      (plist-put org-format-latex-options :background "Transparent"))
 
 (provide 'init-org)
 
