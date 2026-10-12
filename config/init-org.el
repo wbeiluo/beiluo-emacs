@@ -726,6 +726,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
       :empty-lines 1 :prepend t)
 
      ;; ---- 日程 / 计划 Journal ----
+     ("j" "日程 / 计划 Journal")
      ("jd" "日记" entry (file+olp+datetree "diary.org")
       ,(concat "* TODO %?\n  SCHEDULED: %^t\n" my/org-capture--created)
       :empty-lines 1 :jump-to-captured t)
