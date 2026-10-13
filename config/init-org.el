@@ -112,7 +112,7 @@
   ;; (org-modern-replace-stars "◉◎○◈◇✳")
   ;; 折叠后隐藏前导星号
   (org-modern-hide-stars 'leading)
-  ;; 时间戳美化：色块字号（org-modern-label 的 0.8 倍）比正文字号窄，
+  ;; 时间戳美化：色块字号在 :config 中调为 0.9 倍正文，仍比正文字号窄，
   ;; 而 org 表格按正文字号量列宽（org-string-width 会抹掉 face），
   ;; 开启后表格会错位；故表格内跳过美化，其他位置照常
   ;; （见 my/org-modern-timestamp-skip-in-table）
@@ -179,6 +179,16 @@
      ("DEPRECATED" . (:inherit shadow  :weight regular :inverse-video t))
      ("ARCHIVED"   . (:inherit shadow  :weight regular :inverse-video t))))
   :config
+  ;; 时间戳色块字号调为 0.9 倍正文（org-modern 默认继承
+  ;; org-modern-label 的 0.8 倍，偏小）。浮点 :height 是相对底层
+  ;; face 高度的缩放因子，四个时间戳 face 都继承 org-modern-label
+  ;; （0.8×正文），会与这里设置的值连乘，故写 1.125×0.8=0.9，
+  ;; 直接写 0.9 会变成 0.72 倍正文。
+  ;; 用 face-override-spec 而非 set-face-attribute：主题切换会重置
+  ;; 后者，override spec 在 face-spec-recalc 中最后应用，始终生效。
+  (dolist (face '(org-modern-date-active org-modern-date-inactive
+                  org-modern-time-active org-modern-time-inactive))
+    (face-spec-set face '((t :height 1.125)) 'face-override-spec))
   ;; 表格内跳过时间戳美化，保证 org 表格列宽对齐
   (advice-add 'org-modern--timestamp :around #'my/org-modern-timestamp-skip-in-table))
 
