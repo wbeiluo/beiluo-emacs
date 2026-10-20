@@ -20,7 +20,8 @@
   :init
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
-  (setq dashboard-display-icons-p t)
+  ;; TTY 下终端字体不含 Nerd Font 字形，仅图形界面显示图标（ #'display-graphic-p 为其默认值）
+  (setq dashboard-display-icons-p #'display-graphic-p)
   (setq dashboard-icon-type 'nerd-icons)
   :config
   ;; 启动并初始化
@@ -45,7 +46,9 @@
 
   ;; 设置页脚
   (setq dashboard-footer-messages (list (format "%s %s" blemacs-name blemacs-version)))
-  (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face)))
+  ;; TTY 下不设图标页脚，回落到默认的 ">"
+  (when (display-graphic-p)
+    (setq dashboard-footer-icon (nerd-icons-sucicon "nf-custom-emacs" :height 1.1 :face 'font-lock-keyword-face))))
 
 (provide 'init-start-board)
 ;;; init-start-board.el ends here

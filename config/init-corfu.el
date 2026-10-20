@@ -108,8 +108,10 @@
 (use-package nerd-icons-corfu
   :ensure t
   :after corfu
+  ;; TTY 下终端字体不含 Nerd Font 字形，仅图形界面添加图标
   :config
-  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+  (when (display-graphic-p)
+    (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)))
 
 (provide 'init-corfu)
 

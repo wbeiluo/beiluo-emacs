@@ -107,9 +107,10 @@
 (use-package nerd-icons-completion
   :ensure t
   :after marginalia
-  :hook (marginalia-mode . nerd-icons-completion-marginalia-setup)
+  ;; TTY 下终端字体不含 Nerd Font 字形，图标会显示为乱码/空白，仅图形界面启用
   :config
-  (nerd-icons-completion-mode))
+  (when (display-graphic-p)
+    (nerd-icons-completion-mode)))
 
 (provide 'init-vertico)
 ;;; init-vertico.el ends here

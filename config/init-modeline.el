@@ -78,7 +78,8 @@
 
   ;; Whether display icons in the mode-line.
   ;; While using the server mode in GUI, should set the value explicitly.
-  (setq doom-modeline-icon t)
+  ;; TTY 下终端字体不含 Nerd Font 字形，关闭图标避免显示乱码/空白
+  (setq doom-modeline-icon (display-graphic-p))
 
   ;; Whether display the icon for `major-mode'. It respects option `doom-modeline-icon'.
   (setq doom-modeline-major-mode-icon t)

@@ -110,8 +110,10 @@
 (use-package treemacs-nerd-icons
   :ensure t
   :after treemacs
+  ;; TTY 下终端字体不含 Nerd Font 字形，仅图形界面切换到 nerd 图标主题
   :config
-  (treemacs-nerd-icons-config))
+  (when (display-graphic-p)
+    (treemacs-nerd-icons-config)))
 
 (provide 'init-treemacs)
 
