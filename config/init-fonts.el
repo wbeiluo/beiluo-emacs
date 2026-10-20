@@ -87,8 +87,9 @@
                      (set-font "LXGW WenKai Mono Medium" "霞鹜文楷等宽 Medium" 12 1.00)
                    (set-font "LXGW WenKai Mono" "霞鹜文楷等宽" 12 1.00 'medium 'regular)))))
 
-;; 设置Uniclode字体
-(set-fontset-font "fontset-default" 'unicode "Symbols Nerd Font Mono")
+;; 设置Uniclode字体（需图形环境，font-core 在非 GUI 构建中不可用）
+(when (display-graphic-p)
+  (set-fontset-font "fontset-default" 'unicode "Symbols Nerd Font Mono"))
 
 (provide 'init-fonts)
 
