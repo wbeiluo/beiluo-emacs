@@ -14,7 +14,7 @@
 ;;   3. 核心 Core        —— 目录文件、显示折叠、列表图片、TODO 关键字、标签、日志、refile、LaTeX 预览
 ;;   4. 日程 Agenda      —— 时间线、视图定制（org-super-agenda）、appt 提醒
 ;;   5. 捕获 Capture     —— 模板、目标定位、收尾钩子
-;;   6. 扩展 Extensions  —— org-id、org-super-links、org-gantt
+;;   6. 扩展 Extensions  —— org-id、org-super-links
 ;;
 ;; 显示风格为克制的现代感：颜色全部交给主题（modus / solarized），
 ;; 本文件只描述字体、字号、字重与符号；主题切换后由 `my/org-set-faces' 重新挂载样式。
@@ -1753,25 +1753,6 @@ ID 列为指向需求条目的 CUSTOM_ID 链接."
   (setq org-super-links-related-into-drawer t)
   ;; 自动为链接的目标添加 ID（如果目标没有 ID）
   (setq org-super-links-link-prefix 'org-super-links-link-prefix-timestamp))
-
-;; 甘特图：org-gantt 动态块，从标题的 SCHEDULED/DEADLINE/EFFORT 生成
-;; pgfgantt 图表。注意图表只在导出 LaTeX/PDF 时可见（需要系统安装
-;; texlive 的 pgfgantt.sty），缓冲区内用 C-c C-x g 更新动态块预览结构。
-;; 动态块注册需要包已加载，故这里不做延迟加载。
-(use-package org-gantt
-  :vc (:url "https://github.com/swillner/org-gantt"
-       :rev :newest)
-  :after org
-  :config
-  ;; 里程碑判定标签：带此标签的条目渲染为菱形里程碑
-  (setq org-gantt-default-milestone-tags '("milestone"))
-  ;; 无日期条目不上图，保持图表干净。注意不要把
-  ;; incomplete-date-headlines 也设成 ignore：只有 SCHEDULED（无 DEADLINE）
-  ;; 的普通任务属于这种情况，会被整体忽略掉。
-  (setq org-gantt-default-no-date-headlines 'ignore)
-  ;; 进度优先用进度 cookie（[0/3]、[50%]），没有时用 clocksum
-  (setq org-gantt-default-progress-source 'cookie-clocksum)
-  (setq org-gantt-default-show-progress 'if-exists))
 
 ;; org 自带链接命令也统一挂到 C-c s 前缀下，与 org-super-links 放在一起。
 ;; 打开链接保持默认的 `C-c C-o'（org-open-at-point），这里不重复绑定。
