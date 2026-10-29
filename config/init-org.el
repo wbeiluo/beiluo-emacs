@@ -795,7 +795,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "    #+END:\n\n"
    "    - 入口条件：\n"
    "    - 阶段计划：\n"
-   "    - 技术要求梳理（功能/性能/接口需求用 pn 录入「需求」章）：\n"
+   "    - 技术要求梳理（功能/性能/接口/其他需求用 pn 录入「需求」章）：\n"
    "    - 需求变更记录：\n"
    "    - 需求基线确认（M2）：\n\n"
    "*** 总体方案设计\n\n"
@@ -1014,6 +1014,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "*** 功能需求\n\n"
    "*** 性能需求\n\n"
    "*** 接口需求\n\n"
+   "*** 其他需求\n\n"
    "*** 追踪矩阵\n\n"
    "    #+BEGIN: req-matrix\n"
    "    #+END:\n\n"
@@ -1249,6 +1250,16 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
   "返回捕获需求条目时选择的类型 (供模板展开)."
   (or my/org-capture--req-type "功能"))
 
+(defconst my/org-capture--req-id-letters
+  '(("功能" . "F") ("性能" . "P") ("接口" . "I") ("其他" . "O"))
+  "需求类型到 ID 中缀的映射: ID 形如 代号_REQ-F-001, 按类型分段编号.")
+
+(defun my/org-capture--req-id ()
+  "按捕获时选择的需求类型生成需求 ID (供模板展开): REQ-<类型字母>-NNN."
+  (let* ((type (my/org-capture--req-type))
+         (letter (or (cdr (assoc type my/org-capture--req-id-letters)) "O")))
+    (my/org-capture--next-id (concat "REQ-" letter))))
+
 (defconst my/org-capture--record-tables
   '(("单元测试记录" . "unit-test")
     ("功能测试记录" . "func-test")
@@ -1391,7 +1402,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
 (defun my/org-capture-req-target ()
   "需求条目(pn): 「需求」章对应类型小节下."
   (let* ((file (my/org-capture-project-file))
-         (type (completing-read "需求类型: " '("功能" "性能" "接口") nil t)))
+         (type (completing-read "需求类型: " '("功能" "性能" "接口" "其他") nil t)))
     (setq my/org-capture--req-type type)
     (my/org-capture--goto-olp file (list "研制过程" "需求" (concat type "需求")))))
 
@@ -1671,9 +1682,9 @@ ID 列为指向需求条目的 CUSTOM_ID 链接."
       :empty-lines 1)
      ("pn" "需求条目" entry (function my/org-capture-req-target)
       ,(concat "* DESIGN %?\n  :PROPERTIES:\n"
-               "  :CUSTOM_ID: %(my/org-capture--next-id \"REQ\")\n"
+               "  :CUSTOM_ID: %(my/org-capture--req-id)\n"
                "  :TYPE: %(my/org-capture--req-type)\n"
-               "  :SOURCE: %^{来源|技术要求|任务书|设计输入|其他}\n"
+               "  :SOURCE: %^{来源|任务书/合同|用户要求|系统需求分解|标准规范|设计输入|继承复用|其他}\n"
                "  :PHASE: %(my/org-capture--stage-prompt)\n"
                "  :DESIGN: %^{设计章节(可空)}\n"
                "  :MODULE: %^{实现模块(可空)}\n"
