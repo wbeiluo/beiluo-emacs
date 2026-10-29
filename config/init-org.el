@@ -1470,10 +1470,11 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
   (re-search-forward "^\\* 日志[ \t]*$")
   (org-end-of-subtree t t)
   (unless (bolp) (insert "\n"))
+  ;; %A 全称星期(星期四), 与 org-time-stamp-formats 一致; %a 会缩写成「周四」
   (insert (format "** %s 阶段切换：%s → %s\n"
-                  (format-time-string "[%Y-%m-%d %a]") from to))
+                  (format-time-string "[%Y-%m-%d %A]") from to))
   (insert "   :PROPERTIES:\n   :TYPE: 阶段切换\n   :CREATED: "
-          (format-time-string "[%Y-%m-%d %a %H:%M]") "\n   :END:\n")
+          (format-time-string "[%Y-%m-%d %A %H:%M]") "\n   :END:\n")
   (insert "   - 切换原因：" reason "\n")
   (insert (format "   - %s 测试结论：%s\n" from result))
   (insert (format "   - 后续任务、测试/试验记录、软件状态均在「%s」下创建\n" to)))
