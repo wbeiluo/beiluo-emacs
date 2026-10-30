@@ -14,7 +14,7 @@
 
 ;; Set the software name and version
 (setq blemacs-name    "BLEmacs")
-(setq blemacs-version "2.3.0")
+(setq blemacs-version "2.3.1")
 
 ;; Add configuration path
 (setq default-directory "~/")
