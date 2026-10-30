@@ -13,8 +13,11 @@
 ;;   2. 外观 Appearance  —— 字体、标题层级、符号美化（org-modern）、强调显示（org-appear）
 ;;   3. 核心 Core        —— 目录文件、显示折叠、列表图片、TODO 关键字、标签、日志、refile、LaTeX 预览
 ;;   4. 日程 Agenda      —— 时间线、视图定制（org-super-agenda）、appt 提醒
-;;   5. 捕获 Capture     —— 模板、目标定位、收尾钩子
+;;   5. 捕获 Capture     —— 通用模板、目标定位、收尾钩子
 ;;   6. 扩展 Extensions  —— org-id、org-super-links
+;;
+;; 项目管理（研制阶段、门禁、需求基线、风险、p 组模板与台账视图）已拆分到
+;; init-org-project.el，由 init.el 紧随本模块加载。
 ;;
 ;; 显示风格为克制的现代感：颜色全部交给主题（modus / solarized），
 ;; 本文件只描述字体、字号、字重与符号；主题切换后由 `my/org-set-faces' 重新挂载样式。
@@ -45,7 +48,12 @@
 ;; 默认的 `C-c !' 与 flycheck-keymap-prefix 同键，被 flycheck-mode-map
 ;; 抢占（minor mode 优先于 major mode），故将非激活时间戳改绑到 `C-c _'。
 ;; 新版 Org 命令名为 `org-timestamp-inactive'（旧名 `org-time-stamp-inactive' 仍是别名）。
+;; 动态块刷新: 本机 org 的 C-c C-x C-u(org-dblock-update) 对缩进区块
+;; 报 "Not in a dynamic block", 改绑带回落的包装(出错时刷新全文动态块)
+(define-key org-mode-map (kbd "C-c C-x C-u") #'my/org-dblock-update)
 (define-key org-mode-map (kbd "C-c _") #'org-timestamp-inactive)
+
+;; 项目管理的按键（C-c P s/b/r/x/R/g）在 init-org-project.el 中定义。
 
 ;;; 2. 外观 Appearance ---------------------------------------------------------
 
@@ -315,7 +323,14 @@
      ;; CONFIRMED : 已确认(完成测试及验证)
      ;; DEPRECATED: 已废弃，不再维护
      ;; ARCHIVED  : 已归档
-     (sequence "DESIGN(s)" "DEVELOP(p!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")))
+     (sequence "DESIGN(s)" "DEVELOP(p!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
+
+     ;; --- 风险跟踪状态 ---
+     ;; 风险 = 未发生的不确定事件; 已发生的转议题, 不双轨跟踪.
+     ;; IDENT    : 已识别, 待评估确认
+     ;; MITIGATE : 已确认, 措施执行/监控中
+     ;; RESOLVED : 已了结, 由 :CONCLUSION: 区分 闭环/挂账/转议题/误报
+     (sequence "IDENT(i)" "MITIGATE(g!)" "|" "RESOLVED(v@/!)")))
   ;; 标题行状态变化时标签同步发生的变化
   (org-todo-state-tags-triggers
    '(("CANCELLED" ("cancelled" . t) ("wait"))
@@ -334,7 +349,11 @@
      ("DEVELOP" ("develop" . t) ("design") ("confirmed"))
      ("CONFIRMED" ("confirmed" . t) ("design") ("develop"))
      ("DEPRECATED" ("deprecated" . t) ("design") ("develop") ("confirmed"))
-     ("ARCHIVED" ("archived" . t) ("design") ("develop") ("confirmed"))))
+     ("ARCHIVED" ("archived" . t) ("design") ("develop") ("confirmed"))
+
+     ("IDENT" ("risk" . t) ("mitigate") ("resolved"))
+     ("MITIGATE" ("risk" . t) ("resolved"))
+     ("RESOLVED" ("resolved" . t) ("risk"))))
   ;; 使用专家模式选择标题栏状态
   (org-use-fast-todo-selection 'expert)
   ;; 父子标题栏状态有依赖
@@ -378,9 +397,18 @@
 
   ;; ---- 属性与列视图 ----
   ;; 标题行全局属性设置
+  ;; 风险相关属性的候选值集中在此, 供 org-set-property 与 capture 补全;
+  ;; 旧 RISK_ALL 的英文三档 (Low/Medium/High) 与模板 :LEVEL: 的中文不一致, 已废弃.
   (org-global-properties '(("EFFORT_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00 8:00")
                            ("APPT_WARNTIME_ALL" . "0 5 10 15 20 25 30 45 60")
-                           ("RISK_ALL" . "Low Medium High")
+                           ;; 等级属性用下划线而非连字符: agenda 搜索语法只认
+                           ;; [A-Za-z0-9_], 且 LEVEL 是 org 搜索保留字, 故 RISK_LEVEL.
+                           ("RISK_LEVEL_ALL" . "高 中 低")
+                           ("PROBABILITY_ALL" . "高 中 低")
+                           ("IMPACT_ALL" . "高 中 低")
+                           ("RESPONSE_ALL" . "规避 减轻 转移 接受")
+                           ("ORIGIN_ALL" . "需求 设计 接口 器件 试验 评审 进度 资源 人员 其他")
+                           ("CONCLUSION_ALL" . "闭环 挂账 转议题 误报")
                            ("STYLE_ALL" . "habit")))
   ;; Org columns 的默认格式
   (org-columns-default-format "%25ITEM %TODO %SCHEDULED %DEADLINE %3PRIORITY %TAGS %CLOCKSUM %EFFORT{:}")
@@ -607,7 +635,10 @@
       ((alltodo ""
                 ((org-agenda-span 'day)
                  (org-super-agenda-groups
-                  '(;; 日程任务
+                  '(;; 门禁: 门也是 TODO, 必须排在通用 TODO 组之前
+                    (:name "◎ 门禁 ➜ 待关闭" :tag "gate")
+
+                    ;; 日程任务
                     (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
                     (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
                     (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
@@ -622,6 +653,10 @@
                     (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
                     (:name "◎ 代码控制 ➜ 开发🄓" :todo "DEVELOP")
                     (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
+
+                    ;; 风险跟踪
+                    (:name "◎ 风险 ➜ 待评估" :todo "IDENT")
+                    (:name "◎ 风险 ➜ 措施中" :todo "MITIGATE")
 
                     ;; 其他
                     (:discard (:anything t)))))))))))
@@ -697,7 +732,19 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
 
 (defun my/org-capture-setup ()
   "捕获缓冲区内提供所有 agenda 标签候选."
-  (setq-local org-complete-tags-always-offer-all-agenda-tags t))
+  (setq-local org-complete-tags-always-offer-all-agenda-tags t)
+  ;; 每次捕获开始清空上次的门记录, 避免中止的 pe 留下陈旧状态
+  (setq my/org-capture--review-gate nil))
+
+(defun my/org-dblock-update ()
+  "更新光标处动态块, 失败时回落更新全文所有动态块.
+本机 org(native 编译) 的 `org-dblock-update' 对缩进的动态块总是报
+\"Not in a dynamic block\", 故加此包装: 优先原命令, 出错则
+`org-update-all-dblocks' (项目文件内的 req-by-phase 均为幂等刷新)."
+  (interactive)
+  (condition-case _
+      (org-dblock-update)
+    (error (org-update-all-dblocks))))
 
 (use-package org-capture
   :ensure nil
@@ -705,11 +752,13 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
   :hook ((org-capture-mode . my/org-capture-setup)
          (org-capture-mode . delete-other-windows)
          ;; 捕获完成后同步 appt 提醒, 避免新日程最长 15 分钟内不触发提醒
-         (org-capture-after-finalize . org-agenda-to-appt))
+         (org-capture-after-finalize . org-agenda-to-appt)
+)
   :custom
   ;; 从日程视图捕获时使用光标所在日期(决定 datetree 归档日期与 %U/%t 的展开)
   (org-capture-use-agenda-date t)
   ;; 模板按键分组: c=收集箱 j=日程计划 r=参考 x=计时备注
+  ;; 项目管理 p 组模板由 init-org-project.el 追加
   (org-capture-templates
    `(;; ---- 收集箱 Inbox ----
      ("c" "收集箱 Inbox")
