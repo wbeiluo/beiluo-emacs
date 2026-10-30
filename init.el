@@ -36,6 +36,7 @@
   (require 'init-consult)
   (require 'init-vertico)
   (require 'init-org)
+  (require 'init-org-project)
   (require 'init-note)
   (require 'init-embark)
   (require 'init-markdown)

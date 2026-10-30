@@ -13,6 +13,9 @@ Verification = batch startup smoke test (below). Docs: `README.org` (Chinese, in
   block, Chinese commentary, `(provide 'init-foo)` + `;;; init-foo.el ends here` footer.
 - `init-windows.el` is **Windows platform support** (windows-nt: PATH/MSYS2, clipboard coding);
   `init-window.el` is **window management**. Easy to confuse.
+- `init-org.el` is org 基础配置（按键、外观、核心、agenda、通用捕获）；`init-org-project.el` 是
+  **项目管理**（研制阶段、门禁、需求基线、风险、议题、p 组模板、台账视图），紧随 `init-org`
+  加载，依赖 org 已就绪。
 - Platform gates found in code: `display-graphic-p` (fonts, theme), `system-type 'windows-nt`
   (`init-windows.el`, parts of `init-fonts.el`), `gnu/linux` (`init-org.el`). The config targets
   both Arch Linux and Windows.
@@ -92,6 +95,10 @@ Rules that are easy to get wrong:
 
 ## Cross-module gotchas
 
+- **`add-hook` 必须写全 `-hook` 后缀**（Emacs 31 不再自动补）：`(add-hook 'org-capture-after-finalize
+  #'fn)` 加到的是变量 `org-capture-after-finalize`，而 org 实际运行 `org-capture-after-finalize-hook`。
+  `use-package :hook` 会自动补，手写 `add-hook` 不会。项目模块的捕获收尾钩子因此写成
+  `(add-hook 'org-capture-after-finalize-hook #'fn t)`。
 - Org inactive timestamp is `C-c _`, not the default `C-c !`: flycheck's keymap prefix steals
   `C-c !` (minor-mode maps beat major-mode maps). See comments in `init-org.el`.
 - Org table/date/tag faces are set via `face-override-spec`, not `set-face-attribute`, so they
