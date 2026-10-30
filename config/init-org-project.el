@@ -2420,7 +2420,7 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
 
 ;; 项目管理捕获模板（p 组）
 (defconst my/org-project--capture-templates
-  '(
+  `(
      ;; ---- 项目管理 Project ----
      ;; 落点由目标函数解析: 选软件配置项文件后按「研制过程」的
      ;; :CURRENT-STATE: 定位到当前阶段; 新建项目用 pp 生成骨架
