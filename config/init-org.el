@@ -51,9 +51,12 @@
 (define-key org-mode-map (kbd "C-c _") #'org-timestamp-inactive)
 
 ;; 项目管理: `C-c P s' 切换研制阶段(收尾检查/填里程碑/记日志).
+;; `C-c P b' 需求基线圈定(批量标记 :BASELINE: 并登记基线记录表).
 ;; C-c 大写字母为用户保留前缀, org-mode-map 未占用 C-c P.
 (global-set-key (kbd "C-c P s") #'my/org-project-stage-switch)
 (define-key org-mode-map (kbd "C-c P s") #'my/org-project-stage-switch)
+(global-set-key (kbd "C-c P b") #'my/org-project-baseline-create)
+(define-key org-mode-map (kbd "C-c P b") #'my/org-project-baseline-create)
 
 ;;; 2. 外观 Appearance ---------------------------------------------------------
 
@@ -712,9 +715,14 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
 ;; projects/ 子目录名(pp 创建时可选现有或新建), 骨架由 pp 模板生成。
 ;; 研制阶段(方案设计/样机研制/工程研制/状态鉴定)任一时刻唯一, 记录在「研制过程」标题的
 ;; :CURRENT-STATE: 属性; 阶段任务、测试/试验记录、软件状态都创建在当前阶段
-;; 子树下。里程碑条目用 :FROM:/:TO: 承载阶段转换记录, 阶段切换时自动填写。
+;; 子树下。门禁在「里程碑」章: 转段门用 :FROM:/:TO: 承载阶段转换记录并由
+;; 阶段切换自动结算; 冻结门与需求基线版本同号, 由圈定基线时创建。
 (defconst my/org-project--stages '("方案设计" "样机研制" "工程研制" "状态鉴定")
   "研制阶段固定划分.")
+
+(defconst my/org-project--closed-todos
+  '("DONE" "CANCELLED" "ARCHIVED" "DEPRECATED" "CONFIRMED" "CLOSED" "WONTFIX")
+  "视为已收尾的 TODO 终态 (收尾检查与基线圈定共用).")
 
 (defun my/org-project--codes ()
   "返回 projects/ 下的工程代号 (子目录名) 列表."
@@ -796,8 +804,8 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "    - 入口条件：\n"
    "    - 阶段计划：\n"
    "    - 技术要求梳理（功能/性能/接口/其他需求用 pn 录入「需求」章）：\n"
-   "    - 需求变更记录：\n"
-   "    - 需求基线确认（M2）：\n\n"
+   "    - 需求变更记录（pc 捕获，落在「需求」章「需求变更记录」表）：\n"
+   "    - 需求基线确认（M2，评审表在「需求」章「需求基线」节）：\n\n"
    "*** 总体方案设计\n\n"
    "    - 技术路线：\n"
    "    - 系统架构/软件配置项划分：\n"
@@ -820,7 +828,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "    #+END:\n\n"
    "    - 入口条件：\n"
    "    - 阶段计划：\n"
-   "    - 本阶段需求变更：\n\n"
+   "    - 本阶段需求变更（pc 捕获，落在「需求」章「需求变更记录」表）：\n\n"
    "*** 设计与实现\n\n"
    "    - 设计（架构/详细设计）：\n"
    "    - 代码走查/静态检查：\n"
@@ -932,7 +940,10 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "#   软件状态 DESIGN→DEVELOP→CONFIRMED→ARCHIVED;\n"
    "# - 需求条目在「需求」章统一建档(:PHASE: 可多值), 各阶段的动态块\n"
    "#   自动引用, 刷新用 C-c C-x C-u;\n"
-   "# - 评审记录统一记在「里程碑」对应条目的评审表内(pe 捕获);\n"
+   "# - 需求基线(M2)在「需求」章「需求基线」节: 评审通过后 C-c P b 圈定,\n"
+   "#   变更用 pc 捕获(自动将需求移出基线);\n"
+   "# - 评审记录统一记在「里程碑」对应条目的评审表内(pe 捕获),\n"
+   "#   M2 评审表在「需求」章「需求基线」节;\n"
    "# - 软件状态条目(ps)记在各阶段「软件状态」节, 状态鉴定阶段记在「状态管理」.\n\n"
    "* 概述\n\n"
    "** " name "\n"
@@ -965,14 +976,6 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "    :END:\n\n"
    "    方案/技术成熟度/技术验证闭环后转入样机研制.\n\n"
    "    #+NAME: review-M1\n"
-   "    | 日期 | 评审类型 | 评审对象 | 人员 | 结论 | 遗留问题 | 待办 |\n"
-   "    |------+----------+----------+------+------+----------+------|\n\n"
-   "*** TODO M2 需求基线建立              :milestone:\n"
-   "    :PROPERTIES:\n"
-   "    :CUSTOM_ID: " code "_M2\n"
-   "    :END:\n\n"
-   "    软件研制任务书 + 软件需求规格评审通过.\n\n"
-   "    #+NAME: review-M2\n"
    "    | 日期 | 评审类型 | 评审对象 | 人员 | 结论 | 遗留问题 | 待办 |\n"
    "    |------+----------+----------+------+------+----------+------|\n\n"
    "*** TODO M3 样机研制完成（转工程研制） :milestone:\n"
@@ -1015,6 +1018,30 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "*** 性能需求\n\n"
    "*** 接口需求\n\n"
    "*** 其他需求\n\n"
+   "*** 需求基线\n\n"
+   "    # 基线流程: pn 录入需求 → M2 评审通过(评审记在下表, pe 捕获) →\n"
+   "    # C-c P b 圈定基线(批量写需求 :BASELINE:, 登记基线记录表, 生成快照).\n"
+   "    # 需求变更用 pc 捕获记入「需求变更记录」表, 变更需求自动移出基线,\n"
+   "    # 重新圈定后进入新基线版本.\n\n"
+   "**** TODO M2 需求基线建立              :milestone:\n"
+   "        :PROPERTIES:\n"
+   "        :CUSTOM_ID: " code "_M2\n"
+   "        :END:\n\n"
+   "        软件研制任务书 + 软件需求规格评审通过.\n\n"
+   "        #+NAME: review-M2\n"
+   "        | 日期 | 评审类型 | 评审对象 | 人员 | 结论 | 遗留问题 | 待办 |\n"
+   "        |------+----------+----------+------+------+----------+------|\n\n"
+   "    #+NAME: baseline-records\n"
+   "    | 基线版本 | 日期 | 需求数 | 评审结论 | 备注 |\n"
+   "    |----------+------+------+----------+------|\n\n"
+   "    #+BEGIN: req-baseline :version RB1\n"
+   "    #+END:\n\n"
+   "*** 需求变更记录\n\n"
+   "    # 用 pc 捕获登记(选需求填变更内容); 被变更需求的 :BASELINE: 清空,\n"
+   "    # 重新圈定后进入新基线版本.\n\n"
+   "    #+NAME: req-changes\n"
+   "    | 日期 | 需求ID | 变更类型 | 变更说明 | 原因 | 影响范围 | 处置 | 关联议题 |\n"
+   "    |------+--------+----------+----------+------+------+------+----------|\n\n"
    "*** 追踪矩阵\n\n"
    "    #+BEGIN: req-matrix\n"
    "    #+END:\n\n"
@@ -1063,7 +1090,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "# (不修 WONTFIX); 调试/试验/交付后问题都记在此, :PHASE: 区分来源.\n\n"
    "* 风险\n\n"
    "# 风险条目用 pr 捕获.\n\n"
-   "* 日志\n\n"
+   "\n* 日志\n\n"
    "# 日志与会议记录都记在此章, 用 pd 捕获(:TYPE: 日志|会议).\n"))
 
 (defun my/org-project--align-tables ()
@@ -1343,7 +1370,8 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
       ;; 文件已存在或缓冲区已有内容(上次未保存的骨架)时不重建
       (when (and (= (buffer-size) 0) (not (file-exists-p file)))
         (insert (my/org-project--skeleton code name product))
-        (my/org-project--align-tables))
+        (my/org-project--align-tables)
+        (ignore-errors (org-update-all-dblocks)))
       (my/org-capture--goto-olp file '("日志")))))
 
 (defun my/org-capture-task-target ()
@@ -1406,6 +1434,53 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
     (setq my/org-capture--req-type type)
     (my/org-capture--goto-olp file (list "研制过程" "需求" (concat type "需求")))))
 
+(defvar my/org-capture--req-change-id nil
+  "需求变更(pc)选中的需求 CUSTOM_ID, 供落表后联动移出基线.")
+
+(defun my/org-capture--req-prompt-id ()
+  "提示选择需求条目, 返回其 ID 链接文本 (供模板展开).
+只列带 :PHASE: 的真实需求条目, 门禁条目(在「里程碑」章)不参与变更."
+  (let* ((entries (seq-filter (lambda (e) (plist-get e :phase))
+                              (with-current-buffer (my/org-capture--project-buffer)
+                                (my/org-project--req-entries))))
+         (choices (mapcar (lambda (e)
+                            (format "%s %s" (plist-get e :id) (plist-get e :title)))
+                          entries))
+         (choice (completing-read "变更需求: " choices nil t)))
+    (setq my/org-capture--req-change-id (car (split-string choice " ")))
+    (format "[[#%s][%s]]" my/org-capture--req-change-id
+            (my/org-project--req-id-short my/org-capture--req-change-id
+                                          (my/org-capture--code)))))
+
+(defun my/org-capture-req-change-target ()
+  "需求变更(pc): 「需求」章「需求变更记录」的变更表."
+  (my/org-capture--goto-named-table (my/org-capture-project-file)
+                                    '("研制过程" "需求" "需求变更记录")
+                                    "req-changes"))
+
+(defun my/org-capture-req-change-finalize ()
+  "需求变更(pc)落表后联动: 将对应需求移出基线并置回 DESIGN.
+中止捕获(org-note-abort)或未选择需求时不联动."
+  (let ((id my/org-capture--req-change-id)
+        (buf my/org-capture--last-buffer))
+    (setq my/org-capture--req-change-id nil)
+    (when (and id (not (and (boundp 'org-note-abort) org-note-abort))
+               (buffer-live-p buf))
+      (with-current-buffer buf
+        (org-with-wide-buffer
+         (goto-char (point-min))
+         (when (re-search-forward "^\\*\\* 需求[ \t]*$" nil t)
+           (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+             (while (re-search-forward "^\\*+ " end t)
+               (when (string= (org-entry-get (point) "CUSTOM_ID") id)
+                 (org-entry-put (point) "BASELINE" "")
+                 (let ((st (org-get-todo-state)))
+                   ;; org-todo 切到同态会取消关键字, 仅在偏离 DESIGN 时归位
+                   (when (and st (not (string= st "DESIGN"))) (org-todo "DESIGN")))
+                 ;; 钩子顺序上动态块刷新可能先于本联动, 故再刷一次
+                 (ignore-errors (org-update-all-dblocks))
+                 (message "需求 %s 已移出基线, 状态置回 DESIGN" id))))))))))
+
 (defun my/org-capture-issue-target ()
   "议题(pi): 「议题」章下, 议题条目为章的直接子标题."
   (my/org-capture--goto-olp (my/org-capture-project-file) '("议题")))
@@ -1428,7 +1503,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
 
 ;; ---- 阶段切换 Stage switching ----
 (defun my/org-project--pending-items (stage)
-  "返回阶段 STAGE 未完成任务与未闭环议题的描述列表."
+  "返回阶段 STAGE 未完成任务、未闭环议题与未入基线需求的描述列表."
   (let (items)
     (save-excursion
       (goto-char (point-min))
@@ -1438,9 +1513,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
           (while (re-search-forward "^\\*+ " end t)
             (let ((todo (org-get-todo-state))
                   (title (org-get-heading t t t t)))
-              (when (and todo (not (member todo '("DONE" "CANCELLED" "ARCHIVED"
-                                                  "DEPRECATED" "CONFIRMED"
-                                                  "CLOSED" "WONTFIX"))))
+              (when (and todo (not (member todo my/org-project--closed-todos)))
                 (push (format "[%s] %s" todo title) items)))))))
     (save-excursion
       (goto-char (point-min))
@@ -1451,6 +1524,28 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
                   (title (org-get-heading t t t t)))
               (when (member todo '("REPORT" "BUG" "KNOWNCAUSE" "FIXED"))
                 (push (format "[议题 %s] %s" todo title) items)))))))
+    ;; 需求章: 未完成的需求基线里程碑(如 M2)与未入基线的本阶段需求
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^\\*\\* 需求[ \t]*$" nil t)
+        (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+          (while (re-search-forward "^\\*+ " end t)
+            (when (and (member "milestone" (org-get-tags))
+                       (org-get-todo-state)
+                       (not (member (org-get-todo-state)
+                                    my/org-project--closed-todos)))
+              (push (format "[里程碑 %s] %s"
+                            (org-get-todo-state) (org-get-heading t t t t))
+                    items))))))
+    (let ((unbased (seq-filter
+                    (lambda (e)
+                      (and (not (org-string-nw-p (plist-get e :baseline)))
+                           (member stage (split-string (or (plist-get e :phase) "")))
+                           (not (member (plist-get e :todo) my/org-project--closed-todos))))
+                    (my/org-project--req-entries))))
+      (dolist (e unbased)
+        (push (format "[需求未入基线] %s %s" (plist-get e :id) (plist-get e :title))
+              items)))
     (nreverse items)))
 
 (defun my/org-project--goto-milestone (stage)
@@ -1477,6 +1572,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
           (format-time-string "[%Y-%m-%d %A %H:%M]") "\n   :END:\n")
   (insert "   - 切换原因：" reason "\n")
   (insert (format "   - %s 测试结论：%s\n" from result))
+  (insert (format "   - %s\n" (my/org-project--baseline-summary)))
   (insert (format "   - 后续任务、测试/试验记录、软件状态均在「%s」下创建\n" to)))
 
 (defun my/org-project-stage-switch ()
@@ -1516,6 +1612,40 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
       (message "已切换到阶段「%s」(原「%s」)" stage cur))))
 
 ;; ---- 需求动态块 Requirement dynamic block ----
+(defun my/org-project--req-entries ()
+  "扫描「需求」章, 返回需求条目的 plist 列表.
+每项含 :pos :id :title :type :phase :baseline :design :module :test-case :todo.
+只收同时带 CUSTOM_ID 与 :PHASE: 的条目 (pn 捕获的需求; 小节标题无
+CUSTOM_ID, 门禁条目在「里程碑」章, 均自动排除)."
+  (let (entries)
+    (org-with-wide-buffer
+     (save-excursion
+       (goto-char (point-min))
+       (when (re-search-forward "^\\*\\* 需求[ \t]*$" nil t)
+         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+           (while (re-search-forward "^\\*+ " end t)
+             (let ((id (org-entry-get (point) "CUSTOM_ID"))
+                   (phase (org-entry-get (point) "PHASE")))
+               (when (and id phase)
+                 (push (list :pos (point)
+                             :id id
+                             :title (org-get-heading t t t t)
+                             :type (org-entry-get (point) "TYPE")
+                             :phase phase
+                             :baseline (org-entry-get (point) "BASELINE")
+                             :design (org-entry-get (point) "DESIGN")
+                             :module (org-entry-get (point) "MODULE")
+                             :test-case (org-entry-get (point) "TEST-CASE")
+                             :todo (org-get-todo-state))
+                       entries))))))))
+    (nreverse entries)))
+
+(defun my/org-project--req-id-short (id code)
+  "需求 ID 显示文本: 去掉项目代号前缀 CODE_."
+  (if (string-prefix-p (concat code "_") id)
+      (substring id (1+ (length code)))
+    id))
+
 (defun org-dblock-write:req-by-phase (params)
   "按 :PHASE: 属性过滤「需求」章条目, 生成需求引用表.
 PARAMS 的 :phase 指定阶段名, 与条目 :PHASE: 多值(空格分隔)成员匹配;
@@ -1526,75 +1656,165 @@ ID 列为指向需求条目的 CUSTOM_ID 链接."
                       ((symbolp phase) (symbol-name phase))
                       (t (format "%s" phase))))
          (code (file-name-base (buffer-file-name)))
-         rows)
-    (org-with-wide-buffer
-     (save-excursion
-       (goto-char (point-min))
-       (when (re-search-forward "^\\*\\* 需求[ \t]*$" nil t)
-         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
-           (while (re-search-forward "^\\*\\{2,\\} " end t)
-             (let ((id (org-entry-get (point) "CUSTOM_ID"))
-                   (ph (org-entry-get (point) "PHASE")))
-               (when (and id ph (member phase (split-string ph)))
-                 (push (list id
-                             (org-get-heading t t t t)
-                             (org-entry-get (point) "TYPE")
-                             (org-get-todo-state))
-                       rows))))))))
-    (setq rows (nreverse rows))
+         (rows (seq-filter (lambda (e)
+                             (member phase (split-string (or (plist-get e :phase) ""))))
+                           (my/org-project--req-entries))))
     (insert "| 需求ID | 需求条目 | 类型 | 状态 |\n")
     (insert "|--------+----------+------+------|\n")
-    (dolist (row rows)
+    (dolist (e rows)
       (insert (format "| [[#%s][%s]] | %s | %s | %s |\n"
-                      (nth 0 row)
-                      (if (string-prefix-p (concat code "_") (nth 0 row))
-                          (substring (nth 0 row) (1+ (length code)))
-                        (nth 0 row))
-                      (nth 1 row)
-                      (or (nth 2 row) "")
-                      (or (nth 3 row) ""))))))
+                      (plist-get e :id)
+                      (my/org-project--req-id-short (plist-get e :id) code)
+                      (plist-get e :title)
+                      (or (plist-get e :type) "")
+                      (or (plist-get e :todo) ""))))))
+
+(defun org-dblock-write:req-baseline (params)
+  "按 :BASELINE: 属性过滤「需求」章条目, 生成基线版本快照表.
+PARAMS 的 :version 指定基线版本(RBn), 与条目 :BASELINE: 多值(空格分隔)成员匹配;
+版本快照可随时重生成, 即基线内容的审计依据."
+  (let* ((version (plist-get params :version))
+         ;; org 用 read 解析块参数, RBn 会成为符号, 需归一成字符串
+         (version (cond ((stringp version) version)
+                        ((symbolp version) (symbol-name version))
+                        (t (format "%s" version))))
+         (code (file-name-base (buffer-file-name)))
+         (rows (seq-filter
+                (lambda (e)
+                  (member version (split-string (or (plist-get e :baseline) ""))))
+                (my/org-project--req-entries))))
+    (insert "| 需求ID | 需求条目 | 类型 | 状态 |\n")
+    (insert "|--------+----------+------+------|\n")
+    (dolist (e rows)
+      (insert (format "| [[#%s][%s]] | %s | %s | %s |\n"
+                      (plist-get e :id)
+                      (my/org-project--req-id-short (plist-get e :id) code)
+                      (plist-get e :title)
+                      (or (plist-get e :type) "")
+                      (or (plist-get e :todo) ""))))))
 
 (defun org-dblock-write:req-matrix (_params)
   "生成需求追踪矩阵: 汇总「需求」章条目的追踪属性与覆盖率.
-列: 需求ID(链接) / :PHASE: / :TYPE: / 标题 / :DESIGN: / :MODULE: /
-:TEST-CASE: / TODO 状态; 表后一行输出覆盖统计, 评审前据此核对勾稽缺口."
-  (let ((code (file-name-base (buffer-file-name)))
-        rows)
-    (org-with-wide-buffer
-     (save-excursion
-       (goto-char (point-min))
-       (when (re-search-forward "^\\*\\* 需求[ \t]*$" nil t)
-         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
-           (while (re-search-forward "^\\*\\{2,\\} " end t)
-             (let ((id (org-entry-get (point) "CUSTOM_ID")))
-               (when (and id (org-entry-get (point) "PHASE"))
-                 (push (list id
-                             (or (org-entry-get (point) "PHASE") "")
-                             (or (org-entry-get (point) "TYPE") "")
-                             (org-get-heading t t t t)
-                             (or (org-entry-get (point) "DESIGN") "")
-                             (or (org-entry-get (point) "MODULE") "")
-                             (or (org-entry-get (point) "TEST-CASE") "")
-                             (or (org-get-todo-state) ""))
-                       rows))))))))
-    (setq rows (nreverse rows))
-    (insert "| 需求ID | 阶段 | 类型 | 需求条目 | 设计章节 | 实现模块 | 测试用例 | 状态 |\n")
-    (insert "|--------+------+------+----------+----------+----------+----------+------|\n")
-    (let ((n 0) (d 0) (m 0) (tc 0))
-      (dolist (row rows)
+列: 需求ID(链接) / :PHASE: / :TYPE: / 标题 / :BASELINE: / :DESIGN: /
+:MODULE: / :TEST-CASE: / TODO 状态; 表后输出覆盖统计(含未入基线条数),
+评审前据此核对勾稽缺口."
+  (let* ((code (file-name-base (buffer-file-name)))
+         (rows (seq-filter (lambda (e) (plist-get e :phase))
+                           (my/org-project--req-entries))))
+    (insert "| 需求ID | 阶段 | 类型 | 需求条目 | 基线 | 设计章节 | 实现模块 | 测试用例 | 状态 |\n")
+    (insert "|--------+------+------+----------+------+----------+----------+----------+------|\n")
+    (let ((n 0) (d 0) (m 0) (tc 0) (nb 0))
+      (dolist (e rows)
         (setq n (1+ n))
-        (when (org-string-nw-p (nth 4 row)) (setq d (1+ d)))
-        (when (org-string-nw-p (nth 5 row)) (setq m (1+ m)))
-        (when (org-string-nw-p (nth 6 row)) (setq tc (1+ tc)))
-        (insert (format "| [[#%s][%s]] | %s | %s | %s | %s | %s | %s | %s |\n"
-                        (nth 0 row)
-                        (if (string-prefix-p (concat code "_") (nth 0 row))
-                            (substring (nth 0 row) (1+ (length code)))
-                          (nth 0 row))
-                        (nth 1 row) (nth 2 row) (nth 3 row)
-                        (nth 4 row) (nth 5 row) (nth 6 row) (nth 7 row))))
-      (insert (format "# 覆盖统计: 需求 %d 条 · 设计 %d · 模块 %d · 测试 %d\n"
-                      n d m tc)))))
+        (when (org-string-nw-p (plist-get e :design)) (setq d (1+ d)))
+        (when (org-string-nw-p (plist-get e :module)) (setq m (1+ m)))
+        (when (org-string-nw-p (plist-get e :test-case)) (setq tc (1+ tc)))
+        (unless (org-string-nw-p (plist-get e :baseline)) (setq nb (1+ nb)))
+        (insert (format "| [[#%s][%s]] | %s | %s | %s | %s | %s | %s | %s | %s |\n"
+                        (plist-get e :id)
+                        (my/org-project--req-id-short (plist-get e :id) code)
+                        (or (plist-get e :phase) "")
+                        (or (plist-get e :type) "")
+                        (plist-get e :title)
+                        (or (plist-get e :baseline) "")
+                        (or (plist-get e :design) "")
+                        (or (plist-get e :module) "")
+                        (or (plist-get e :test-case) "")
+                        (or (plist-get e :todo) ""))))
+      (insert (format "# 覆盖统计: 需求 %d 条 · 设计 %d · 模块 %d · 测试 %d · 未入基线 %d\n"
+                      n d m tc nb)))))
+
+;; ---- 需求基线 Requirement baseline ----
+(defun my/org-project--baseline-max (entries)
+  "扫描需求条目 ENTRIES 的 :BASELINE: 属性, 返回既有最大版本号 (无则 0)."
+  (let ((max 0))
+    (dolist (e entries)
+      (dolist (v (split-string (or (plist-get e :baseline) "")))
+        (when (string-match "\\`RB\\([0-9]+\\)\\'" v)
+          (setq max (max max (string-to-number (match-string 1 v)))))))
+    max))
+
+(defun my/org-project--baseline-record-add (file ver count)
+  "在项目 FILE 的基线记录表(#+NAME: baseline-records)追加一行.
+登记版本 VER、当天日期与已圈定需求数 COUNT; 表不存在时仅提示跳过."
+  (set-buffer (org-capture-target-buffer file))
+  (widen)
+  (goto-char (point-min))
+  (if (not (re-search-forward "^[ \t]*#\\+NAME:[ \t]+baseline-records[ \t]*$" nil t))
+      (message "未找到基线记录表 baseline-records, 跳过登记")
+    (forward-line 1)
+    (when (org-at-table-p)
+      (goto-char (org-table-end))
+      (insert (format "| %s | %s | %d |  |  |\n"
+                      ver (format-time-string "%Y-%m-%d") count))
+      (org-table-align))))
+
+(defun my/org-project--baseline-dblock-ensure (file ver)
+  "项目 FILE 若无 :version VER 的 req-baseline 快照块, 在基线记录表后插入一个."
+  (set-buffer (org-capture-target-buffer file))
+  (widen)
+  (goto-char (point-min))
+  (unless (re-search-forward
+           (concat "^[ \t]*#\\+BEGIN:[ \t]+req-baseline :version "
+                   (regexp-quote ver) "[ \t]*$") nil t)
+    (goto-char (point-min))
+    (when (re-search-forward "^[ \t]*#\\+NAME:[ \t]+baseline-records[ \t]*$" nil t)
+      (goto-char (org-table-end))
+      (forward-line 1)
+      (insert "\n    #+BEGIN: req-baseline :version " ver "\n    #+END:\n"))))
+
+(defun my/org-project-baseline-create ()
+  "需求基线圈定: 选择项目, 将未入基线的需求批量标记 :BASELINE:.
+提示基线版本(默认在既有最大版本上加一)后多选需求, 写入 :BASELINE:,
+在基线记录表追加一行并按需插入快照动态块, 最后刷新全文动态块.
+基线评审(M2)另用 pe 捕获记入评审表, 圈定与评审解耦."
+  (interactive)
+  (let ((file (my/org-capture-project-file)))
+    (set-buffer (org-capture-target-buffer file))
+    (widen)
+    (let* ((entries (seq-filter (lambda (e) (plist-get e :phase))
+                                (my/org-project--req-entries)))
+           (cands (seq-filter (lambda (e)
+                                (and (not (org-string-nw-p (plist-get e :baseline)))
+                                     (not (member (plist-get e :todo)
+                                                  my/org-project--closed-todos))))
+                              entries)))
+      (unless cands (user-error "没有未入基线的需求条目"))
+      (let* ((defver (format "RB%d" (1+ (my/org-project--baseline-max entries))))
+             (ver (read-string (format "基线版本 (默认 %s): " defver) nil nil defver))
+             (choices (mapcar (lambda (e)
+                                (format "%s %s" (plist-get e :id) (plist-get e :title)))
+                              cands))
+             (sel (completing-read-multiple
+                   "圈定需求(可多选, 逗号分隔): " choices nil t)))
+        (unless sel (user-error "未选择需求"))
+        (dolist (label sel)
+          (let ((id (car (split-string label " "))))
+            ;; 逐条按 CUSTOM_ID 重定位, 避免写属性导致后续缓存位置偏移
+            (goto-char (point-min))
+            (when (re-search-forward
+                   (concat "^[ \t]*:CUSTOM_ID:[ \t]+" (regexp-quote id) "[ \t]*$") nil t)
+              (org-entry-put (point) "BASELINE" ver))))
+        (my/org-project--baseline-record-add file ver (length sel))
+        (my/org-project--baseline-dblock-ensure file ver)
+        (with-current-buffer (org-capture-target-buffer file)
+          (org-update-all-dblocks))
+        (message "已圈定基线 %s: %d 条需求" ver (length sel))))))
+
+(defun my/org-project--baseline-summary ()
+  "返回需求基线概况字符串 (供阶段切换日志): 最新版本与入基线条数、未入基线条数.
+无任何已圈定需求时返回「基线未建立」."
+  (let* ((entries (seq-filter (lambda (e) (plist-get e :phase))
+                              (my/org-project--req-entries)))
+         (max (my/org-project--baseline-max entries))
+         (in 0) (out 0))
+    (dolist (e entries)
+      (if (org-string-nw-p (plist-get e :baseline))
+          (setq in (1+ in))
+        (setq out (1+ out))))
+    (if (= max 0)
+        (format "需求基线未建立 (%d 条未入基线)" out)
+      (format "需求基线 RB%d · %d 条已入基线 · %d 条未入基线" max in out))))
 
 (defun my/org-dblock-update ()
   "更新光标处动态块, 失败时回落更新全文所有动态块.
@@ -1619,7 +1839,10 @@ ID 列为指向需求条目的 CUSTOM_ID 链接."
          (org-capture-mode . delete-other-windows)
          ;; 捕获完成后同步 appt 提醒, 避免新日程最长 15 分钟内不触发提醒
          (org-capture-after-finalize . org-agenda-to-appt)
+         ;; 需求变更(pc)落表后将对应需求移出基线并置回 DESIGN
+         (org-capture-after-finalize . my/org-capture-req-change-finalize)
          ;; 刷新项目文件中的需求动态块(req-by-phase)
+         (org-capture-after-finalize . my/org-capture-refresh-dblocks)
          (org-capture-after-finalize . my/org-capture-refresh-dblocks))
   :custom
   ;; 从日程视图捕获时使用光标所在日期(决定 datetree 归档日期与 %U/%t 的展开)
@@ -1687,10 +1910,14 @@ ID 列为指向需求条目的 CUSTOM_ID 链接."
                "  :TYPE: %(my/org-capture--req-type)\n"
                "  :SOURCE: %^{来源|任务书/合同|用户要求|系统需求分解|标准规范|设计输入|继承复用|其他}\n"
                "  :PHASE: %(my/org-capture--stage-prompt)\n"
+               "  :BASELINE:\n"
                "  :DESIGN: %^{设计章节(可空)}\n"
                "  :MODULE: %^{实现模块(可空)}\n"
                "  :TEST-CASE: %^{测试用例(可空)}\n"
                "  :CREATED: %U\n  :END:\n")
+      :empty-lines 1)
+     ("pc" "需求变更" table-line (function my/org-capture-req-change-target)
+      "| %u | %(my/org-capture--req-prompt-id) | %^{变更类型|新增|修改|删除|挂起} | %^{变更说明} | %^{原因} | %^{影响范围(设计/模块/测试,可空)} | %^{处置|重新圈定|挂账|终止} | %^{关联议题(可空)} |"
       :empty-lines 1)
      ("pi" "议题" entry (function my/org-capture-issue-target)
       ,(concat "* REPORT %?\n  :PROPERTIES:\n"
