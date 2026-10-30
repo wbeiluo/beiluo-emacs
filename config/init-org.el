@@ -50,13 +50,22 @@
 (define-key org-mode-map (kbd "C-c C-x C-u") #'my/org-dblock-update)
 (define-key org-mode-map (kbd "C-c _") #'org-timestamp-inactive)
 
-;; 项目管理: `C-c P s' 切换研制阶段(收尾检查/填里程碑/记日志).
+;; 项目管理: `C-c P s' 切换研制阶段(门链结算/更新状态/记日志).
 ;; `C-c P b' 需求基线圈定(批量标记 :BASELINE: 并登记基线记录表).
+;; 风险管理: `C-c P r' 评估确认(IDENT→MITIGATE), `C-c P x' 转议题,
+;; `C-c P R' 刷新并查看风险台账; 存量文件升级用 M-x my/org-project-risk-upgrade.
+;; 门禁: `C-c P g' 关门/重开/看判据/跳评审表, 门链在 `C-c P s' 转段时结算.
 ;; C-c 大写字母为用户保留前缀, org-mode-map 未占用 C-c P.
 (global-set-key (kbd "C-c P s") #'my/org-project-stage-switch)
 (define-key org-mode-map (kbd "C-c P s") #'my/org-project-stage-switch)
 (global-set-key (kbd "C-c P b") #'my/org-project-baseline-create)
 (define-key org-mode-map (kbd "C-c P b") #'my/org-project-baseline-create)
+(global-set-key (kbd "C-c P r") #'my/org-project-risk-assess)
+(define-key org-mode-map (kbd "C-c P r") #'my/org-project-risk-assess)
+(global-set-key (kbd "C-c P x") #'my/org-project-risk-to-issue)
+(define-key org-mode-map (kbd "C-c P x") #'my/org-project-risk-to-issue)
+(global-set-key (kbd "C-c P R") #'my/org-project-risk-dashboard)
+(define-key org-mode-map (kbd "C-c P R") #'my/org-project-risk-dashboard)
 
 ;;; 2. 外观 Appearance ---------------------------------------------------------
 
@@ -99,6 +108,10 @@
                    `((t :height ,(nth 1 spec) :weight ,(nth 2 spec)))
                    'face-override-spec)))
 (my/org-set-faces)
+
+;; 风险汇总里的来源缺失标记用 error face 标红。用 face 符号而非写死颜色,
+;; 明暗主题切换后仍然有效 (与上面 face-override-spec 的处理同理)。
+(font-lock-add-keywords 'org-mode '(("⚠ 未链接" 0 'error t)))
 
 ;; 时间戳美化(org-modern-timestamp)会让时间戳套上 org-modern-label 的紧凑字号，
 ;; 实际渲染宽度比原字符窄，而 org 表格按正文字号量列宽，于是表格错位。
@@ -326,7 +339,14 @@
      ;; CONFIRMED : 已确认(完成测试及验证)
      ;; DEPRECATED: 已废弃，不再维护
      ;; ARCHIVED  : 已归档
-     (sequence "DESIGN(s)" "DEVELOP(p!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")))
+     (sequence "DESIGN(s)" "DEVELOP(p!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
+
+     ;; --- 风险跟踪状态 ---
+     ;; 风险 = 未发生的不确定事件; 已发生的转议题, 不双轨跟踪.
+     ;; IDENT    : 已识别, 待评估确认
+     ;; MITIGATE : 已确认, 措施执行/监控中
+     ;; RESOLVED : 已了结, 由 :CONCLUSION: 区分 闭环/挂账/转议题/误报
+     (sequence "IDENT(i)" "MITIGATE(g!)" "|" "RESOLVED(v@/!)")))
   ;; 标题行状态变化时标签同步发生的变化
   (org-todo-state-tags-triggers
    '(("CANCELLED" ("cancelled" . t) ("wait"))
@@ -345,7 +365,11 @@
      ("DEVELOP" ("develop" . t) ("design") ("confirmed"))
      ("CONFIRMED" ("confirmed" . t) ("design") ("develop"))
      ("DEPRECATED" ("deprecated" . t) ("design") ("develop") ("confirmed"))
-     ("ARCHIVED" ("archived" . t) ("design") ("develop") ("confirmed"))))
+     ("ARCHIVED" ("archived" . t) ("design") ("develop") ("confirmed"))
+
+     ("IDENT" ("risk" . t) ("mitigate") ("resolved"))
+     ("MITIGATE" ("risk" . t) ("resolved"))
+     ("RESOLVED" ("resolved" . t) ("risk"))))
   ;; 使用专家模式选择标题栏状态
   (org-use-fast-todo-selection 'expert)
   ;; 父子标题栏状态有依赖
@@ -389,9 +413,18 @@
 
   ;; ---- 属性与列视图 ----
   ;; 标题行全局属性设置
+  ;; 风险相关属性的候选值集中在此, 供 org-set-property 与 capture 补全;
+  ;; 旧 RISK_ALL 的英文三档 (Low/Medium/High) 与模板 :LEVEL: 的中文不一致, 已废弃.
   (org-global-properties '(("EFFORT_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 7:00 8:00")
                            ("APPT_WARNTIME_ALL" . "0 5 10 15 20 25 30 45 60")
-                           ("RISK_ALL" . "Low Medium High")
+                           ;; 等级属性用下划线而非连字符: agenda 搜索语法只认
+                           ;; [A-Za-z0-9_], 且 LEVEL 是 org 搜索保留字, 故 RISK_LEVEL.
+                           ("RISK_LEVEL_ALL" . "高 中 低")
+                           ("PROBABILITY_ALL" . "高 中 低")
+                           ("IMPACT_ALL" . "高 中 低")
+                           ("RESPONSE_ALL" . "规避 减轻 转移 接受")
+                           ("ORIGIN_ALL" . "需求 设计 接口 器件 试验 评审 进度 资源 人员 其他")
+                           ("CONCLUSION_ALL" . "闭环 挂账 转议题 误报")
                            ("STYLE_ALL" . "habit")))
   ;; Org columns 的默认格式
   (org-columns-default-format "%25ITEM %TODO %SCHEDULED %DEADLINE %3PRIORITY %TAGS %CLOCKSUM %EFFORT{:}")
@@ -634,8 +667,20 @@
                     (:name "◎ 代码控制 ➜ 开发🄓" :todo "DEVELOP")
                     (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
 
+                    ;; 风险跟踪
+                    (:name "◎ 风险 ➜ 待评估" :todo "IDENT")
+                    (:name "◎ 风险 ➜ 措施中" :todo "MITIGATE")
+
                     ;; 其他
-                    (:discard (:anything t)))))))))))
+                    (:discard (:anything t))))))))
+
+     ("R" "风险台账" tags "RISK_LEVEL=\"高\""
+      ((org-agenda-overriding-header "高等级风险台账")
+       (org-super-agenda-groups
+        '((:name "◎ 待评估" :todo "IDENT")
+          (:name "◎ 措施中" :todo "MITIGATE")
+          (:name "◎ 挂账" :property ("CONCLUSION" "挂账"))
+          (:name "◎ 已了结" :anything t))))))))
 
 ;; ---- appt 通知提醒 ----
 (defun appt-display-with-notification (min-to-app new-time appt-msg)
@@ -719,6 +764,12 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
 ;; 阶段切换自动结算; 冻结门与需求基线版本同号, 由圈定基线时创建。
 (defconst my/org-project--stages '("方案设计" "样机研制" "工程研制" "状态鉴定")
   "研制阶段固定划分.")
+
+(defun my/org-project--state ()
+  "返回当前条目的 TODO 状态 (去文本属性), 无状态返回 nil.
+org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
+  (let ((state (org-get-todo-state)))
+    (and state (substring-no-properties state))))
 
 (defconst my/org-project--closed-todos
   '("DONE" "CANCELLED" "ARCHIVED" "DEPRECATED" "CONFIRMED" "CLOSED" "WONTFIX")
@@ -920,6 +971,43 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
       (push (my/org-project--stage-subtree code i stage) parts))
     (mapconcat #'identity (nreverse parts) "\n")))
 
+;; 风险章正文 (不含标题行): 骨架生成与存量升级共用同一份文本, 避免模板分叉。
+;; 章节结构 = 台账视图(矩阵/本阶段/汇总) + 评审记录 + 阶段出口准则;
+;; 条目只在「风险」章建档, 阶段子树与评审处只放动态块引用。
+(defconst my/org-project--risk-body
+  (concat
+   "# 风险 = 未发生的不确定事件; 已发生的转议题, 不双轨跟踪.\n"
+   "# 流程: pr 识别(IDENT) → C-c P r 评估确认(MITIGATE) → 措施执行/监控\n"
+   "#       → 置 RESOLVED, 并在 :CONCLUSION: 写明 闭环|挂账|转议题|误报.\n"
+   "# 已发生用 C-c P x 转议题(双向链接); 缺 :ORIGIN-LINK: 的条目在汇总中标红.\n"
+   "# 措施用 checkbox 子项: org-enforce-todo-checkbox-dependencies 会阻止\n"
+   "# 措施未勾完就置终态(挂账时勾选并注明不执行).\n\n"
+   "** 风险矩阵\n\n"
+   "    #+BEGIN: risk-matrix\n"
+   "    #+END:\n\n"
+   "** 本阶段风险\n\n"
+   "    #+BEGIN: risk-by-phase :phase current\n"
+   "    #+END:\n\n"
+   "** 风险台账\n\n"
+   "    #+BEGIN: risk-summary\n"
+   "    #+END:\n\n"
+   "** 风险评审记录\n\n"
+   "    #+NAME: risk-review\n"
+   "    | 日期 | 风险ID | 原等级 | 新等级 | 结论 | 评审人 |\n"
+   "    |------+--------+--------+--------+------+--------|\n\n"
+   "** 阶段出口准则\n\n"
+   "    | 阶段     | 风险出口要求 |\n"
+   "    |----------+--------------|\n"
+   "    | 方案设计 | IDENT 清零; 高风险须 MITIGATE 且带验证计划 |\n"
+   "    | 样机研制 | 高风险 RESOLVED(闭环/挂账); 中风险措施在执行 |\n"
+   "    | 工程研制 | 高/中风险 RESOLVED; 新风险须有 OWNER 与 TRIGGER |\n"
+   "    | 状态鉴定 | 全部终态; 挂账风险转入交付遗留清单 |\n")
+  "风险章正文 (骨架与存量升级共用).")
+
+(defun my/org-project--risk-chapter ()
+  "返回完整风险章文本 (标题行 + 正文)."
+  (concat "* 风险\n\n" my/org-project--risk-body))
+
 (defun my/org-project--skeleton (code name product)
   "生成项目文件骨架文本: CODE 配置项代号, NAME 项目名称, PRODUCT 产品代号."
   (concat
@@ -944,7 +1032,9 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "#   变更用 pc 捕获(自动将需求移出基线);\n"
    "# - 评审记录统一记在「里程碑」对应条目的评审表内(pe 捕获),\n"
    "#   M2 评审表在「需求」章「需求基线」节;\n"
-   "# - 软件状态条目(ps)记在各阶段「软件状态」节, 状态鉴定阶段记在「状态管理」.\n\n"
+   "# - 软件状态条目(ps)记在各阶段「软件状态」节, 状态鉴定阶段记在「状态管理」;\n"
+   "# - 风险: pr 识别(IDENT) → C-c P r 评估确认(MITIGATE) → RESOLVED 了结,\n"
+   "#   已发生用 C-c P x 转议题; 汇总/矩阵用 C-c P R 刷新查看.\n\n"
    "* 概述\n\n"
    "** " name "\n"
    "   :PROPERTIES:\n"
@@ -1088,8 +1178,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
    "\n* 议题\n\n"
    "# 问题/议题统一台账, 状态流 REPORT → BUG → KNOWNCAUSE → FIXED → CLOSED\n"
    "# (不修 WONTFIX); 调试/试验/交付后问题都记在此, :PHASE: 区分来源.\n\n"
-   "* 风险\n\n"
-   "# 风险条目用 pr 捕获.\n\n"
+   (my/org-project--risk-chapter)
    "\n* 日志\n\n"
    "# 日志与会议记录都记在此章, 用 pd 捕获(:TYPE: 日志|会议).\n"))
 
@@ -1494,8 +1583,13 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
     (my/org-capture--goto-olp file (list "研制过程" stage section))))
 
 (defun my/org-capture-risk-target ()
-  "风险(pr): 「风险」章下."
-  (my/org-capture--goto-olp (my/org-capture-project-file) '("风险")))
+  "风险(pr): 「风险」章下; 旧结构文件先就地升级该章(幂等)."
+  (let ((file (my/org-capture-project-file)))
+    (set-buffer (org-capture-target-buffer file))
+    (widen)
+    (unless (my/org-project--risk-chapter-p)
+      (my/org-project-risk-upgrade))
+    (my/org-capture--goto-olp file '("风险"))))
 
 (defun my/org-capture-log-target ()
   "日志/会议(pd): 「日志」章下."
@@ -1511,7 +1605,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
                                nil t)
         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
           (while (re-search-forward "^\\*+ " end t)
-            (let ((todo (org-get-todo-state))
+            (let ((todo (my/org-project--state))
                   (title (org-get-heading t t t t)))
               (when (and todo (not (member todo my/org-project--closed-todos)))
                 (push (format "[%s] %s" todo title) items)))))))
@@ -1520,10 +1614,31 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
       (when (re-search-forward "^\\* 议题[ \t]*$" nil t)
         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
           (while (re-search-forward "^\\*\\* " end t)
-            (let ((todo (org-get-todo-state))
+            (let ((todo (my/org-project--state))
                   (title (org-get-heading t t t t)))
               (when (member todo '("REPORT" "BUG" "KNOWNCAUSE" "FIXED"))
                 (push (format "[议题 %s] %s" todo title) items)))))))
+    ;; 风险章: 本阶段未闭环风险(高等级标注), 未状态化的旧条目按待评估提示
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward
+             "^\\* 风险\\(?:[ \t]+\\[[0-9/%]+\\]\\)?[ \t]*$" nil t)
+        (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+          (while (re-search-forward "^\\*\\*+ " end t)
+            (let ((todo (my/org-project--state))
+                  (id (org-entry-get nil "CUSTOM_ID"))
+                  (level (org-entry-get nil "RISK_LEVEL"))
+                  (phase (org-entry-get nil "PHASE")))
+              (when (and id
+                         (or (null todo) (member todo '("IDENT" "MITIGATE")))
+                         (or (null phase) (member stage (split-string phase))))
+                (push (format "[风险 %s·%s] %s"
+                              (or level "未分级")
+                              (cond ((equal todo "IDENT") "待评估")
+                                    ((equal todo "MITIGATE") "措施中")
+                                    (t "未状态化"))
+                              (org-get-heading t t t t))
+                      items)))))))
     ;; 需求章: 未完成的需求基线里程碑(如 M2)与未入基线的本阶段需求
     (save-excursion
       (goto-char (point-min))
@@ -1573,6 +1688,7 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
   (insert "   - 切换原因：" reason "\n")
   (insert (format "   - %s 测试结论：%s\n" from result))
   (insert (format "   - %s\n" (my/org-project--baseline-summary)))
+  (insert (format "   - %s\n" (my/org-project--risk-summary-line)))
   (insert (format "   - 后续任务、测试/试验记录、软件状态均在「%s」下创建\n" to)))
 
 (defun my/org-project-stage-switch ()
@@ -1594,6 +1710,10 @@ LABEL 为链接前缀, 默认 \"来源: \"; 传空串则直接插入链接本身
           (display-buffer (current-buffer)))
         (unless (y-or-n-p (format "阶段「%s」仍有 %d 项未收尾, 确认切换? "
                                   cur (length pending)))
+          (user-error "已取消阶段切换")))
+      ;; 高等级风险未闭环时再确认一次: 风险是转段的主要否决项
+      (when (seq-some (lambda (p) (string-prefix-p "[风险 高" p)) pending)
+        (unless (y-or-n-p "仍有未闭环的高等级风险, 确认转段? ")
           (user-error "已取消阶段切换")))
       (setq stage (completing-read (format "切换到阶段(当前 %s): " cur)
                                    my/org-project--stages nil t))
@@ -1636,15 +1756,13 @@ CUSTOM_ID, 门禁条目在「里程碑」章, 均自动排除)."
                              :design (org-entry-get (point) "DESIGN")
                              :module (org-entry-get (point) "MODULE")
                              :test-case (org-entry-get (point) "TEST-CASE")
-                             :todo (org-get-todo-state))
+                             :todo (my/org-project--state))
                        entries))))))))
     (nreverse entries)))
 
 (defun my/org-project--req-id-short (id code)
   "需求 ID 显示文本: 去掉项目代号前缀 CODE_."
-  (if (string-prefix-p (concat code "_") id)
-      (substring id (1+ (length code)))
-    id))
+  (my/org-project--id-short id code))
 
 (defun org-dblock-write:req-by-phase (params)
   "按 :PHASE: 属性过滤「需求」章条目, 生成需求引用表.
@@ -1723,6 +1841,480 @@ PARAMS 的 :version 指定基线版本(RBn), 与条目 :BASELINE: 多值(空格�
                         (or (plist-get e :todo) ""))))
       (insert (format "# 覆盖统计: 需求 %d 条 · 设计 %d · 模块 %d · 测试 %d · 未入基线 %d\n"
                       n d m tc nb)))))
+
+;; ---- 风险 Risk ----
+;; 风险 = 未发生的不确定事件; 已发生的走议题(REPORT), 由 `C-c P x' 双向链接
+;; 后风险置 RESOLVED, 不双轨跟踪。状态只有三态:
+;;   IDENT(待评估) → MITIGATE(措施执行/监控) → RESOLVED(已了结)
+;; 了结方式由 :CONCLUSION: 区分 闭环/挂账/转议题/误报。「风险」章是唯一建档
+;; 处, 阶段与评审只看 risk-by-phase / risk-matrix / risk-summary 动态块;
+;; 存量文件用 my/org-project-risk-upgrade 就地升级, pr 捕获也会懒升级。
+(defconst my/org-project--risk-chapter-re
+  "^\\* 风险\\(?:[ \t]+\\[[0-9/%]+\\]\\)?[ \t]*$"
+  "「风险」章标题匹配 (兼容旧模板的 [0/0] 统计 cookie).")
+
+(defconst my/org-project--risk-levels
+  '(("高" ("高" . "高") ("中" . "高") ("低" . "中"))
+    ("中" ("高" . "高") ("中" . "中") ("低" . "低"))
+    ("低" ("高" . "中") ("中" . "低") ("低" . "低")))
+  "风险等级矩阵: (可能性 (后果 . 等级) ...).")
+
+(defvar my/org-capture--risk-prob nil
+  "捕获风险(pr)时选择的可能性, 供模板计算 :RISK_LEVEL:.")
+
+(defvar my/org-capture--risk-impact nil
+  "捕获风险(pr)时选择的影响, 供模板计算 :RISK_LEVEL:.")
+
+(defun my/org-project--risk-level (prob impact)
+  "按可能性 PROB 与影响 IMPACT 返回风险等级 (高/中/低)."
+  (or (cdr (assoc impact (cdr (assoc prob my/org-project--risk-levels))))
+      "中"))
+
+(defun my/org-capture--risk-prompt (kind label default)
+  "提示风险评估项 KIND (probability/impact), 记录取值供模板展开."
+  (let ((value (completing-read (format "%s: " label)
+                                '("高" "中" "低") nil t nil nil default)))
+    (if (eq kind 'probability)
+        (setq my/org-capture--risk-prob value)
+      (setq my/org-capture--risk-impact value))
+    value))
+
+(defun my/org-capture--risk-level ()
+  "返回捕获时按概率×影响算出的等级 (供模板展开)."
+  (my/org-project--risk-level (or my/org-capture--risk-prob "中")
+                              (or my/org-capture--risk-impact "中")))
+
+(defun my/org-project--id-short (id code)
+  "显示用条目 ID: 去掉项目代号前缀 CODE_."
+  (if (and id (string-prefix-p (concat code "_") id))
+      (substring id (1+ (length code)))
+    id))
+
+(defun my/org-project--file-stage ()
+  "返回当前文件「研制过程」章的 :CURRENT-STATE:, 无则取第一阶段."
+  (org-with-wide-buffer
+   (save-excursion
+     (goto-char (point-min))
+     (if (re-search-forward "^\\* 研制过程[ \t]*$" nil t)
+         (or (org-entry-get nil "CURRENT-STATE") (car my/org-project--stages))
+       (car my/org-project--stages)))))
+
+(defun my/org-project--risk-entries ()
+  "扫描「风险」章, 返回风险条目的 plist 列表.
+每项含 :pos :id :title :phase :origin :origin-link :probability :impact
+:level :response :trigger :owner :review :conclusion :accept-reason
+:evidence :issue :todo; 只收带 CUSTOM_ID 的条目."
+  (let (entries)
+    (org-with-wide-buffer
+     (save-excursion
+       (goto-char (point-min))
+       (when (re-search-forward my/org-project--risk-chapter-re nil t)
+         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+           (while (re-search-forward "^\\*\\*+ " end t)
+             (let ((id (org-entry-get nil "CUSTOM_ID")))
+               (when id
+                 (push (list :pos (point)
+                             :id id
+                             :title (org-get-heading t t t t)
+                             :phase (org-entry-get nil "PHASE")
+                             :origin (org-entry-get nil "ORIGIN")
+                             :origin-link (org-entry-get nil "ORIGIN-LINK")
+                             :probability (org-entry-get nil "PROBABILITY")
+                             :impact (org-entry-get nil "IMPACT")
+                             :level (org-entry-get nil "RISK_LEVEL")
+                             :response (org-entry-get nil "RESPONSE")
+                             :trigger (org-entry-get nil "TRIGGER")
+                             :owner (org-entry-get nil "OWNER")
+                             :review (org-entry-get nil "REVIEW")
+                             :conclusion (org-entry-get nil "CONCLUSION")
+                             :accept-reason (org-entry-get nil "ACCEPT-REASON")
+                             :evidence (org-entry-get nil "EVIDENCE")
+                             :issue (org-entry-get nil "ISSUE")
+                             :todo (my/org-project--state))
+                       entries))))))))
+    (nreverse entries)))
+
+(defun my/org-project--risk-open-p (entry)
+  "风险条目 ENTRY 是否未了结 (无状态或 IDENT/MITIGATE)."
+  (let ((todo (plist-get entry :todo)))
+    (or (null todo) (member todo '("IDENT" "MITIGATE")))))
+
+(defun my/org-project--risk-in-stage-p (entry stage)
+  "风险条目 ENTRY 是否属于阶段 STAGE; 缺 :PHASE: 的旧条目视为属于任何阶段."
+  (let ((phase (plist-get entry :phase)))
+    (or (not (org-string-nw-p phase))
+        (member stage (split-string phase)))))
+
+(defun my/org-project--risk-summary-line ()
+  "返回风险台账概况字符串 (供阶段切换日志与仪表盘)."
+  (let ((total 0) (ident 0) (mit 0) (res 0) (acc 0) (high 0) (nolink 0))
+    (dolist (e (my/org-project--risk-entries))
+      (setq total (1+ total))
+      (pcase (plist-get e :todo)
+        ("IDENT" (setq ident (1+ ident)))
+        ("MITIGATE" (setq mit (1+ mit)))
+        ("RESOLVED"
+         (setq res (1+ res))
+         (when (equal (plist-get e :conclusion) "挂账") (setq acc (1+ acc))))
+        (_ (setq ident (1+ ident))))     ; 旧条目未状态化, 按待评估计
+      (when (and (my/org-project--risk-open-p e)
+                 (equal (plist-get e :level) "高"))
+        (setq high (1+ high)))
+      (unless (org-string-nw-p (plist-get e :origin-link))
+        (setq nolink (1+ nolink))))
+    (format "风险 %d 条 · 待评估 %d · 措施中 %d · 已了结 %d(挂账 %d) · 高等级未闭环 %d · 来源未链接 %d"
+            total ident mit res acc high nolink)))
+
+(defun my/org-project--risk-select ()
+  "选择风险条目 ID: 光标在风险条目上时直接取, 否则从本章列表选择."
+  (let* ((entries (my/org-project--risk-entries))
+         (here (and (derived-mode-p 'org-mode) (org-entry-get nil "CUSTOM_ID")))
+         (ids (mapcar (lambda (e) (plist-get e :id)) entries)))
+    (unless entries (user-error "本项目还没有风险条目, 先用 pr 捕获"))
+    (if (member here ids)
+        here
+      (car (split-string
+            (completing-read
+             "风险条目: "
+             (mapcar (lambda (e) (format "%s %s" (plist-get e :id)
+                                         (plist-get e :title)))
+                     entries)
+             nil t)
+            " ")))))
+
+(defun my/org-project--risk-goto (id)
+  "按 ID 定位风险条目, 成功则 point 停在该标题行."
+  (goto-char (point-min))
+  (when (re-search-forward
+         (concat "^[ \t]*:CUSTOM_ID:[ \t]+" (regexp-quote id) "[ \t]*$") nil t)
+    (org-back-to-heading t)))
+
+(defun my/org-project-risk-assess ()
+  "风险评估确认: 计算等级并补齐确认要素, 状态 IDENT → MITIGATE.
+概率/影响决定 :RISK_LEVEL:, 再补 :TRIGGER:/:RESPONSE:/:OWNER:/:REVIEW:,
+写入 :ASSESSED: 时间戳; 缺 :ORIGIN-LINK: 时只提示, 不阻断."
+  (interactive)
+  (let ((id (my/org-project--risk-select)))
+    (unless (my/org-project--risk-goto id)
+      (user-error "未找到风险条目 %s" id))
+    (unless (org-string-nw-p (org-entry-get nil "ORIGIN-LINK"))
+      (message "提示: 风险 %s 缺少 :ORIGIN-LINK:, 汇总里会标红" id))
+    (let* ((prob (completing-read "可能性: " '("高" "中" "低") nil t nil nil
+                                  (or (org-entry-get nil "PROBABILITY") "中")))
+           (impact (completing-read "影响: " '("高" "中" "低") nil t nil nil
+                                    (or (org-entry-get nil "IMPACT") "中")))
+           (level (my/org-project--risk-level prob impact))
+           (resp (completing-read "应对策略: " '("减轻" "规避" "转移" "接受")
+                                  nil t nil nil
+                                  (or (org-entry-get nil "RESPONSE") "减轻")))
+           (trigger (read-string "预警判据(可观测): " nil nil
+                                 (org-entry-get nil "TRIGGER")))
+           (owner (read-string "责任人: " nil nil
+                               (or (org-entry-get nil "OWNER") user-full-name)))
+           (review (read-string "下次复核(可空): " nil nil
+                                (org-entry-get nil "REVIEW"))))
+      (org-entry-put nil "PROBABILITY" prob)
+      (org-entry-put nil "IMPACT" impact)
+      (org-entry-put nil "RISK_LEVEL" level)
+      (org-entry-put nil "RESPONSE" resp)
+      (org-entry-put nil "TRIGGER" trigger)
+      (org-entry-put nil "OWNER" owner)
+      (org-entry-put nil "REVIEW" review)
+      (org-entry-put nil "ASSESSED" (format-time-string "[%Y-%m-%d %A %H:%M]"))
+      (when (member (org-get-todo-state) '(nil "IDENT"))
+        (org-todo "MITIGATE"))
+      (save-buffer)
+      (message "风险 %s 已确认: %s×%s → %s (%s)" id prob impact level
+               (org-get-todo-state)))))
+
+(defun my/org-project--issue-titles ()
+  "返回「议题」章中带 CUSTOM_ID 的条目 (标题 . ID) 列表."
+  (let (items)
+    (org-with-wide-buffer
+     (save-excursion
+       (goto-char (point-min))
+       (when (re-search-forward "^\\* 议题\\(?:[ \t]+\\[[0-9/%]+\\]\\)?[ \t]*$" nil t)
+         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+           (while (re-search-forward "^\\*\\*+ " end t)
+             (let ((iid (org-entry-get nil "CUSTOM_ID")))
+               (when iid
+                 (push (cons (org-get-heading t t t t) iid) items))))))))
+    (nreverse items)))
+
+(defun my/org-project--issue-new (title phase)
+  "在「议题」章新建 REPORT 条目, 返回其 CUSTOM_ID.
+插入过程不移动调用方的 point (风险条目写完属性还要用)."
+  (let ((id (my/org-capture--next-id "ISSUE")))
+    (save-excursion
+      (goto-char (point-min))
+      (unless (re-search-forward "^\\* 议题\\(?:[ \t]+\\[[0-9/%]+\\]\\)?[ \t]*$" nil t)
+        (goto-char (point-max))
+        (unless (bolp) (insert "\n"))
+        (insert "* 议题\n"))
+      (org-end-of-subtree t t)
+      (unless (bolp) (insert "\n"))
+      (insert (format (concat "** REPORT %s\n"
+                              "   :PROPERTIES:\n"
+                              "   :CUSTOM_ID: %s\n"
+                              "%s"
+                              "   :SEVERITY: 一般\n"
+                              "   :CREATED: %s\n"
+                              "   :END:\n\n"
+                              "   *1. 问题描述*\n\n"
+                              "   *2. 分析定位*\n\n"
+                              "   *3. 措施验证*\n\n"
+                              "   *4. 结论*\n")
+                      title id
+                      (if (org-string-nw-p phase)
+                          (format "   :PHASE: %s\n" phase)
+                        "")
+                      (format-time-string "[%Y-%m-%d %A %H:%M]"))))
+    id))
+
+(defun my/org-project-risk-to-issue ()
+  "风险已发生: 转议题并双向链接, 风险置 RESOLVED(:CONCLUSION: 转议题).
+可新建议题或关联既有议题; 转议题属于风险退出, 不受措施 checkbox 依赖阻塞."
+  (interactive)
+  (let* ((id (my/org-project--risk-select))
+         (entries (my/org-project--risk-entries))
+         (entry (seq-find (lambda (e) (equal (plist-get e :id) id)) entries)))
+    (unless (my/org-project--risk-goto id)
+      (user-error "未找到风险条目 %s" id))
+    (let* ((existing (my/org-project--issue-titles))
+           (choice (completing-read "关联议题: " (cons "新建议题" existing)
+                                    nil t))
+           (issue-id (if (equal choice "新建议题")
+                         (my/org-project--issue-new (plist-get entry :title)
+                                                    (plist-get entry :phase))
+                       (cdr (assoc choice existing)))))
+      (org-entry-put nil "ISSUE"
+                     (format "[[#%s][%s]]" issue-id
+                             (my/org-project--id-short
+                              issue-id (file-name-base (buffer-file-name)))))
+      (org-entry-put nil "CONCLUSION" "转议题")
+      (let ((org-enforce-todo-checkbox-dependencies nil)
+            (org-enforce-todo-dependencies nil))
+        (when (org-get-todo-state)
+          (org-todo "RESOLVED")))
+      (save-buffer)
+      (message "风险 %s 已转议题 %s" id issue-id))))
+
+;; ---- 风险动态块 Risk dynamic blocks ----
+(defun org-dblock-write:risk-by-phase (params)
+  "按 :PHASE: 过滤「风险」章条目, 生成阶段风险表.
+PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
+  (let* ((phase (plist-get params :phase))
+         (phase (cond ((stringp phase) phase)
+                      ((symbolp phase) (symbol-name phase))
+                      (t (format "%s" phase))))
+         (phase (if (string= phase "current")
+                    (my/org-project--file-stage)
+                  phase))
+         (code (file-name-base (buffer-file-name)))
+         (rows (seq-filter (lambda (e) (my/org-project--risk-in-stage-p e phase))
+                           (my/org-project--risk-entries))))
+    (insert "| 风险ID | 等级 | 状态 | 策略 | 责任人 | 预警判据 |\n")
+    (insert "|--------+------+------+------+--------+----------|\n")
+    (dolist (e rows)
+      (insert (format "| [[#%s][%s]] | %s | %s | %s | %s | %s |\n"
+                      (plist-get e :id)
+                      (my/org-project--id-short (plist-get e :id) code)
+                      (or (plist-get e :level) "")
+                      (or (plist-get e :todo) "未状态化")
+                      (or (plist-get e :response) "")
+                      (or (plist-get e :owner) "")
+                      (or (plist-get e :trigger) ""))))))
+
+(defun org-dblock-write:risk-matrix (_params)
+  "生成 3×3 风险矩阵 (可能性 × 影响), 格内为未闭环风险 ID."
+  (let* ((code (file-name-base (buffer-file-name)))
+         (entries (seq-filter #'my/org-project--risk-open-p
+                              (my/org-project--risk-entries))))
+    (insert "| 可能性\\影响 | 低 | 中 | 高 |\n")
+    (insert "|-------------+----+----+----|\n")
+    (dolist (prob '("高" "中" "低"))
+      (insert (format "| %s |" prob))
+      (dolist (impact '("低" "中" "高"))
+        (let* ((cell (seq-filter
+                      (lambda (e)
+                        (and (equal (or (plist-get e :probability) "中") prob)
+                             (equal (or (plist-get e :impact) "中") impact)))
+                      entries))
+               (text (if cell
+                         (mapconcat (lambda (e)
+                                      (my/org-project--id-short
+                                       (plist-get e :id) code))
+                                    cell " ")
+                       "—")))
+          (insert (format " %s |" text))))
+      (insert "\n"))
+    (insert (format "# 仅统计未闭环风险 (IDENT/MITIGATE), 共 %d 条\n"
+                    (length entries)))))
+
+(defun org-dblock-write:risk-summary (_params)
+  "生成风险台账汇总: 统计行 + 未闭环清单 + 挂账清单.
+缺 :ORIGIN-LINK: 的条目显示「⚠ 未链接」, 由 font-lock 标红."
+  (let* ((code (file-name-base (buffer-file-name)))
+         (entries (my/org-project--risk-entries))
+         (open (seq-filter #'my/org-project--risk-open-p entries))
+         (accepted (seq-filter (lambda (e) (equal (plist-get e :conclusion) "挂账"))
+                               entries)))
+    (insert (my/org-project--risk-summary-line) "\n\n")
+    (insert "| 风险ID | 等级 | 状态 | 阶段 | 来源 | 责任人 | 复核 | 预警判据 |\n")
+    (insert "|--------+------+------+------+------+--------+------+----------|\n")
+    (dolist (e open)
+      (insert (format "| [[#%s][%s]] | %s | %s | %s | %s | %s | %s | %s |\n"
+                      (plist-get e :id)
+                      (my/org-project--id-short (plist-get e :id) code)
+                      (or (plist-get e :level) "")
+                      (or (plist-get e :todo) "未状态化")
+                      (or (plist-get e :phase) "")
+                      (if (org-string-nw-p (plist-get e :origin-link))
+                          (plist-get e :origin-link)
+                        "⚠ 未链接")
+                      (or (plist-get e :owner) "")
+                      (or (plist-get e :review) "")
+                      (or (plist-get e :trigger) ""))))
+    (when accepted
+      (insert "\n挂账风险:\n\n")
+      (insert "| 风险ID | 等级 | 挂账理由 | 复核 |\n")
+      (insert "|--------+------+----------+------|\n")
+      (dolist (e accepted)
+        (insert (format "| [[#%s][%s]] | %s | %s | %s |\n"
+                        (plist-get e :id)
+                        (my/org-project--id-short (plist-get e :id) code)
+                        (or (plist-get e :level) "")
+                        (or (plist-get e :accept-reason) "")
+                        (or (plist-get e :review) "")))))))
+
+(defun my/org-project-risk-dashboard ()
+  "刷新风险动态块, 并在 *项目风险* 缓冲区显示分布与未闭环清单."
+  (interactive)
+  (unless (and (derived-mode-p 'org-mode) (buffer-file-name))
+    (user-error "请在项目 org 文件中执行"))
+  (org-with-wide-buffer (org-update-all-dblocks))
+  (let ((entries (my/org-project--risk-entries))
+        (buf (get-buffer-create "*项目风险*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "项目: %s\n\n" (buffer-file-name)))
+        (insert (my/org-project--risk-summary-line) "\n\n")
+        (let ((open (seq-filter #'my/org-project--risk-open-p entries)))
+          (if (null open)
+              (insert "未闭环风险: (无)\n")
+            (insert "未闭环风险:\n")
+            (dolist (e open)
+              (insert (format "  - [%s%s] %s%s  %s\n"
+                              (or (plist-get e :todo) "未状态化")
+                              (if (org-string-nw-p (plist-get e :level))
+                                  (concat " " (plist-get e :level)) "")
+                              (plist-get e :title)
+                              (if (org-string-nw-p (plist-get e :origin-link))
+                                  "" "  ⚠ 未链接")
+                              (or (plist-get e :owner) ""))))))
+        (let ((org-inhibit-startup t))
+          (org-mode))
+        (goto-char (point-min))
+        (setq buffer-read-only t)))
+    (display-buffer buf)))
+
+;; ---- 风险章升级 Risk chapter upgrade ----
+(defun my/org-project--risk-chapter-p ()
+  "当前缓冲区「风险」章是否已含新结构 (risk-matrix 动态块)."
+  (save-excursion
+    (goto-char (point-min))
+    (and (re-search-forward my/org-project--risk-chapter-re nil t)
+         (let ((end (save-excursion (org-end-of-subtree t t) (point))))
+           (save-excursion
+             (re-search-forward "^[ \t]*#\\+BEGIN:[ \t]+risk-matrix" end t))))))
+
+(defun my/org-project--risk-keep-subtrees ()
+  "摘出「风险」章下真实风险条目的原文, 供升级时保留.
+模板残留 (CUSTOM_ID 以 XXX_ 开头或标题为 XXXX) 丢弃."
+  (let (texts)
+    (org-with-wide-buffer
+     (goto-char (point-min))
+     (when (re-search-forward my/org-project--risk-chapter-re nil t)
+       (let* ((beg (progn (forward-line 1) (point)))
+              (end (save-excursion (org-end-of-subtree t t) (point))))
+         (goto-char beg)
+         (while (re-search-forward "^\\*\\*+ " end t)
+           (let* ((hbeg (line-beginning-position))
+                  (hend (save-excursion (org-end-of-subtree t t) (point)))
+                  (id (org-entry-get nil "CUSTOM_ID"))
+                  (title (org-get-heading t t t t)))
+             (unless (or (string-prefix-p "XXX_" (or id ""))
+                         (member title '("XXXX" "")))
+               (push (replace-regexp-in-string
+                      "^\\([ \t]*\\):LEVEL:"
+                      "\\1:RISK_LEVEL:"
+                      (buffer-substring-no-properties hbeg hend))
+                     texts)))
+           (goto-char (save-excursion (org-end-of-subtree t t) (point)))))))
+    (nreverse texts)))
+
+(defun my/org-project-risk-upgrade ()
+  "把当前项目文件的「风险」章升级为新结构 (幂等).
+只重写「风险」章: 保留既有风险条目(含正文), 丢弃模板残留, 重建说明、
+矩阵/阶段/台账动态块、评审记录表与阶段出口准则表; 其他章节不动."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "请在项目 org 文件中执行"))
+  (org-with-wide-buffer
+   (goto-char (point-min))
+   (let ((exists (re-search-forward my/org-project--risk-chapter-re nil t)))
+     (if (and exists (my/org-project--risk-chapter-p))
+         (message "「风险」章已是新结构, 无需升级")
+       (let ((kept (and exists (my/org-project--risk-keep-subtrees))))
+         (goto-char (point-min))
+         (if (re-search-forward my/org-project--risk-chapter-re nil t)
+             (let ((beg (line-beginning-position))
+                   (end (save-excursion (org-end-of-subtree t t) (point))))
+               (delete-region beg end)
+               (goto-char beg)
+               (insert (my/org-project--risk-chapter) "\n"))
+           ;; 没有风险章: 插到「日志」章前, 否则文件末尾
+           (goto-char (point-max))
+           (if (re-search-backward "^\\* 日志[ \t]*$" nil t)
+               (progn (forward-line 0)
+                      (insert (my/org-project--risk-chapter) "\n"))
+             (unless (bolp) (insert "\n"))
+             (insert "\n" (my/org-project--risk-chapter) "\n")))
+         (when kept
+           (dolist (text kept) (insert text)))
+         (org-update-all-dblocks)
+         (message "「风险」章已升级为新结构 (保留 %d 条既有条目)"
+                  (length kept)))))))
+
+(defun my/org-project-risk-upgrade-all ()
+  "批量把 projects/ 下项目文件的「风险」章升级为新结构.
+升级前用 tar 备份 projects/ (~/Org 不在版本控制内), 已升级的文件自动跳过."
+  (interactive)
+  (let* ((files (my/org-project--files))
+         (pending (seq-filter
+                   (lambda (f)
+                     (let ((org-inhibit-startup t))
+                       (with-current-buffer (find-file-noselect (cdr f))
+                         (not (my/org-project--risk-chapter-p)))))
+                   files)))
+    (unless pending (user-error "所有项目文件的风险章都已是新结构"))
+    (when (y-or-n-p (format "将升级 %d 个文件的风险章, 并先备份 projects/? "
+                            (length pending)))
+      (let ((tar (expand-file-name
+                  (format "projects-risk-backup-%s.tar.gz"
+                          (format-time-string "%Y%m%d-%H%M%S"))
+                  org-directory)))
+        (call-process "tar" nil nil nil "-czf" tar "-C" org-directory "projects")
+        (message "已备份: %s" tar))
+      (let ((n 0))
+        (dolist (f pending)
+          (let ((org-inhibit-startup t))
+            (with-current-buffer (find-file-noselect (cdr f))
+              (my/org-project-risk-upgrade)
+              (save-buffer)
+              (setq n (1+ n)))))
+        (message "已升级 %d 个文件的风险章" n)))))
 
 ;; ---- 需求基线 Requirement baseline ----
 (defun my/org-project--baseline-max (entries)
@@ -1941,11 +2533,25 @@ PARAMS 的 :version 指定基线版本(RBn), 与条目 :BASELINE: 多值(空格�
                "  |--------+----------+----------+------|\n")
       :empty-lines 1)
      ("pr" "风险" entry (function my/org-capture-risk-target)
-      ,(concat "* %?\n  :PROPERTIES:\n"
+      ,(concat "* IDENT %?\n  :PROPERTIES:\n"
                "  :CUSTOM_ID: %(my/org-capture--next-id \"RISK\")\n"
-               "  :LEVEL: %^{等级|高|中|低}\n"
+               "  :PHASE: %(my/org-capture--stage-prompt)\n"
+               "  :ORIGIN: %^{风险来源|设计|需求|接口|器件|试验|评审|进度|资源|人员|其他}\n"
+               "  :ORIGIN-LINK: %^{来源链接(建议填, 可空)}\n"
+               "  :PROBABILITY: %(my/org-capture--risk-prompt 'probability \"可能性\" \"中\")\n"
+               "  :IMPACT: %(my/org-capture--risk-prompt 'impact \"影响\" \"中\")\n"
+               "  :RISK_LEVEL: %(my/org-capture--risk-level)\n"
+               "  :RESPONSE: %^{应对策略|减轻|规避|转移|接受}\n"
+               "  :TRIGGER: %^{预警判据(可观测, 可空)}\n"
                "  :OWNER: %^{责任人|王北洛}\n"
-               "  :CREATED: %U\n  :END:\n\n  - 应对措施：\n")
+               "  :REVIEW: %^{下次复核(可空)}\n"
+               "  :CREATED: %U\n  :END:\n\n"
+               "  - 风险描述：\n"
+               "  - 触发后果：\n"
+               "  - 措施：\n"
+               "    - [ ] \n"
+               "  - 应急/降级预案：\n"
+               "  - 残余风险：\n")
       :empty-lines 1)
      ("pd" "日志/会议" entry (function my/org-capture-log-target)
       ,(concat "* %?\n  :PROPERTIES:\n"
