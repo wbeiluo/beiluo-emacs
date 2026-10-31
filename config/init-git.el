@@ -12,20 +12,26 @@
 ;;; Code:
 
 ;; Compact syntax for short lambda
+;; 以下 llama/cond-let/transient/with-editor 均为 magit 的依赖，
+;; magit 加载时会自行 require，无需在启动时急切加载（llama 实测约 1.4s）
 (use-package llama
-  :ensure t)
+  :ensure t
+  :defer t)
 
 ;; Additional and improved binding conditionals
 (use-package cond-let
-  :ensure t)
+  :ensure t
+  :defer t)
 
 ;; Transient command menus
 (use-package transient
-  :ensure t)
+  :ensure t
+  :defer t)
 
 ;; Use the Emacsclient as the $EDITOR of child processes
 (use-package with-editor
-  :ensure t)
+  :ensure t
+  :defer t)
 
 ;; A Git Porcelain inside Emacs
 (use-package magit

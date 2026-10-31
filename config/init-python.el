@@ -29,6 +29,9 @@
 
 (use-package lsp-pyright
   :ensure t
+  ;; 显式延迟：:hook 未隐含延迟时会启动即加载 lsp-pyright（连带整个
+  ;; lsp-mode，实测约 1.4s）；python-mode 首次激活时钩子会加载它
+  :defer t
   :custom
   (python-indent-offset 4)
   (lsp-pyright-langserver-command "pyright")  
