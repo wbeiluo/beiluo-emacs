@@ -72,17 +72,23 @@
 ;;; 2. 代码智能显示
 
 ;; lens：行末显示引用计数等（clangd codeLens / pyright）
+;; 这些 lsp-* 子模块都延迟加载：启用函数(lsp-lens--enable 等)有 autoload，
+;; lsp-mode 的 lsp--auto-configure 会在会话启动时按需加载它们，
+;; 启动时不必连带加载整个 lsp-mode
 (use-package lsp-lens
+  :defer t
   :custom
   (lsp-lens-place-position 'end-of-line))     ;; 贴在行末，不额外占行
 
 ;; 语义高亮：按 server 返回的 token 类型着色，比 font-lock 关键字匹配更准确
 (use-package lsp-semantic-tokens
+  :defer t
   :custom
   (lsp-semantic-tokens-enable t))
 
 ;; modeline 上的 LSP 状态提示（诊断与 code action 不在 modeline 重复显示）
 (use-package lsp-modeline
+  :defer t
   :custom
   ;; 诊断由 flycheck + doom-modeline check 段展示
   (lsp-modeline-diagnostics-enable nil)
@@ -165,9 +171,12 @@
     (define-key lsp-command-map (kbd "d") #'consult-lsp-diagnostics))) ;; 工作区诊断
 
 ;; 附带功能：lsp-dired（dired 里显示诊断）、lsp-icons（图标辅助）
-(use-package lsp-dired)
+;; 延迟加载：lsp-dired-mode 有 autoload，需要时自动加载
+(use-package lsp-dired
+  :defer t)
 
-(use-package lsp-icons)
+(use-package lsp-icons
+  :defer t)
 
 ;;; 6. 调试
 

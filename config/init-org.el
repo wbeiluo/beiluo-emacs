@@ -28,13 +28,22 @@
 
 ;; Org 及其子模块启动即加载：按键绑定、appt 定时同步、capture 模板
 ;; 都要在启动后立刻可用，因此这里不做延迟加载。
+;;
+;; org-modules 用 setq 而非 use-package 的 :custom 设置：custom setter
+;; (org-set-modules) 在 org 已加载时会立即强制加载列出的所有子模块并重置
+;; org-element 缓存（实测约 2.5s），而这些模块（ol-bibtex/ol-eww/ol-info/
+;; org-habit/org-protocol）只在首次用到时才需要。setq 不触发 setter，org
+;; 会在第一次激活 org-mode 或运行 agenda 时按需加载它们（org-load-modules-maybe）。
+;; 注意:ol-gnus 曾列在此处,但它会连带加载整个 gnus 栈(实测约 5.5s);
+;; 本配置不使用 gnus(见 init-modeline.el),需要时再加回。
+(setq org-modules '(ol-bibtex ol-eww ol-info org-habit org-protocol))
 (require 'org)
 (require 'org-agenda)
 (require 'org-capture)
-(require 'org-id)
-(require 'org-element)
 (require 'appt)
-(require 'notifications)
+;; notifications 不在启动时加载:它只被下面的 appt-display-with-notification
+;; 用到(且该函数只在 linux 下启用),改为在函数内按需 require(实测省约 0.26s)。
+;; org-id / org-element 也不在此处 require:org-agenda 已连带加载二者。
 
 ;; Org-agenda: `i' 直接捕获日记模板（jd），`J' 搜索日程条目
 (global-set-key (kbd "\e\e a") #'org-agenda)
@@ -253,8 +262,6 @@
   (org-directory "~/Org")
   ;; 笔记的默认存储位置
   (org-default-notes-file (expand-file-name "inbox.org" org-directory))
-  ;; 启用的子模块
-  (org-modules '(ol-bibtex ol-gnus ol-info ol-eww org-habit org-protocol))
   ;; 打开 Org links 的程序
   (org-file-apps '(("\\.png\\'"     . default)
                    (auto-mode       . emacs)
@@ -663,13 +670,18 @@
 
 ;; ---- appt 通知提醒 ----
 (defun appt-display-with-notification (min-to-app new-time appt-msg)
+  (require 'notifications)
   (notifications-notify :title (format "Appointment in %s minutes" min-to-app)
                         :body appt-msg
                         :urgency 'critical)
   (appt-disp-window min-to-app new-time appt-msg))
 
 ;; 每 15 分钟更新一次 appt
-(run-at-time t 900 #'org-agenda-to-appt)
+;; 首次同步不放在启动关键路径上:org-agenda-to-appt 会预扫描全部 agenda
+;; 文件(实测 80 个文件约 3.5s),用 run-at-time t 会在启动时立刻执行,
+;; 拖慢启动。改为启动 10 秒后首次同步,之后仍每 15 分钟一次;期间新捕获
+;; 的日程由 org-capture-after-finalize / org-agenda-finalize-hook 即时同步。
+(run-at-time 10 900 #'org-agenda-to-appt)
 ;; 不显示日期
 (setq appt-display-diary nil)
 ;; 提醒间隔时间，每 15 分钟提醒一次
