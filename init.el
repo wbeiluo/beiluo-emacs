@@ -50,6 +50,7 @@
   (require 'init-tempel)
   (require 'init-program)
   (require 'init-cc)
+  (require 'init-embedded)
   (require 'init-python)
   (require 'init-music)
   (require 'init-ai)

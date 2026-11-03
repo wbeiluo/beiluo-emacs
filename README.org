@@ -38,7 +38,7 @@
 
   #+BEGIN_SRC
   init.el            启动引导：按固定顺序 require config/ 下的模块，最后加载 custom.el
-  config/init-*.el   功能模块（33 个），每个以 (provide 'init-foo) 结尾
+  config/init-*.el   功能模块（34 个），每个以 (provide 'init-foo) 结尾
   agents/*.md        gptel-agent 自定义子代理定义（Markdown/Org，含 YAML 头）
   custom.el          Custom 生成，勿手写（不入库）
   logo.txt           启动界面 logo
@@ -73,6 +73,58 @@
   | =C-c t=                 | 插入时间 / 屏幕透明度                         |
   | =M-o= / =M-j=             | ace-window 切窗 / avy 跳转                    |
   | =C-x b= / =M-s r=         | consult-buffer / consult-ripgrep              |
+  | =C-c d=                 | 嵌入式调试 / 构建（见「嵌入式调试」）         |
+
+** 嵌入式调试（C-c d）
+
+  面向 STM32 等 ARM 工程的 dape 远程调试 + 构建集成。TI C2000 DSP 的调试在
+  CCS/XDS 侧，这里覆盖其 gmake 工程的构建与代码阅读。
+
+  依赖工具（按需安装）：
+
+  | 工具                        | 用途                            |
+  |-----------------------------+---------------------------------|
+  | arm-none-eabi-gcc / gdb     | 交叉编译与调试（gdb >= 14.1）   |
+  | openocd 或 JLinkGDBServer   | 目标板 GDBServer（二选一）      |
+  | cmake / make                | 构建                            |
+
+  调试走 GDB 原生 DAP（=gdb --interpreter=dap=），dape 直接复用 arm-none-eabi-gdb，
+  不需要下载额外的调试适配器。
+
+  | 按键        | 功能                                                     |
+  |-------------+----------------------------------------------------------|
+  | =C-c d d=   | 启动调试（stm32-openocd / stm32-jlink / gdb-remote）     |
+  | =C-c d r=   | 重发初始命令（复位 + 烧写 + 复位）                       |
+  | =C-c d x=   | 发送任意 GDB 命令（结果显示在 dape REPL）                |
+  | =C-c d o=   | 启动 openocd                                             |
+  | =C-c d j=   | 启动 JLinkGDBServer                                      |
+  | =C-c d k=   | 停止 GDBServer                                           |
+  | =C-c d b=   | 编译（自动识别 CMake / make / CCS gmake）                |
+  | =C-c d c=   | cmake 配置（=cmake -S . -B build=）                      |
+  | =C-c d f=   | 外部烧写（=embedded-flash-command=，默认 =make flash=）  |
+
+  调试流程：=C-c d o= 启动 openocd（或 =C-c d j=）→ =C-c d d= 选 =stm32-openocd=
+  attach → 会话首次停止自动执行初始命令（复位停住 → =load= 烧写 → 复位停住）→
+  设断点、继续、查变量用 dape 默认键位（=C-x C-a= 前缀）。
+
+  项目参数放工程根目录 =.dir-locals.el=（变量已声明安全，打开工程不询问）：
+
+  #+BEGIN_SRC emacs-lisp
+  ((nil . ((embedded-elf . "build/firmware.elf")     ; 不设则自动探测工程内 .elf
+           (embedded-gdb-server-address . "localhost:3333")  ; 不设用配置默认端口
+           (embedded-dape-init-commands . ("monitor reset halt"))  ; nil 禁用自动执行
+           (embedded-flash-command . "make flash")
+           ("*.cmd" . embedded-ti-cmd-mode))))        ; TI 链接命令文件
+  #+END_SRC
+
+  - openocd 参数在 =C-c d o= 时输入（如 =-f interface/stlink.cfg -f target/stm32f4x.cfg=），
+    可在 =.dir-locals.el= 里用 =embedded-openocd-args= / =embedded-jlink-args= 固化
+    （含设备型号，JLink 同理）。
+  - 交叉 GDB 可用 =embedded-gdb-program= 覆盖（默认 arm-none-eabi-gdb，缺失时退回 gdb）。
+  - TI CCS 的 gmake 工程识别根目录或 =Debug/= 下的 makefile；Windows 上可把
+    =embedded-make-program= 设为 =gmake=。
+  - 自动初始命令若失败（如未烧写过固件），用 =C-c d r= 重试；=C-c d x= 可手动执行
+    =monitor reset halt= 之类的任意命令。
 
 ** org 链接速查（C-c s）
 
