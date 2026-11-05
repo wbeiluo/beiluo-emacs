@@ -11,13 +11,13 @@
 ;;
 ;;   1. 项目文件与编号 —— projects/<工程代号>/<配置项>.org 布局、CUSTOM_ID 生成
 ;;   2. 研制阶段       —— :CURRENT-STATE: 唯一阶段、阶段子树模板与阶段切换
-;;   3. 门禁           —— 转段门 M1..M4、冻结门 B<k>、门链结算与 gate-summary
-;;   4. 需求与基线     —— 需求条目建档、全量重圈、基线快照动态块
+;;   3. 里程碑           —— M1..M4 转段检查点、结算与 milestone-summary
+;;   4. 需求与基线     —— 需求条目建档、全量重圈、基线记录表与快照动态块
 ;;   5. 风险与议题     —— 三态风险台账、评估/转议题/汇总、议题落点
-;;   6. 捕获与视图     —— p 组模板、评审/测试记录落点、agenda 风险与门禁台账
+;;   6. 捕获与视图     —— p 组模板、评审/测试记录落点、agenda 风险与里程碑台账
 ;;
 ;; 项目数据在 ~/Org/projects/ 下，本文件只放代码；升级旧项目用
-;; `my/org-project-risk-upgrade' / `my/org-project-gate-upgrade'。
+;; `my/org-project-risk-upgrade' / `my/org-project-milestone-upgrade'。
 ;;
 ;;; Code:
 
@@ -32,10 +32,25 @@
 ;; projects/ 子目录名(pp 创建时可选现有或新建), 骨架由 pp 模板生成。
 ;; 研制阶段(方案设计/样机研制/工程研制/状态鉴定)任一时刻唯一, 记录在「研制过程」标题的
 ;; :CURRENT-STATE: 属性; 阶段任务、测试/试验记录、软件状态都创建在当前阶段
-;; 子树下。门禁在「里程碑」章: 转段门用 :FROM:/:TO: 承载阶段转换记录并由
-;; 阶段切换自动结算; 冻结门与需求基线版本同号, 由圈定基线时创建。
+;; 子树下。里程碑即检查点: 「里程碑」章的 M1..M4 用 :FROM:/:TO: 承载阶段
+;; 转换记录并由阶段切换自动结算, 没有独立的门概念。需求基线数据(记录表
+;; 状态列 + 快照)集中在「需求」章「需求基线」节; 冻结判据、评审表与冻结
+;; 操作挂在各阶段的需求类小节(宿主小节映射), 阶段引用块 baseline-by-phase、
+;; 转段检查、milestone-summary 与切换日志都读记录表本阶段最新行的状态,
+;; 单一数据源。
 (defconst my/org-project--stages '("方案设计" "样机研制" "工程研制" "状态鉴定")
   "研制阶段固定划分.")
+
+;; 需求基线记录表(baseline-records)的行状态词汇: 圈定=待评审, 冻结确认=
+;; 已冻结, 同阶段重新圈定且未冻结的旧行=被取代。存量空状态按已冻结处理。
+(defconst my/org-project--baseline-status-new "待评审"
+  "圈定基线后记录表行的初始状态.")
+
+(defconst my/org-project--baseline-status-frozen "已冻结"
+  "冻结确认后的记录表行状态.")
+
+(defconst my/org-project--baseline-status-superseded "被取代"
+  "同阶段重新圈定时, 未冻结旧行的标记状态.")
 
 (defun my/org-project--state ()
   "返回当前条目的 TODO 状态 (去文本属性), 无状态返回 nil.
@@ -118,8 +133,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
             (setq max (max max (string-to-number (match-string 1))))))))
     (format "%s_%s-%03d" code prefix (1+ max))))
 
-(defun my/org-project--plan-subtree ()
-  "生成「方案设计」阶段子树文本 (方案阶段专属结构)."
+(defun my/org-project--plan-subtree (idx)
+  "生成「方案设计」阶段子树文本 (方案阶段专属结构). IDX 为阶段序号."
   (concat
    "*** 需求分析\n\n"
    "    #+BEGIN: req-by-phase :phase 方案设计\n"
@@ -128,7 +143,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "    - 阶段计划：\n"
    "    - 技术要求梳理（功能/性能/接口/其他需求用 pn 录入「需求」章）：\n"
    "    - 需求变更记录（pc 捕获，落在「需求」章「需求变更记录」表）：\n"
-   "    - 需求基线冻结（B1，C-c P b 圈定，评审记入「里程碑」章 review-B1）：\n\n"
+   (my/org-project--baseline-control-text "方案设计" idx "    ") "\n"
    "*** 总体方案设计\n\n"
    "    - 技术路线：\n"
    "    - 系统架构/软件配置项划分：\n"
@@ -143,15 +158,16 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "    | 序号 | 技术项 | 成熟度 | 风险 | 验证计划 | 验证结论 |\n"
    "    |------+--------+--------+------+----------+----------|\n\n"))
 
-(defun my/org-project--generic-subtree (stage)
-  "生成通用阶段子树文本: STAGE 阶段名 (策划与需求/设计与实现/测试与验证/软件状态)."
+(defun my/org-project--generic-subtree (stage idx)
+  "生成通用阶段子树文本: STAGE 阶段名, IDX 阶段序号 (控制块评审表名后缀)."
   (concat
    "*** 策划与需求\n\n"
    "    #+BEGIN: req-by-phase :phase " stage "\n"
    "    #+END:\n\n"
    "    - 入口条件：\n"
    "    - 阶段计划：\n"
-   "    - 本阶段需求变更（pc 捕获，落在「需求」章「需求变更记录」表）：\n\n"
+   "    - 本阶段需求变更（pc 捕获，落在「需求」章「需求变更记录」表）：\n"
+   (my/org-project--baseline-control-text stage idx "    ") "\n"
    "*** 设计与实现\n\n"
    "    - 设计（架构/详细设计）：\n"
    "    - 代码走查/静态检查：\n"
@@ -180,8 +196,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "*** 软件状态\n\n"
    "    版本条目用 ps 捕获, 状态流 DESIGN → DEVELOP → CONFIRMED → ARCHIVED.\n"))
 
-(defun my/org-project--qual-subtree ()
-  "生成「状态鉴定」阶段子树文本 (鉴定阶段专属结构)."
+(defun my/org-project--qual-subtree (idx)
+  "生成「状态鉴定」阶段子树文本 (鉴定阶段专属结构). IDX 为阶段序号."
   (concat
    "*** 鉴定策划\n\n"
    "    - 鉴定依据（研制任务书/技术要求）：\n"
@@ -190,7 +206,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "*** 状态管理\n\n"
    "    - 版本定版（软件状态条目在此登记）：\n"
    "    - 配置项基线：\n"
-   "    - 技术状态更改控制：\n\n"
+   "    - 技术状态更改控制：\n"
+   (my/org-project--baseline-control-text "状态鉴定" idx "    ") "\n"
    "*** 鉴定测试与试验\n\n"
    "    - 鉴定测试记录（登记于「测试与试验记录」章）：\n"
    "    - 鉴定试验记录（登记于「测试与试验记录」章）：\n"
@@ -217,9 +234,9 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "   :CUSTOM_ID: " code "_STAGE-" (number-to-string idx) "\n"
    "   :END:\n\n"
    (cond
-    ((string= stage "方案设计") (my/org-project--plan-subtree))
-    ((string= stage "状态鉴定") (my/org-project--qual-subtree))
-    (t (my/org-project--generic-subtree stage)))))
+    ((string= stage "方案设计") (my/org-project--plan-subtree idx))
+    ((string= stage "状态鉴定") (my/org-project--qual-subtree idx))
+    (t (my/org-project--generic-subtree stage idx)))))
 
 (defun my/org-project--stage-sections (stage)
   "返回阶段 STAGE 的小节名列表 (pt 捕获落点候选)."
@@ -292,7 +309,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "# 使用说明:\n"
    "# - 本文件由 capture 模板 pp 生成, 日常信息通过 C-c c 的 p 组模板录入;\n"
    "# - 当前研制阶段唯一, 记录在「研制过程」的 :CURRENT-STATE: 属性;\n"
-   "#   转段用 C-c P s: 结算门链(冻结门 + 转段门) → 更新属性 → 记日志;\n"
+   "#   转段用 C-c P s: 结算里程碑(基线冻结状态 + 转段里程碑) → 更新属性 → 记日志;\n"
    "# - 阶段结构按阶段特征定制: 方案设计(需求/总体/质量特性/成熟度),\n"
    "#   样机研制(+样机调试), 工程研制(+环境与可靠性验证),\n"
    "#   状态鉴定(鉴定策划/状态管理/鉴定测试/鉴定材料);\n"
@@ -300,11 +317,11 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "#   软件状态 DESIGN→DEVELOP→CONFIRMED→ARCHIVED;\n"
    "# - 需求条目在「需求」章统一建档(:PHASE: 可多值), 各阶段的动态块\n"
    "#   自动引用, 刷新用 C-c C-x C-u;\n"
-   "# - 门禁在「研制过程」>「里程碑」章: 转段门 M1..M4 由 C-c P s 结算,\n"
-   "#   冻结门 B<k> 与基线版本同号(B1=RB1), 同一阶段可有多道;\n"
-   "# - 需求基线在「需求」章「需求基线」节: C-c P b 全量重圈并建冻结门,\n"
-   "#   评审用 pe 记入 review-B<k>, 关门用 C-c P g; 变更用 pc 捕获;\n"
-   "# - 评审记录统一记在「里程碑」各门的 review-<ID> 表内(pe 捕获);\n"
+   "# - 里程碑在「研制过程」>「里程碑」章: 转段里程碑 M1..M4 由 C-c P s 结算;\n"
+   "# - 需求基线数据在「需求」章「需求基线」节(记录表状态: 待评审→已冻结),\n"
+   "#   C-c P b 全量重圈打到当前阶段; 冻结判据/评审/冻结在各阶段需求类小节,\n"
+   "#   冻结与解冻用 C-c P g, 评审用 pe 记入阶段评审表, 变更用 pc 捕获;\n"
+   "# - 评审记录统一记在「里程碑」各条目的 review-<ID> 表内(pe 捕获);\n"
    "# - 软件状态条目(ps)记在各阶段「软件状态」节, 状态鉴定阶段记在「状态管理」;\n"
    "# - 风险: pr 识别(IDENT) → C-c P r 评估确认(MITIGATE) → RESOLVED 了结,\n"
    "#   已发生用 C-c P x 转议题; 汇总/矩阵用 C-c P R 刷新查看.\n\n"
@@ -326,9 +343,9 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "   :PROPERTIES:\n"
    "   :CURRENT-STATE: 方案设计\n"
    "   :END:\n\n"
-   "# 当前阶段唯一, 由 :CURRENT-STATE: 记录; 门禁在下方「里程碑」章:\n"
-   "# 转段门 :FROM:/:TO: 承载阶段转换, 冻结门按基线版本登记, 见 gate-summary.\n\n"
-   (my/org-project--gates-text code)
+   "# 当前阶段唯一, 由 :CURRENT-STATE: 记录; 里程碑(即转段检查点)在下方\n"
+   "# 「里程碑」章: :FROM:/:TO: 承载阶段转换; 基线冻结状态见「需求」章记录表与 milestone-summary.\n\n"
+   (my/org-project--milestones-text code)
    "** 需求\n\n"
    "# 需求条目在此统一建档（唯一编辑处）, 用 pn 捕获; :PHASE: 取值 = 阶段名\n"
    "# (方案设计/样机研制/工程研制/状态鉴定, 可多值) 或 通用; 各阶段的动态块\n"
@@ -338,12 +355,13 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "*** 接口需求\n\n"
    "*** 其他需求\n\n"
    "*** 需求基线\n\n"
-   "    # 基线流程(全量重圈): pn 录入需求 → C-c P b 追加 :BASELINE: 新版本\n"
-   "    # → 登记基线记录表 → 建/绑冻结门 B<k> → pe 记评审 → C-c P g 关门.\n"
-   "    # 同一阶段可建多个基线, 版本号递增; 变更用 pc 捕获(移出基线).\n\n"
+   "    # 唯一数据源(阶段引用/转段检查/台账都读本表): C-c P b 全量重圈 → 追加\n"
+   "    # :BASELINE: 与本表新行(阶段=当前阶段, 状态=待评审); 冻结在各阶段需求类\n"
+   "    # 小节执行(C-c P g, 判据与评审齐备后置「已冻结」); 同一阶段可多个基线,\n"
+   "    # 版本全项目递增; 变更用 pc 捕获(移出基线), 重新圈定后进新版本行.\n\n"
    "    #+NAME: baseline-records\n"
-   "    | 基线版本 | 阶段 | 日期 | 需求数 | 评审结论 | 备注 |\n"
-   "    |----------+------+------+--------+----------+------|\n\n"
+   "    | 基线版本 | 阶段 | 日期 | 需求数 | 状态 | 评审结论 | 备注 |\n"
+   "    |----------+------+------+--------+------+----------+------|\n\n"
    "    #+BEGIN: req-baseline :version RB1\n"
    "    #+END:\n\n"
    "*** 需求变更记录\n\n"
@@ -539,6 +557,21 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
                          '("阶段任务" "需求变更" "设计改进" "问题归零" "硬件适配" "其他")
                          nil nil nil nil "阶段任务")))
 
+(defun my/org-capture--baseline-prompt ()
+  "提示选择软件状态依据的需求基线版本 (ps 模板展开), 默认当前阶段最新基线.
+当前阶段还没有基线时返回空串, 属性可事后手工补填."
+  (let* ((buf (my/org-capture--project-buffer))
+         (stage (and buf (with-current-buffer buf (my/org-capture--current-stage))))
+         (rows (and buf stage
+                    (with-current-buffer buf
+                      (seq-filter (lambda (r) (equal (plist-get r :phase) stage))
+                                  (my/org-project--baseline-records-rows))))))
+    (if (null rows)
+        ""
+      (completing-read "需求基线(回车=本阶段最新, 可空): "
+                       (mapcar (lambda (r) (plist-get r :ver)) rows)
+                       nil nil nil nil (plist-get (car (last rows)) :ver)))))
+
 (defun my/org-project--version-entries ()
   "返回项目内软件状态条目列表: ((CUSTOM_ID 标题) ...).
 以 CUSTOM_ID 前缀 R_ 识别, 兼容旧条目的 :VERSION: 属性."
@@ -702,36 +735,72 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
     (my/org-capture--goto-named-table
      file '("测试与试验记录") my/org-capture--record-kind)))
 
-(defvar my/org-capture--review-gate nil
-  "本次 pe 捕获选中的门 ID, 供落表后提示关门.")
+(defvar my/org-capture--review-stage nil
+  "本次 pe 捕获选中的基线评审阶段 (评审对象为「本阶段基线」时非 nil),
+供模板展开选版本与落表后提示冻结.")
+
+(defun my/org-capture--review-object ()
+  "评审对象 (pe 模板展开): 基线评审从记录表选本阶段版本, 里程碑评审自由输入."
+  (if my/org-capture--review-stage
+      (let* ((stage my/org-capture--review-stage)
+             (buf (my/org-capture--project-buffer))
+             (vers (and buf
+                        (with-current-buffer buf
+                          (mapcar (lambda (r) (plist-get r :ver))
+                                  (seq-filter (lambda (r)
+                                               (equal (plist-get r :phase) stage))
+                                              (my/org-project--baseline-records-rows)))))))
+        (if (null vers)
+            (user-error "阶段「%s」还没有基线, 请先用 C-c P b 圈定" stage)
+          (completing-read "基线版本: " vers nil t nil nil (car (last vers)))))
+    (read-string "评审对象: ")))
 
 (defun my/org-capture-review-target ()
-  "评审记录(pe): 从本文件的「里程碑」章选门, 落到 review-<ID> 表."
+  "评审记录(pe): 选本阶段基线或里程碑.
+基线评审落当前阶段宿主小节的 baseline-review-<n> 表(缺控制块先补建),
+里程碑评审落 review-<ID> 表."
   (let ((file (my/org-capture-project-file)))
     (set-buffer (org-capture-target-buffer file))
     (setq my/org-capture--last-buffer (current-buffer))
     (widen)
-    (let* ((gate (my/org-project--gate-select))
-           (id (plist-get gate :id)))
-      (setq my/org-capture--review-gate id)
-      (my/org-project--gate-review-table-goto id))))
+    (let* ((stage (my/org-project--file-stage))
+           (milestones (my/org-project--milestone-entries))
+           (choice (completing-read
+                    "评审对象: "
+                    (cons "本阶段基线" (mapcar #'my/org-project--milestone-label milestones))
+                    nil t nil nil "本阶段基线")))
+      (if (equal choice "本阶段基线")
+          (progn
+            (setq my/org-capture--review-stage stage)
+            (my/org-project--stage-review-goto stage))
+        (setq my/org-capture--review-stage nil)
+        (let ((milestone (seq-find (lambda (g) (equal (my/org-project--milestone-label g) choice))
+                              milestones)))
+          (unless milestone (user-error "未找到里程碑 %s" choice))
+          (my/org-project--milestone-review-table-goto (plist-get milestone :id)))))))
 
-(defun my/org-capture-gate-review-finalize ()
-  "pe 落表后: 若是冻结门且判据已满足, 询问是否关门."
-  (when (and my/org-capture--review-gate
-             (buffer-live-p my/org-capture--last-buffer))
-    (with-current-buffer my/org-capture--last-buffer
-      (let* ((id my/org-capture--review-gate)
-             (gate (my/org-project--gate-get id)))
-        (when (and gate
-                   (equal (plist-get gate :type) "冻结")
-                   (my/org-project--gate-open-p gate)
-                   (let ((stats (my/org-project--gate-criteria id)))
-                     (and (null (nth 2 stats))
-                          (> (nth 0 stats) 0))))
-          (when (y-or-n-p (format "%s 判据已满足, 现在关闭冻结门? " id))
-            (my/org-project--gate-close id t))))))
-  (setq my/org-capture--review-gate nil))
+(defun my/org-capture-review-finalize ()
+  "pe 落表后: 基线评审且最新基线判据已满足时, 询问是否冻结."
+  (let ((stage my/org-capture--review-stage))
+    (setq my/org-capture--review-stage nil)
+    (when (and stage
+               (not (and (boundp 'org-note-abort) org-note-abort))
+               (buffer-live-p my/org-capture--last-buffer))
+      (with-current-buffer my/org-capture--last-buffer
+        (widen)
+        (let* ((row (my/org-project--stage-latest-baseline stage))
+               (stats (and row (ignore-errors
+                                (my/org-project--stage-criteria stage)))))
+          (when (and row
+                     (not (my/org-project--baseline-frozen-p (plist-get row :status)))
+                     stats
+                     (null (nth 2 stats))
+                     (> (my/org-project--stage-review-count
+                         stage (plist-get row :ver))
+                        0))
+            (when (y-or-n-p (format "%s 判据已满足, 现在冻结基线? "
+                                    (plist-get row :ver)))
+              (my/org-project-baseline-freeze stage t))))))))
 
 (defun my/org-capture-req-target ()
   "需求条目(pn): 「需求」章对应类型小节下."
@@ -745,7 +814,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 
 (defun my/org-capture--req-prompt-id ()
   "提示选择需求条目, 返回其 ID 链接文本 (供模板展开).
-只列带 :PHASE: 的真实需求条目, 门禁条目(在「里程碑」章)不参与变更."
+只列带 :PHASE: 的真实需求条目, 里程碑条目(在「里程碑」章)不参与变更."
   (let* ((entries (seq-filter (lambda (e) (plist-get e :phase))
                               (with-current-buffer (my/org-capture--project-buffer)
                                 (my/org-project--req-entries))))
@@ -867,28 +936,30 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
               items)))
     (nreverse items)))
 
-(defun my/org-project--phase-req-unbased (stage)
-  "返回阶段 STAGE 中未入基线的有效需求条目."
-  (seq-filter (lambda (e)
-                (and (not (org-string-nw-p (plist-get e :baseline)))
-                     (member stage (split-string (or (plist-get e :phase) "")))))
-              (my/org-project--req-entries)))
+(defun my/org-project--stage-req-unbased (stage)
+  "返回阶段 STAGE 中未入基线的有效需求条目数 (归档/废弃/取消不计)."
+  (seq-count (lambda (e) (not (org-string-nw-p (plist-get e :baseline))))
+             (seq-filter (lambda (e)
+                           (and (my/org-project--req-active-p e)
+                                (member stage (split-string
+                                               (or (plist-get e :phase) "")))))
+                         (my/org-project--req-entries))))
 
-(defun my/org-project--gate-chain-summary (from to)
-  "返回转段门链概况 (供切换日志)."
-  (let* ((gate (my/org-project--gate-transition-for from to))
-         (freezes (my/org-project--gate-for-phase from "冻结"))
-         (done (seq-count (lambda (g) (equal (plist-get g :todo) "DONE"))
-                          freezes))
-         (void (seq-count (lambda (g) (equal (plist-get g :todo) "CANCELLED"))
-                          freezes)))
-    (format "门禁 %s · 冻结门 %d/%d 已关%s"
-            (if gate
-                (format "%s %s" (plist-get gate :suffix)
-                        (if (my/org-project--gate-open-p gate) "未关闭" "已关闭"))
-              (format "%s→%s 无转段门" from to))
-            done (length freezes)
-            (if (> void 0) (format " (%d 作废)" void) ""))))
+(defun my/org-project--milestone-chain-summary (from to)
+  "返回里程碑结算概况与本阶段基线冻结状态 (供切换日志)."
+  (let* ((milestone (my/org-project--milestone-for from to))
+         (row (my/org-project--stage-latest-baseline from))
+         (bl (cond
+              ((null row) "基线未建立")
+              ((my/org-project--baseline-frozen-p (plist-get row :status))
+               (format "基线 %s 已冻结" (plist-get row :ver)))
+              (t (format "基线 %s 未冻结" (plist-get row :ver))))))
+    (format "里程碑 %s · %s"
+            (if milestone
+                (format "%s %s" (plist-get milestone :suffix)
+                        (if (my/org-project--milestone-open-p milestone) "未关闭" "已关闭"))
+              (format "%s→%s 无对应里程碑" from to))
+            bl)))
 
 (defun my/org-project--insert-switch-log (from to reason result &optional forced)
   "在「日志」章插入阶段切换记录; FORCED 非 nil 表示强制转段."
@@ -903,30 +974,26 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
           (format-time-string "[%Y-%m-%d %A %H:%M]") "\n   :END:\n")
   (insert "   - 切换原因：" reason (if forced "（强制转段，存在未收尾项）" "") "\n")
   (insert (format "   - %s 测试结论：%s\n" from result))
-  (insert (format "   - %s\n" (my/org-project--gate-chain-summary from to)))
+  (insert (format "   - %s\n" (my/org-project--milestone-chain-summary from to)))
   (insert (format "   - %s\n" (my/org-project--baseline-summary)))
   (insert (format "   - %s\n" (my/org-project--risk-summary-line)))
   (insert (format "   - 后续任务、测试/试验记录、软件状态均在「%s」下创建\n" to)))
 
-(defun my/org-project--gate-switch-gaps (cur stage)
-  "返回从阶段 CUR 转到 STAGE 的门禁缺口列表."
-  (let ((gate (my/org-project--gate-transition-for cur stage))
-        (freezes (my/org-project--gate-open-freeze cur)))
+(defun my/org-project--switch-gaps (cur stage)
+  "返回从阶段 CUR 转到 STAGE 的里程碑缺口列表 (转段里程碑 + 基线冻结状态)."
+  (let ((milestone (my/org-project--milestone-for cur stage))
+        (bl-gap (my/org-project--stage-baseline-gap cur)))
     (append
-     (when (null gate)
-       (list (format "未定义 %s → %s 的转段门" cur stage)))
-     (mapcar (lambda (g)
-               (format "冻结门 %s（%s）未关闭"
-                       (plist-get g :suffix)
-                       (or (plist-get g :version) "未绑版本")))
-             freezes)
-     (when gate
-       (mapcar (lambda (gap) (concat (plist-get gate :suffix) " " gap))
-               (my/org-project--gate-gaps gate))))))
+     (when (null milestone)
+       (list (format "未定义 %s → %s 的转段里程碑" cur stage)))
+     (when bl-gap (list bl-gap))
+     (when milestone
+       (mapcar (lambda (gap) (concat (plist-get milestone :suffix) " " gap))
+               (my/org-project--milestone-gaps milestone))))))
 
 (defun my/org-project-stage-switch ()
-  "切换项目当前研制阶段: 门链结算 → 更新 :CURRENT-STATE: → 记日志.
-门链 = 本阶段冻结门(须全部关闭) + FROM 为当前阶段的转段门(判据/前置门).
+  "切换项目当前研制阶段: 里程碑结算 → 更新 :CURRENT-STATE: → 记日志.
+检查点 = 本阶段需求基线(须已冻结) + FROM 为当前阶段的里程碑(判据/前置里程碑).
 有缺口时列出并二次确认; 强制转段写 :OVERRIDE: 并记入日志."
   (interactive)
   (let ((file (my/org-capture-project-file)))
@@ -936,20 +1003,20 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
            (stage (completing-read (format "切换到阶段(当前 %s): " cur)
                                    my/org-project--stages nil t))
            (pending (my/org-project--pending-items cur))
-           (gate-gaps (and (not (string= stage cur))
-                           (my/org-project--gate-switch-gaps cur stage)))
+           (milestone-gaps (and (not (string= stage cur))
+                           (my/org-project--switch-gaps cur stage)))
            (high-risk (seq-some (lambda (p) (string-prefix-p "[风险 高" p))
                                 pending))
-           (gaps (append gate-gaps pending))
-           forced reason result gate)
+           (gaps (append milestone-gaps pending))
+           forced reason result milestone)
       (when (string= stage cur) (user-error "已在阶段「%s」" cur))
       (when (or gaps high-risk)
         (with-current-buffer (get-buffer-create "*项目转段检查*")
           (erase-buffer)
           (insert (format "阶段「%s」→「%s」\n\n" cur stage))
-          (when gate-gaps
-            (insert "门禁缺口:\n")
-            (dolist (g gate-gaps) (insert "  - " g "\n"))
+          (when milestone-gaps
+            (insert "里程碑缺口:\n")
+            (dolist (g milestone-gaps) (insert "  - " g "\n"))
             (insert "\n"))
           (when pending
             (insert "未收尾条目:\n")
@@ -963,14 +1030,14 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
         (setq forced t))
       (setq reason (read-string "切换原因: "))
       (setq result (read-string (format "「%s」测试结论: " cur)))
-      (setq gate (my/org-project--gate-transition-for cur stage))
-      (when gate
-        (my/org-project--gate-goto (plist-get gate :id))
+      (setq milestone (my/org-project--milestone-for cur stage))
+      (when milestone
+        (my/org-project--milestone-goto (plist-get milestone :id))
         (org-entry-put nil "REASON" reason)
         (org-entry-put nil "TEST-RESULT" result)
         (when forced
           (org-entry-put nil "OVERRIDE" (format-time-string "[%Y-%m-%d %A %H:%M]")))
-        (my/org-project--gate-close (plist-get gate :id) forced))
+        (my/org-project--milestone-close (plist-get milestone :id) forced))
       (goto-char (point-min))
       (re-search-forward "^\* 研制过程[ \t]*$")
       (org-entry-put nil "CURRENT-STATE" stage)
@@ -984,7 +1051,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
   "扫描「需求」章, 返回需求条目的 plist 列表.
 每项含 :pos :id :title :type :phase :baseline :design :module :test-case :todo.
 只收同时带 CUSTOM_ID 与 :PHASE: 的条目 (pn 捕获的需求; 小节标题无
-CUSTOM_ID, 门禁条目在「里程碑」章, 均自动排除)."
+CUSTOM_ID, 里程碑条目在「里程碑」章, 均自动排除)."
   (let (entries)
     (org-with-wide-buffer
      (save-excursion
@@ -1058,6 +1125,32 @@ PARAMS 的 :version 指定基线版本(RBn), 与条目 :BASELINE: 多值(空格�
                       (plist-get e :title)
                       (or (plist-get e :type) "")
                       (or (plist-get e :todo) ""))))))
+
+(defun org-dblock-write:baseline-by-phase (params)
+  "按记录表阶段列过滤, 生成本阶段基线状态引用表 (阶段子树控制块内用).
+PARAMS 的 :phase 指定阶段名; 数据源自「需求」章 baseline-records,
+状态列是转段检查与台账共用的同一份状态."
+  (let* ((phase (plist-get params :phase))
+         ;; org 用 read 解析块参数, 中文阶段名会成为符号, 需归一成字符串
+         (phase (cond ((stringp phase) phase)
+                      ((symbolp phase) (symbol-name phase))
+                      (t (format "%s" phase))))
+         (rows (seq-filter (lambda (r) (equal (plist-get r :phase) phase))
+                           (my/org-project--baseline-records-rows))))
+    (if (null rows)
+        (insert "# 本阶段暂无基线（用 C-c P b 圈定）\n")
+      (insert "| 基线版本 | 日期 | 需求数 | 状态 | 评审结论 | 备注 |\n")
+      (insert "|----------+------+------+------+----------+------|\n")
+      (dolist (r rows)
+        (insert (format "| %s | %s | %s | %s | %s | %s |\n"
+                        (plist-get r :ver)
+                        (plist-get r :date)
+                        (plist-get r :count)
+                        (if (org-string-nw-p (plist-get r :status))
+                            (plist-get r :status)
+                          my/org-project--baseline-status-frozen)
+                        (plist-get r :review)
+                        (plist-get r :note)))))))
 
 (defun org-dblock-write:req-matrix (_params)
   "生成需求追踪矩阵: 汇总「需求」章条目的追踪属性与覆盖率.
@@ -1564,31 +1657,32 @@ PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
               (setq n (1+ n)))))
         (message "已升级 %d 个文件的风险章" n)))))
 
-;; ---- 门禁 Gate ----
-;; 门 = 「里程碑」章下的一个条目: 类型(转段/冻结) + 判据 checkbox + 评审表
-;; review-<后缀> + 证据链接。转段门 M1..M4 与阶段转换一一对应, 由 C-c P s
-;; 结算; 冻结门 B<k> 与基线版本同号(B2 = RB2), 同一阶段可有多道, 圈定基线时
-;; 由 C-c P b 创建, 评审后关门。判据未勾完时 checkbox 依赖会阻止关门,
-;; 关闭入口统一走"列缺口 + 二次确认"(C-c P g / pe 落表后的提示)。
-(defconst my/org-project--gate-chapter-re "^\\*+ 里程碑[ \t]*$"
+;; ---- 里程碑 Milestone ----
+;; 里程碑即检查点: 「里程碑」章下的一个条目 = 判据 checkbox + 评审表
+;; review-<后缀> + 证据链接。M1..M4 与阶段转换一一对应, 由 C-c P s 结算。
+;; 需求基线不设里程碑标题: 记录表在「需求」章(状态列 待评审→已冻结), 冻结
+;; 判据/评审表/冻结操作挂在各阶段需求类小节, 转段检查、milestone-summary 与
+;; 切换日志经 `my/org-project--stage-baseline-gap' / baseline-by-phase 读同一份
+;; 状态。关闭与冻结统一走"列缺口 + 二次确认"(C-c P g / pe 落表后的提示)。
+(defconst my/org-project--milestone-chapter-re "^\\*+ 里程碑[ \t]*$"
   "「里程碑」章标题匹配 (兼容存量文件的顶级章与骨架的二级章).")
 
-(defun my/org-project--gate-chapter-level ()
+(defun my/org-project--milestone-chapter-level ()
   "返回「里程碑」章的标题层级, 不存在返回 nil."
   (save-excursion
     (goto-char (point-min))
-    (when (re-search-forward my/org-project--gate-chapter-re nil t)
+    (when (re-search-forward my/org-project--milestone-chapter-re nil t)
       (org-current-level))))
 
-(defconst my/org-project--gate-transitions
+(defconst my/org-project--milestone-defs
   '(("M1" "方案评审通过" "方案设计" "样机研制")
     ("M2" "样机研制完成" "样机研制" "工程研制")
     ("M3" "工程研制完成" "工程研制" "状态鉴定")
     ("M4" "状态鉴定通过" "状态鉴定" nil))
-  "转段门定义: (编号 名称 来源阶段 目标阶段); 目标为 nil 表示项目终点门.")
+  "里程碑定义: (编号 名称 来源阶段 目标阶段); 目标为 nil 表示项目终点里程碑.")
 
-(defconst my/org-project--gate-criteria
-  '(("M1" "需求基线已冻结（本阶段冻结门全部关闭）"
+(defconst my/org-project--milestone-criteria
+  '(("M1" "本阶段需求基线已冻结（最新基线状态为已冻结）"
          "技术成熟度与验证闭环"
          "遗留问题已转议题或风险")
     ("M2" "样机调试与测试闭环"
@@ -1599,147 +1693,113 @@ PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
          "软件状态已冻结")
     ("M4" "鉴定测试与试验闭环"
          "软件状态已固化归档"
-         "遗留风险已挂账")
-    ("freeze" "需求条目全部入基线"
-              "需求评审通过（结论：通过/有条件通过）"
-              "变更请求已处置或挂账"))
-  "门的判据清单: 门编号或 freeze.")
+         "遗留风险已挂账"))
+  "里程碑的判据清单: 里程碑编号. (基线冻结判据见 my/org-project--baseline-criteria)")
 
-(defun my/org-project--gate-criteria-text (key indent)
-  "生成判据 checkbox 文本, KEY 为门编号或 freeze, INDENT 为缩进."
+(defun my/org-project--milestone-criteria-text (key indent)
+  "生成判据 checkbox 文本, KEY 为里程碑编号, INDENT 为缩进."
   (mapconcat (lambda (item) (concat indent "- [ ] " item "\n"))
-             (cdr (assoc key my/org-project--gate-criteria))
+             (cdr (assoc key my/org-project--milestone-criteria))
              ""))
 
-(defun my/org-project--gate-review-table-text (suffix indent)
+(defun my/org-project--milestone-review-table-text (suffix indent)
   "生成名为 review-SUFFIX 的空评审表文本, INDENT 为缩进."
   (concat indent "#+NAME: review-" suffix "\n"
           indent "| 日期 | 评审类型 | 评审对象 | 人员 | 结论 | 遗留问题 | 待办 |\n"
           indent "|------+----------+----------+------+------+----------+------|\n"))
 
-(defun my/org-project--gate-text-transition (code id name from to &optional level)
-  "生成转段门文本: CODE 项目代号, ID 编号, NAME 名称, FROM/TO 阶段.
-LEVEL 为「里程碑」章层级, 门标题取其下一级 (默认 2)."
+(defun my/org-project--milestone-text (code id name from to &optional level)
+  "生成里程碑文本: CODE 项目代号, ID 编号, NAME 名称, FROM/TO 阶段.
+LEVEL 为「里程碑」章层级, 里程碑标题取其下一级 (默认 2)."
   (concat
-   (make-string (1+ (or level 2)) ?*) " TODO " id " " name " :gate:transition:\n"
+   (make-string (1+ (or level 2)) ?*) " TODO " id " " name " :milestone:\n"
    "    :PROPERTIES:\n"
    "    :CUSTOM_ID: " code "_" id "\n"
-   "    :GATE-TYPE: 转段\n"
    "    :FROM:     " from "\n"
    (if to (concat "    :TO:       " to "\n") "")
    "    :REASON:\n"
    "    :TEST-RESULT:\n"
    "    :OWNER:\n"
    "    :END:\n\n"
-   (my/org-project--gate-criteria-text id "    ")
+   (my/org-project--milestone-criteria-text id "    ")
    "\n"
-   (my/org-project--gate-review-table-text id "    ")
+   (my/org-project--milestone-review-table-text id "    ")
    "\n"))
 
-(defun my/org-project--gate-text-freeze (code k version phase &optional level)
-  "生成冻结门文本: CODE 项目代号, K 基线版本号, VERSION 版本, PHASE 阶段.
-LEVEL 为「里程碑」章层级, 门标题取其下一级 (默认 2)."
-  (let ((suffix (format "B%d" k))
-        (stars (make-string (1+ (or level 2)) ?*)))
-    (concat
-     stars " TODO " suffix " 需求基线冻结 :gate:freeze:\n"
-     "    :PROPERTIES:\n"
-     "    :CUSTOM_ID: " code "_" suffix "\n"
-     "    :GATE-TYPE: 冻结\n"
-     "    :ARTIFACT:  需求基线\n"
-     "    :VERSION:   " (or version "") "\n"
-     "    :PHASE:     " (or phase "") "\n"
-     "    :OWNER:\n"
-     "    :EVIDENCE:  [[#baseline-records][基线记录表]] [[#req-matrix][追踪矩阵]]\n"
-     "    :END:\n\n"
-     (my/org-project--gate-criteria-text "freeze" "    ")
-     "\n"
-     (my/org-project--gate-review-table-text suffix "    ")
-     "\n")))
-
-(defconst my/org-project--gate-chapter-preamble
+(defconst my/org-project--milestone-chapter-preamble
   (concat
-   "# 门禁台账: 转段门 M1..M4 改变 :CURRENT-STATE:, 冻结门 B<k> 冻结需求基线\n"
-   "# (与基线版本同号, 同一阶段可有多道)。每道门 = 判据 checkbox + 评审表\n"
-   "# review-<ID> + 证据链接; 判据未勾完时 checkbox 依赖会阻止关门。\n"
-   "# 关门 `C-c P g' (列缺口 + 二次确认), 转段 `C-c P s' (门链结算)。\n\n")
+   "# 里程碑台账: M1..M4 承载转段并改变 :CURRENT-STATE:。每个里程碑 = 判据\n"
+   "# checkbox + 评审表 review-<ID> + 证据链接; 判据未勾完时 checkbox 依赖会阻止关闭。\n"
+   "# 关闭 `C-c P g' (列缺口 + 二次确认), 转段 `C-c P s' (里程碑结算)。\n"
+   "# 需求基线不设里程碑: 记录表在「需求」章, 冻结判据/评审/冻结在各阶段需求类小节。\n\n")
   "「里程碑」章的说明文字.")
 
-(defun my/org-project--gates-text (code &optional level)
-  "生成「里程碑」章完整子树文本: 汇总块 + B1 占位 + 四道转段门.
+(defun my/org-project--milestones-text (code &optional level)
+  "生成「里程碑」章完整子树文本: 汇总块 + 四个转段里程碑.
 LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
   (let ((level (or level 2)))
     (concat
      (make-string level ?*) " 里程碑\n\n"
-     my/org-project--gate-chapter-preamble
-     "   #+BEGIN: gate-summary\n"
+     my/org-project--milestone-chapter-preamble
+     "   #+BEGIN: milestone-summary\n"
      "   #+END:\n\n"
-     (my/org-project--gate-text-freeze code 1 nil nil level)
-     "\n"
      (mapconcat (lambda (spec)
-                  (apply #'my/org-project--gate-text-transition
+                  (apply #'my/org-project--milestone-text
                          code (append spec (list level))))
-                my/org-project--gate-transitions ""))))
+                my/org-project--milestone-defs ""))))
 
-(defun my/org-project--gate-suffix (id)
-  "门的表名后缀: ID 最后一个下划线之后的部分 (1501_X_B2 -> B2)."
+(defun my/org-project--milestone-suffix (id)
+  "里程碑的表名后缀: ID 最后一个下划线之后的部分 (1501_X_B2 -> B2)."
   (if (string-match "\\([^_]+\\'\\)" id)
       (match-string 1 id)
     id))
 
-(defun my/org-project--gates ()
-  "扫描「里程碑」章, 返回门条目 plist 列表.
-每项含 :pos :id :suffix :title :type :from :to :artifact :version
-:phase :requires :owner :evidence :todo."
-  (let (gates)
+(defun my/org-project--milestone-entries ()
+  "扫描「里程碑」章, 返回里程碑条目 plist 列表 (带 CUSTOM_ID 的条目即里程碑).
+每项含 :pos :id :suffix :title :from :to :requires :owner :todo."
+  (let (entries)
     (org-with-wide-buffer
      (save-excursion
        (goto-char (point-min))
-       (when (re-search-forward my/org-project--gate-chapter-re nil t)
+       (when (re-search-forward my/org-project--milestone-chapter-re nil t)
          (let* ((level (1+ (org-current-level)))
                 (end (save-excursion (org-end-of-subtree t t) (point)))
                 (re (concat "^" (regexp-quote (make-string level ?*)) " ")))
            (while (re-search-forward re end t)
-             (let ((id (org-entry-get nil "CUSTOM_ID"))
-                   (kind (org-entry-get nil "GATE-TYPE")))
-               (when (and id kind)
+             (let ((id (org-entry-get nil "CUSTOM_ID")))
+               (when id
                  (push (list :pos (point)
                              :id id
-                             :suffix (my/org-project--gate-suffix id)
+                             :suffix (my/org-project--milestone-suffix id)
                              :title (org-get-heading t t t t)
-                             :type kind
                              :from (org-entry-get nil "FROM")
                              :to (org-entry-get nil "TO")
-                             :artifact (org-entry-get nil "ARTIFACT")
-                             :version (org-entry-get nil "VERSION")
-                             :phase (org-entry-get nil "PHASE")
                              :requires (org-entry-get nil "REQUIRES")
                              :owner (org-entry-get nil "OWNER")
-                             :evidence (org-entry-get nil "EVIDENCE")
                              :todo (my/org-project--state))
-                       gates))))))))
-    (nreverse gates)))
+                       entries))))))))
+    (nreverse entries)))
 
-(defun my/org-project--gate-get (id)
-  "按 ID 返回门 plist, 不存在返回 nil."
+(defun my/org-project--milestone-get (id)
+  "按 ID 返回里程碑 plist, 不存在返回 nil."
   (seq-find (lambda (g) (equal (plist-get g :id) id))
-            (my/org-project--gates)))
+            (my/org-project--milestone-entries)))
 
-(defun my/org-project--gate-open-p (gate)
-  "门 GATE 是否未关闭 (TODO 或未状态化)."
-  (not (member (plist-get gate :todo) '("DONE" "CANCELLED"))))
+(defun my/org-project--milestone-open-p (milestone)
+  "里程碑是否未完成 (TODO 或未状态化)."
+  (not (member (plist-get milestone :todo) '("DONE" "CANCELLED"))))
 
-(defun my/org-project--gate-goto (id)
-  "按 ID 定位门条目, 成功返回 non-nil 且 point 在标题行."
+(defun my/org-project--milestone-goto (id)
+  "按 ID 定位里程碑条目, 成功返回 non-nil 且 point 在标题行."
   (goto-char (point-min))
   (when (re-search-forward
          (concat "^[ \t]*:CUSTOM_ID:[ \t]+" (regexp-quote id) "[ \t]*$") nil t)
     (org-back-to-heading t)))
 
-(defun my/org-project--gate-criteria (id)
-  "返回门 ID 的判据状态: (已勾 总数 未勾文本列表)."
-  (unless (my/org-project--gate-goto id)
-    (user-error "未找到门 %s" id))
+(defun my/org-project--milestone-criteria-stats (id)
+  "返回里程碑 ID 的判据状态: (已勾 总数 未勾文本列表)."
+  (unless (my/org-project--milestone-goto id)
+    (user-error "未找到里程碑 %s" id))
   (let ((end (save-excursion (org-end-of-subtree t t) (point)))
         (done 0) (total 0) gaps)
     (save-excursion
@@ -1751,35 +1811,35 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
           (setq done (1+ done)))))
     (list done total (nreverse gaps))))
 
-(defun my/org-project--gate-requires-unmet (gate)
-  "返回门 GATE 的 :REQUIRES: 中未满足的门 ID 列表."
+(defun my/org-project--milestone-requires-unmet (milestone)
+  "返回里程碑 :REQUIRES: 中未完成的前置里程碑 ID 列表."
   (let (unmet)
-    (dolist (id (split-string (or (plist-get gate :requires) "") "[ ,]+" t))
-      (let ((g (my/org-project--gate-get id)))
-        (when (or (null g) (my/org-project--gate-open-p g))
+    (dolist (id (split-string (or (plist-get milestone :requires) "") "[ ,]+" t))
+      (let ((g (my/org-project--milestone-get id)))
+        (when (or (null g) (my/org-project--milestone-open-p g))
           (push id unmet))))
     (nreverse unmet)))
 
-(defun my/org-project--gate-gaps (gate)
-  "返回门 GATE 的缺口描述列表 (判据未勾 + 前置门未过)."
-  (let* ((id (plist-get gate :id))
-         (stats (my/org-project--gate-criteria id))
+(defun my/org-project--milestone-gaps (milestone)
+  "返回里程碑的缺口描述列表 (判据未勾 + 前置里程碑未完成)."
+  (let* ((id (plist-get milestone :id))
+         (stats (my/org-project--milestone-criteria-stats id))
          (done (nth 0 stats))
          (total (nth 1 stats))
          (unchecked (nth 2 stats))
-         (unmet (my/org-project--gate-requires-unmet gate)))
+         (unmet (my/org-project--milestone-requires-unmet milestone)))
     (append
      (when (< done total)
        (list (format "判据 %d/%d" done total)))
      (mapcar (lambda (item) (concat "未勾判据: " item)) unchecked)
-     (mapcar (lambda (req) (format "前置门未关闭: %s" req)) unmet))))
+     (mapcar (lambda (req) (format "前置里程碑未关闭: %s" req)) unmet))))
 
-(defun my/org-project--gate-review-count (id)
-  "返回门 ID 评审表的数据行数."
-  (unless (my/org-project--gate-goto id)
-    (user-error "未找到门 %s" id))
+(defun my/org-project--milestone-review-count (id)
+  "返回里程碑评审表的数据行数."
+  (unless (my/org-project--milestone-goto id)
+    (user-error "未找到里程碑 %s" id))
   (let ((end (save-excursion (org-end-of-subtree t t) (point)))
-        (name (concat "review-" (my/org-project--gate-suffix id)))
+        (name (concat "review-" (my/org-project--milestone-suffix id)))
         (n 0))
     (save-excursion
       (when (re-search-forward
@@ -1795,28 +1855,28 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
               (forward-line 1))))))
     n))
 
-(defun my/org-project--gate-review-table-ensure (id)
-  "确保门 ID 下有 review-<后缀> 表, 缺失则在门子树末尾补一张."
-  (unless (my/org-project--gate-goto id)
-    (user-error "未找到门 %s" id))
+(defun my/org-project--milestone-review-table-ensure (id)
+  "确保里程碑下有 review-<后缀> 表, 缺失则在里程碑子树末尾补一张."
+  (unless (my/org-project--milestone-goto id)
+    (user-error "未找到里程碑 %s" id))
   (let* ((beg (point))
          (end (save-excursion (org-end-of-subtree t t) (point)))
-         (suffix (my/org-project--gate-suffix id))
+         (suffix (my/org-project--milestone-suffix id))
          (re (concat "^[ \t]*#\\+NAME:[ \t]+review-"
                      (regexp-quote suffix) "[ \t]*$")))
     (goto-char beg)
     (unless (re-search-forward re end t)
       (goto-char end)
       (unless (bolp) (insert "\n"))
-      (insert "\n" (my/org-project--gate-review-table-text suffix "    "))
+      (insert "\n" (my/org-project--milestone-review-table-text suffix "    "))
       (my/org-project--align-tables))))
 
-(defun my/org-project--gate-review-table-goto (id)
-  "定位到门 ID 的评审表 #+NAME 行, 缺表则补建."
-  (my/org-project--gate-review-table-ensure id)
-  (my/org-project--gate-goto id)
+(defun my/org-project--milestone-review-table-goto (id)
+  "定位到里程碑的评审表 #+NAME 行, 缺表则补建."
+  (my/org-project--milestone-review-table-ensure id)
+  (my/org-project--milestone-goto id)
   (let ((end (save-excursion (org-end-of-subtree t t) (point)))
-        (name (concat "review-" (my/org-project--gate-suffix id))))
+        (name (concat "review-" (my/org-project--milestone-suffix id))))
     (goto-char (point-min))
     (unless (re-search-forward
              (concat "^[ \t]*#\\+NAME:[ \t]+" (regexp-quote name) "[ \t]*$")
@@ -1824,231 +1884,166 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
       (user-error "未找到评审表 %s" name))
     (goto-char (line-beginning-position))))
 
-(defun my/org-project--gate-close (id &optional force)
-  "关闭门 ID: 列缺口并二次确认后置 DONE.
-FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
-  (let ((gate (my/org-project--gate-get id)))
-    (unless gate (user-error "未找到门 %s" id))
-    (let ((gaps (my/org-project--gate-gaps gate)))
+(defun my/org-project--milestone-close (id &optional force)
+  "关闭里程碑 ID: 列缺口并二次确认后置 DONE.
+FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关闭."
+  (let ((milestone (my/org-project--milestone-get id)))
+    (unless milestone (user-error "未找到里程碑 %s" id))
+    (let ((gaps (my/org-project--milestone-gaps milestone)))
       (unless (or force (null gaps))
         (unless (y-or-n-p
-                 (format "%s 仍有缺口（%s）, 确认关门? "
+                 (format "%s 仍有缺口（%s）, 确认关闭? "
                          id (mapconcat #'identity gaps "; ")))
-          (user-error "已取消关门")))
-      (my/org-project--gate-goto id)
+          (user-error "已取消关闭")))
+      (my/org-project--milestone-goto id)
       ;; CLOSED 由 org-log-done 自动写入, org-entry-put 不能直接设该属性
       (let ((org-enforce-todo-checkbox-dependencies nil)
             (org-enforce-todo-dependencies nil))
         (org-todo "DONE"))
-      (message "门 %s 已关闭%s" id (if gaps "（存在缺口，已确认）" "")))))
+      (message "里程碑 %s 已关闭%s" id (if gaps "（存在缺口，已确认）" "")))))
 
-(defun my/org-project--gate-cancel (id)
-  "作废门 ID (置 CANCELLED), 用于被新版本基线取代的冻结门."
-  (unless (my/org-project--gate-goto id)
-    (user-error "未找到门 %s" id))
-  (let ((org-enforce-todo-checkbox-dependencies nil)
-        (org-enforce-todo-dependencies nil))
-    (org-todo "CANCELLED"))
-  (message "门 %s 已作废" id))
-
-(defun my/org-project--gate-reopen (id)
-  "重开门 ID (置 TODO 并清空 CLOSED)."
-  (unless (my/org-project--gate-goto id)
-    (user-error "未找到门 %s" id))
+(defun my/org-project--milestone-reopen (id)
+  "重开里程碑 ID (置 TODO 并清空 CLOSED)."
+  (unless (my/org-project--milestone-goto id)
+    (user-error "未找到里程碑 %s" id))
   (let ((org-closed-keep-when-no-todo nil))
     (org-todo "TODO"))
-  (message "门 %s 已重开" id))
+  (message "里程碑 %s 已重开" id))
 
-(defun my/org-project--gate-for-phase (phase &optional type)
-  "返回属于 PHASE 阶段的门列表; 可按 TYPE(转段/冻结) 过滤.
-未绑定阶段的冻结门视为属于任何阶段 (首个基线尚未圈定时)."
-  (seq-filter
-   (lambda (g)
-     (and (or (null type) (equal (plist-get g :type) type))
-          (or (not (org-string-nw-p (plist-get g :phase)))
-              (equal (plist-get g :phase) phase))))
-   (my/org-project--gates)))
-
-(defun my/org-project--gate-open-freeze (phase)
-  "返回 PHASE 阶段未关闭的冻结门列表."
-  (seq-filter #'my/org-project--gate-open-p
-              (my/org-project--gate-for-phase phase "冻结")))
-
-(defun my/org-project--gate-transition-for (from to)
-  "返回来源阶段 FROM、目标阶段 TO 的转段门; TO 为 nil 时不限目标."
+(defun my/org-project--milestone-for (from to)
+  "返回来源阶段 FROM、目标阶段 TO 的里程碑; TO 为 nil 时不限目标."
   (seq-find (lambda (g)
-              (and (equal (plist-get g :type) "转段")
-                   (equal (plist-get g :from) from)
+              (and (equal (plist-get g :from) from)
                    (or (null to) (equal (plist-get g :to) to))))
-            (my/org-project--gates)))
+            (my/org-project--milestone-entries)))
 
-(defun my/org-project--gate-label (gate)
-  "门的补全显示文本."
-  (format "%s %s [%s·%s]"
-          (plist-get gate :suffix)
-          (or (plist-get gate :title) "")
-          (plist-get gate :type)
-          (or (plist-get gate :todo) "无状态")))
+(defun my/org-project--milestone-label (milestone)
+  "里程碑的补全显示文本."
+  (format "%s %s [%s]"
+          (plist-get milestone :suffix)
+          (or (plist-get milestone :title) "")
+          (or (plist-get milestone :todo) "无状态")))
 
-(defun my/org-project--gate-sort-key (gate)
-  "门的排序键: (类型序 . 编号); 冻结门在前, 同类型按编号数字排序."
-  (let* ((suffix (plist-get gate :suffix))
-         (num (if (and suffix (string-match "\\([0-9]+\\)\\'" suffix))
-                  (string-to-number (match-string 1 suffix))
-                0)))
-    (cons (if (equal (plist-get gate :type) "冻结") 0 1) num)))
+(defun my/org-project--milestone-sort-key (milestone)
+  "里程碑的排序键: 按编号数字排序 (M1 < M2 ...)."
+  (let ((suffix (plist-get milestone :suffix)))
+    (if (and suffix (string-match "\\([0-9]+\\)\\'" suffix))
+        (string-to-number (match-string 1 suffix))
+      0)))
 
-(defun my/org-project--gate-select (&optional open-only)
-  "选择门, 返回门 plist; OPEN-ONLY 时只在未关闭的门中选.
-默认值取当前阶段最新一道未关闭的冻结门, 否则第一道门."
-  (let* ((gates (my/org-project--gates))
-         (cands (if open-only
-                    (seq-filter #'my/org-project--gate-open-p gates)
-                  gates))
-         (phase (my/org-project--file-stage))
-         (default (or (car (last (seq-filter
-                                  (lambda (g)
-                                    (and (my/org-project--gate-open-p g)
-                                         (equal (plist-get g :type) "冻结")
-                                         (equal (plist-get g :phase) phase)))
-                                  cands)))
-                      (car cands))))
-    (unless cands (user-error "本项目没有可用的门, 请检查「里程碑」章"))
-    (let ((choice (completing-read "门: "
-                                   (mapcar #'my/org-project--gate-label cands)
-                                   nil t nil nil
-                                   (my/org-project--gate-label default))))
-      (seq-find (lambda (g) (equal (my/org-project--gate-label g) choice))
-                cands))))
-
-(defun my/org-project--gate-insert-freeze (code k phase &optional version)
-  "在「里程碑」章末尾插入冻结门 B<K>, 返回门 ID."
-  (goto-char (point-min))
-  (unless (re-search-forward my/org-project--gate-chapter-re nil t)
-    (user-error "未找到「里程碑」章"))
-  (let ((level (org-current-level)))
-    (org-end-of-subtree t t)
-    (unless (bolp) (insert "\n"))
-    (insert "\n" (my/org-project--gate-text-freeze code k version phase level)))
-  (my/org-project--align-tables)
-  (format "%s_B%d" code k))
-
-(defun my/org-project--gate-ensure-freeze (code k phase version)
-  "确保版本 VERSION 有对应冻结门并绑定 VERSION/PHASE, 返回门 ID.
-优先复用 :VERSION: 已等于 VERSION 的门 (文件改名/代号不一致时仍能对上),
-其次复用 B<K>, 都没有则新建."
-  (let* ((by-version (seq-find
-                      (lambda (g)
-                        (and (equal (plist-get g :type) "冻结")
-                             (equal (plist-get g :version) version)))
-                      (my/org-project--gates)))
-         (id (or (and by-version (plist-get by-version :id))
-                 (format "%s_B%d" code k))))
-    (if (my/org-project--gate-get id)
-        (progn
-          (my/org-project--gate-goto id)
-          (org-entry-put nil "VERSION" version)
-          (unless (org-string-nw-p (org-entry-get nil "PHASE"))
-            (org-entry-put nil "PHASE" phase))
-          id)
-      (my/org-project--gate-insert-freeze code k phase version))))
-
-(defun my/org-project-gate-dispatch ()
-  "门禁操作: 关门 / 重开 / 查看判据 / 跳到评审表.
-关门与转段都遵循「列缺口 + 二次确认」; M4 终点门只能从这里关闭."
+(defun my/org-project-milestone-dispatch ()
+  "里程碑/基线操作: 先选对象(本阶段基线 / 里程碑), 再选动作.
+基线动作: 冻结 / 解冻 / 查看判据 / 跳到评审表 (数据在「需求」章记录表);
+里程碑动作: 关闭 / 重开 / 查看判据 / 跳到评审表。都遵循「列缺口 + 二次确认」;
+M4 终点里程碑只能从这里关闭."
   (interactive)
   (unless (and (derived-mode-p 'org-mode) (buffer-file-name))
     (user-error "请在项目 org 文件中执行"))
-  (let* ((gate (my/org-project--gate-select))
-         (id (plist-get gate :id))
-         (action (completing-read
-                  (format "门 %s: " (my/org-project--gate-label gate))
-                  '("关门" "重开" "查看判据" "跳到评审表") nil t)))
-    (pcase action
-      ("关门" (my/org-project--gate-close id))
-      ("重开" (my/org-project--gate-reopen id))
-      ("查看判据"
-       (let* ((stats (my/org-project--gate-criteria id))
-              (done (nth 0 stats))
-              (total (nth 1 stats))
-              (gaps (nth 2 stats)))
-         (message "%s 判据 %d/%d%s" id done total
-                  (if gaps (concat "; 未勾: " (mapconcat #'identity gaps " / "))
-                    ""))))
-      ("跳到评审表" (my/org-project--gate-review-table-goto id)))))
+  (widen)
+  (let* ((stage (my/org-project--file-stage))
+         (milestones (my/org-project--milestone-entries))
+         (target (completing-read
+                  "对象: "
+                  (cons "本阶段基线" (mapcar #'my/org-project--milestone-label milestones))
+                  nil t nil nil "本阶段基线")))
+    (if (equal target "本阶段基线")
+        (let ((action (completing-read (format "基线(%s): " stage)
+                                       '("冻结" "解冻" "查看判据" "跳到评审表")
+                                       nil t)))
+          (pcase action
+            ("冻结" (my/org-project-baseline-freeze stage))
+            ("解冻" (my/org-project-baseline-unfreeze stage))
+            ("查看判据"
+             (my/org-project--stage-baseline-ensure stage)
+             (let* ((stats (my/org-project--stage-criteria stage))
+                    (gaps (nth 2 stats)))
+               (message "%s 基线判据 %d/%d%s" stage (nth 0 stats) (nth 1 stats)
+                        (if gaps (concat "; 未勾: "
+                                         (mapconcat #'identity gaps " / "))
+                          ""))))
+            ("跳到评审表" (my/org-project--stage-review-goto stage))))
+      (let* ((milestone (seq-find (lambda (g) (equal (my/org-project--milestone-label g) target))
+                             milestones))
+             (id (and milestone (plist-get milestone :id)))
+             (action (completing-read
+                      (format "里程碑 %s: " target)
+                      '("关闭" "重开" "查看判据" "跳到评审表") nil t)))
+        (unless milestone (user-error "未找到里程碑 %s" target))
+        (pcase action
+          ("关闭" (my/org-project--milestone-close id))
+          ("重开" (my/org-project--milestone-reopen id))
+          ("查看判据"
+           (let* ((stats (my/org-project--milestone-criteria-stats id))
+                  (done (nth 0 stats))
+                  (total (nth 1 stats))
+                  (gaps (nth 2 stats)))
+             (message "%s 判据 %d/%d%s" id done total
+                      (if gaps (concat "; 未勾: " (mapconcat #'identity gaps " / "))
+                        ""))))
+          ("跳到评审表" (my/org-project--milestone-review-table-goto id)))))))
 
-(defun org-dblock-write:gate-summary (_params)
-  "生成门禁台账: 按阶段分组列出全部门, 判据为人为判断, 事实列由数据计算."
-  (let* ((gates (my/org-project--gates))
+(defun org-dblock-write:milestone-summary (_params)
+  "生成里程碑台账: 按来源阶段分组列出全部里程碑, 判据为人为判断, 事实列由数据计算."
+  (let* ((milestones (my/org-project--milestone-entries))
          (reqs (my/org-project--req-entries))
          (unbased (seq-count (lambda (e)
                                (not (org-string-nw-p (plist-get e :baseline))))
                              reqs))
          (phases (append my/org-project--stages '(""))))
-    (insert "| 门 | 类型 | 状态 | 阶段 | 版本 | 判据 | 事实 | 评审 |\n")
-    (insert "|----+------+------+------+------+------+------+------|\n")
+    (insert "| 里程碑 | 状态 | 阶段 | 判据 | 事实 | 评审 |\n")
+    (insert "|--------+------+------+------+------+------|\n")
     (dolist (phase phases)
       (let ((rows (sort (seq-filter
                          (lambda (g)
-                           ;; 转段门按来源阶段归组, 冻结门按 :PHASE:
-                           (equal (or (plist-get g :phase)
-                                      (plist-get g :from) "")
-                                  (or phase "")))
-                         gates)
+                           ;; 里程碑按来源阶段归组
+                           (equal (or (plist-get g :from) "") (or phase "")))
+                         milestones)
                         (lambda (a b)
-                          (let ((ka (my/org-project--gate-sort-key a))
-                                (kb (my/org-project--gate-sort-key b)))
-                            (if (= (car ka) (car kb))
-                                (< (cdr ka) (cdr kb))
-                              (< (car ka) (car kb))))))))
+                          (< (my/org-project--milestone-sort-key a)
+                             (my/org-project--milestone-sort-key b))))))
         (when rows
           (insert (format "# %s\n" (if (string= phase "") "未绑定阶段" phase)))
           (dolist (g rows)
             (let* ((id (plist-get g :id))
                    ;; 判据/评审表读取会移动 point, 必须包在 save-excursion 里
-                   (stats (save-excursion (my/org-project--gate-criteria id)))
+                   (stats (save-excursion (my/org-project--milestone-criteria-stats id)))
                    (done (nth 0 stats))
                    (total (nth 1 stats))
                    (facts
-                    (if (equal (plist-get g :type) "冻结")
-                        (format "未入基线 %d 条" unbased)
-                      (let* ((from (plist-get g :from))
-                             (fs (my/org-project--gate-for-phase from "冻结"))
-                             (done (seq-count
-                                    (lambda (x)
-                                      (equal (plist-get x :todo) "DONE"))
-                                    fs))
-                             (void (seq-count
-                                    (lambda (x)
-                                      (equal (plist-get x :todo) "CANCELLED"))
-                                    fs)))
-                        (if (> void 0)
-                            (format "冻结门 %d/%d 已关 (%d 作废)"
-                                    done (length fs) void)
-                          (format "冻结门 %d/%d 已关" done (length fs)))))))
-              (insert (format "| [[#%s][%s]] | %s | %s | %s | %s | %d/%d | %s | %d |\n"
+                    (let ((from (plist-get g :from)))
+                      (if from
+                          ;; 里程碑事实 = 来源阶段基线冻结状态 + 未入基线条数
+                          (let ((row (my/org-project--stage-latest-baseline from)))
+                            (format "%s · 未入基线 %d 条"
+                                    (cond
+                                     ((null row) "本阶段未打基线")
+                                     ((my/org-project--baseline-frozen-p
+                                       (plist-get row :status))
+                                      (format "基线 %s 已冻结" (plist-get row :ver)))
+                                     (t (format "基线 %s 未冻结" (plist-get row :ver))))
+                                    unbased))
+                        (format "未入基线 %d 条" unbased)))))
+              (insert (format "| [[#%s][%s]] | %s | %s | %d/%d | %s | %d |\n"
                               id (plist-get g :suffix)
-                              (plist-get g :type)
                               (or (plist-get g :todo) "无状态")
-                              (or (plist-get g :phase) "")
-                              (or (plist-get g :version) "")
+                              (or (plist-get g :from) "")
                               done total facts
                               (save-excursion
-                                (my/org-project--gate-review-count id)))))))))
-    (insert (format "# 门 %d 道 · 未关闭 %d 道 · 需求未入基线 %d 条\n"
-                    (length gates)
-                    (seq-count #'my/org-project--gate-open-p gates)
+                                (my/org-project--milestone-review-count id)))))))))
+    (insert (format "# 里程碑 %d 个 · 未完成 %d 个 · 需求未入基线 %d 条\n"
+                    (length milestones)
+                    (seq-count #'my/org-project--milestone-open-p milestones)
                     unbased))))
 
-;; ---- 门禁升级 Gate chapter upgrade ----
-(defun my/org-project--gate-chapter-p ()
-  "当前缓冲区「里程碑」章是否已含 gate-summary 动态块."
+;; ---- 里程碑升级 Milestone chapter upgrade ----
+(defun my/org-project--milestone-chapter-p ()
+  "当前缓冲区「里程碑」章是否已含 milestone-summary 动态块."
   (save-excursion
     (goto-char (point-min))
-    (and (re-search-forward my/org-project--gate-chapter-re nil t)
+    (and (re-search-forward my/org-project--milestone-chapter-re nil t)
          (let ((end (save-excursion (org-end-of-subtree t t) (point))))
            (save-excursion
-             (re-search-forward "^[ \t]*#\\+BEGIN:[ \t]+gate-summary" end t))))))
+             (re-search-forward "^[ \t]*#\\+BEGIN:[ \t]+milestone-summary" end t))))))
 
 (defun my/org-project--named-table-rows (name)
   "返回本缓冲区名为 NAME 的表格的数据行文本(不含表头与分隔行), 无则 nil."
@@ -2081,43 +2076,6 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
       (string-to-number (match-string 1 ver))
     0))
 
-(defun my/org-project--baseline-versions ()
-  "返回基线记录表中的 (版本 . 阶段) 列表; 无记录表时从需求 :BASELINE: 推导."
-  (or (save-excursion
-        (goto-char (point-min))
-        (when (re-search-forward
-               "^[ \t]*#\\+NAME:[ \t]+baseline-records[ \t]*$" nil t)
-          (forward-line 1)
-          (when (org-at-table-p)
-            (let ((end (save-excursion (org-table-end))) rows)
-              (forward-line 2)
-              (while (< (point) end)
-                (when (looking-at "^[ \t]*|\\([^|]*\\)|\\([^|]*\\)|")
-                  ;; 先取出匹配串: string-trim 内部会重置 match data
-                  (let ((ver (match-string 1))
-                        (phase (match-string 2)))
-                    (setq ver (string-trim (or ver ""))
-                          phase (string-trim (or phase "")))
-                    (when (string-match "\\`RB[0-9]+\\'" ver)
-                      (push (cons ver (and (org-string-nw-p phase) phase)) rows))))
-                (forward-line 1))
-              (nreverse rows)))))
-      (let (vers)
-        (dolist (e (my/org-project--req-entries))
-          (dolist (v (split-string (or (plist-get e :baseline) "")))
-            (when (string-match "\\`RB[0-9]+\\'" v)
-              (push (cons v (plist-get e :phase)) vers))))
-        (seq-uniq vers (lambda (a b) (equal (car a) (car b)))))))
-
-(defun my/org-project--legacy-m2-info ()
-  "返回旧「M2 需求基线建立」条目的 (存在 . (TODO . CLOSED)) 信息."
-  (save-excursion
-    (goto-char (point-min))
-    (when (re-search-forward "^\\*+ TODO M2 需求基线建立\\(?:[ \t].*\\)?$" nil t)
-      (let ((todo (my/org-project--state))
-            (closed (org-entry-get nil "CLOSED")))
-        (cons t (cons todo closed))))))
-
 (defun my/org-project--legacy-m2-remove ()
   "删除需求章的旧 M2 条目与其 review-M2 表."
   (goto-char (point-min))
@@ -2135,83 +2093,45 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
         (let ((end (save-excursion (org-table-end))))
           (delete-region beg (min (1+ end) (point-max))))))))
 
-(defun my/org-project-gate-upgrade ()
-  "把当前项目文件的「里程碑」章升级为门禁台账 (幂等).
-迁移旧评审行 (M1→M1, M2→B<最新版本>, M3→M2, M4→M3, M5→M4);
-按 baseline-records 逐版本补建冻结门; 删除需求章的旧 M2 与其评审表."
+(defun my/org-project-milestone-upgrade ()
+  "把当前项目文件的「里程碑」章升级为里程碑台账 (幂等).
+迁移旧评审行 (M1→M1, M3→M2, M4→M3, M5→M4); 删除需求章的旧 M2 与其评审表.
+需求基线不设里程碑: 基线记录与冻结状态在「需求」章 baseline-records, 旧 M2
+「需求基线建立」的评审行无对应条目, 随旧 M2 条目一并丢弃."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "请在项目 org 文件中执行"))
   (org-with-wide-buffer
-   (if (my/org-project--gate-chapter-p)
-       (message "「里程碑」章已是门禁台账, 无需升级")
+   (if (my/org-project--milestone-chapter-p)
+       (message "「里程碑」章已是里程碑台账, 无需升级")
      (let* ((code (file-name-base (buffer-file-name)))
-            (versions (my/org-project--baseline-versions))
-            (maxver (max 1
-                         (my/org-project--baseline-max
-                          (my/org-project--req-entries))
-                         (if versions
-                             (apply #'max
-                                    (mapcar (lambda (v)
-                                              (my/org-project--rb-number (car v)))
-                                            versions))
-                           0)))
-            (legacy (my/org-project--legacy-m2-info))
             (rows (mapcar (lambda (name)
                             (cons name (my/org-project--named-table-rows
                                         (concat "review-" name))))
-                          '("M1" "M2" "M3" "M4" "M5"))))
+                          '("M1" "M3" "M4" "M5"))))
        ;; 先删旧 M2 与其评审表, 再重建章, 避免误删新 M2 的 review-M2
        (my/org-project--legacy-m2-remove)
        (goto-char (point-min))
-       (if (not (re-search-forward my/org-project--gate-chapter-re nil t))
+       (if (not (re-search-forward my/org-project--milestone-chapter-re nil t))
            (user-error "未找到「里程碑」章, 请先在「研制过程」下补建")
          (let* ((level (org-current-level))
                 (beg (line-beginning-position))
                 (end (save-excursion (org-end-of-subtree t t) (point))))
            (delete-region beg end)
            (goto-char beg)
-           (insert (my/org-project--gates-text code level) "\n")))
+           (insert (my/org-project--milestones-text code level) "\n")))
        ;; 迁入旧评审行
        (dolist (pair '(("M1" . "M1") ("M3" . "M2") ("M4" . "M3") ("M5" . "M4")))
          (let ((old (cdr (assoc (car pair) rows))))
            (when old
              (my/org-project--table-append-rows
               (concat "review-" (cdr pair)) old))))
-       ;; 按基线记录补建冻结门
-       (dolist (v versions)
-         (let ((k (and (string-match "\\`RB\\([0-9]+\\)\\'" (car v))
-                       (string-to-number (match-string 1 (car v))))))
-           (when k
-             (my/org-project--gate-ensure-freeze code k (cdr v) (car v)))))
-       ;; 旧 M2 的评审行迁到最新版本的冻结门 (门已建好)
-       (let ((oldm2 (cdr (assoc "M2" rows))))
-         (when oldm2
-           (my/org-project--table-append-rows
-            (format "review-B%d" maxver) oldm2)))
-       ;; 若基线从 RB2 起, B1 占位门无对应版本, 作废避免挡住转段
-       (let ((b1 (my/org-project--gate-get (format "%s_B1" code))))
-         (when (and versions
-                    b1
-                    (not (org-string-nw-p (plist-get b1 :version))))
-           (my/org-project--gate-cancel (plist-get b1 :id))))
-       ;; 旧 M2 已关闭则关闭对应冻结门
-       (when (and (car legacy)
-                  (member (car (cdr legacy)) '("DONE")))
-         (let ((id (format "%s_B%d" code maxver)))
-           (when (my/org-project--gate-get id)
-             (my/org-project--gate-goto id)
-             (let ((org-enforce-todo-checkbox-dependencies nil)
-                   (org-enforce-todo-dependencies nil))
-               (org-todo "DONE")))))
        (org-update-all-dblocks)
-       (message "「里程碑」章已升级为门禁台账 (冻结门 %d 道)"
-                (length (seq-filter
-                         (lambda (g) (equal (plist-get g :type) "冻结"))
-                         (my/org-project--gates))))))))
+       (message "「里程碑」章已升级为里程碑台账 (里程碑 %d 个)"
+                (length (my/org-project--milestone-entries)))))))
 
-(defun my/org-project-gate-upgrade-all ()
-  "批量把 projects/ 下项目文件的「里程碑」章升级为门禁台账.
+(defun my/org-project-milestone-upgrade-all ()
+  "批量把 projects/ 下项目文件的「里程碑」章升级为里程碑台账.
 升级前用 tar 备份 projects/ (~/Org 不在版本控制内), 已升级的自动跳过."
   (interactive)
   (let* ((files (my/org-project--files))
@@ -2219,13 +2139,13 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
                    (lambda (f)
                      (let ((org-inhibit-startup t))
                        (with-current-buffer (find-file-noselect (cdr f))
-                         (not (my/org-project--gate-chapter-p)))))
+                         (not (my/org-project--milestone-chapter-p)))))
                    files)))
-    (unless pending (user-error "所有项目文件的里程碑章都已是门禁台账"))
-    (when (y-or-n-p (format "将升级 %d 个文件的门禁章, 并先备份 projects/? "
+    (unless pending (user-error "所有项目文件的里程碑章都已是里程碑台账"))
+    (when (y-or-n-p (format "将升级 %d 个文件的里程碑章, 并先备份 projects/? "
                             (length pending)))
       (let ((tar (expand-file-name
-                  (format "projects-gate-backup-%s.tar.gz"
+                  (format "projects-milestone-backup-%s.tar.gz"
                           (format-time-string "%Y%m%d-%H%M%S"))
                   org-directory)))
         (call-process "tar" nil nil nil "-czf" tar "-C" org-directory "projects")
@@ -2234,24 +2154,321 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
         (dolist (f pending)
           (let ((org-inhibit-startup t))
             (with-current-buffer (find-file-noselect (cdr f))
-              (my/org-project-gate-upgrade)
+              (my/org-project-milestone-upgrade)
               (save-buffer)
               (setq n (1+ n)))))
-        (message "已升级 %d 个文件的门禁章" n)))))
+        (message "已升级 %d 个文件的里程碑章" n)))))
 
 ;; ---- 需求基线 Requirement baseline ----
+;; 数据唯一存放处: 「需求」章 baseline-records 记录表(状态 待评审→已冻结)
+;; + 按版本的 req-baseline 快照。阶段子树只挂控制块(判据 checkbox + 引用块 +
+;; 评审表, 宿主小节见 `my/org-project--stage-baseline-hosts'); 转段检查、
+;; milestone-summary、切换日志都读记录表本阶段最新行状态。全量重圈 C-c P b 只写
+;; :BASELINE: 与记录表行, 不生成任何标题。
+(defconst my/org-project--baseline-criteria
+  '("本阶段需求全部入基线"
+    "基线评审通过（结论：通过/有条件通过）"
+    "变更请求已处置或挂账")
+  "需求基线冻结判据清单 (与阶段控制块 checkbox 一致).")
+
+(defconst my/org-project--stage-baseline-hosts
+  '(("方案设计" . "需求分析")
+    ("样机研制" . "策划与需求")
+    ("工程研制" . "策划与需求")
+    ("状态鉴定" . "状态管理"))
+  "阶段到基线控制块宿主小节的映射 (阶段子树不设独立基线节).")
+
+(defun my/org-project--stage-baseline-host (stage)
+  "返回阶段 STAGE 基线控制块所在宿主小节名, 未知阶段默认「策划与需求」."
+  (or (cdr (assoc stage my/org-project--stage-baseline-hosts)) "策划与需求"))
+
+(defun my/org-project--stage-index (stage)
+  "返回阶段 STAGE 在 my/org-project--stages 中的序号 (1 起), 未知返回 0."
+  (let ((i (seq-position my/org-project--stages stage)))
+    (if i (1+ i) 0)))
+
+(defun my/org-project--stage-review-table-name (stage)
+  "返回阶段 STAGE 评审表的 #+NAME 标识."
+  (format "baseline-review-%d" (my/org-project--stage-index stage)))
+
+(defun my/org-project--baseline-control-text (stage idx indent)
+  "生成阶段 STAGE 的基线控制块文本: 判据 checkbox + 引用块 + 评审表.
+IDX 为阶段序号(评审表名 baseline-review-IDX 后缀), INDENT 为缩进;
+骨架生成与缺块补建共用."
+  (concat indent "# 需求基线冻结判据（勾齐且有评审后用 C-c P g 冻结）:\n"
+          (mapconcat (lambda (item) (concat indent "- [ ] " item "\n"))
+                     my/org-project--baseline-criteria "")
+          indent "# 本阶段基线状态（引用「需求」章 baseline-records, 刷新 C-c C-x C-u）:\n"
+          indent "#+BEGIN: baseline-by-phase :phase " stage "\n"
+          indent "#+END:\n\n"
+          indent "#+NAME: baseline-review-" (number-to-string idx) "\n"
+          indent "| 日期 | 评审类型 | 评审对象 | 人员 | 结论 | 遗留问题 | 待办 |\n"
+          indent "|------+----------+----------+------+------+----------+------|\n"))
+
 (defun my/org-project--baseline-max (entries)
-  "扫描需求条目 ENTRIES 的 :BASELINE: 属性, 返回既有最大版本号 (无则 0)."
+  "扫描需求条目 ENTRIES 的 :BASELINE: 与记录表行, 返回最大版本号 (无则 0)."
   (let ((max 0))
     (dolist (e entries)
       (dolist (v (split-string (or (plist-get e :baseline) "")))
         (when (string-match "\\`RB\\([0-9]+\\)\\'" v)
           (setq max (max max (string-to-number (match-string 1 v)))))))
+    (dolist (row (my/org-project--baseline-records-rows))
+      (setq max (max max (my/org-project--rb-number (plist-get row :ver)))))
     max))
+
+(defun my/org-project--baseline-records-rows ()
+  "解析 baseline-records 表, 返回行 plist 列表 (读取用, point 不变).
+每项含 :ver :phase :date :count :status :review :note; 无表或无行返回 nil."
+  (save-restriction
+   (save-excursion
+     (widen)
+     (goto-char (point-min))
+     (when (re-search-forward "^[ \t]*#\\+NAME:[ \t]+baseline-records[ \t]*$" nil t)
+       (forward-line 1)
+       (when (org-at-table-p)
+         (let ((end (org-table-end)) rows)
+           (forward-line 2)
+           (while (< (point) end)
+             (when (looking-at
+                    (concat "^[ \t]*|\\([^|]*\\)|\\([^|]*\\)|\\([^|]*\\)|"
+                            "\\([^|]*\\)|\\([^|]*\\)|\\([^|]*\\)|\\([^|]*\\)|"))
+               ;; 先取出全部匹配串: string-trim 内部会重置 match data
+               (let ((ver (match-string 1)) (ph (match-string 2))
+                     (date (match-string 3)) (count (match-string 4))
+                     (status (match-string 5)) (review (match-string 6))
+                     (note (match-string 7)))
+                 (setq ver (string-trim ver) ph (string-trim ph)
+                       date (string-trim date) count (string-trim count)
+                       status (string-trim status) review (string-trim review)
+                       note (string-trim note))
+                 (when (string-match "\\`RB[0-9]+\\'" ver)
+                   (push (list :ver ver :phase ph :date date :count count
+                               :status status :review review :note note)
+                         rows))))
+             (forward-line 1))
+           (nreverse rows)))))))
+
+(defun my/org-project--stage-latest-baseline (stage)
+  "返回记录表中属于阶段 STAGE 的最新基线行 plist (版本号最大), 无则 nil."
+  (let (latest)
+    (dolist (row (my/org-project--baseline-records-rows))
+      (when (equal (plist-get row :phase) stage)
+        (when (or (null latest)
+                  (> (my/org-project--rb-number (plist-get row :ver))
+                     (my/org-project--rb-number (plist-get latest :ver))))
+          (setq latest row))))
+    latest))
+
+(defun my/org-project--baseline-frozen-p (status)
+  "行状态 STATUS 是否视为已冻结 (存量空状态按已冻结处理, 不挡转段)."
+  (or (not (org-string-nw-p status))
+      (string= status my/org-project--baseline-status-frozen)))
+
+(defun my/org-project--baseline-cell-set (ver col value)
+  "把基线记录表中版本 VER 行的第 COL 列置为 VALUE (列号 1 起)."
+  (save-restriction
+   (save-excursion
+     (widen)
+     (goto-char (point-min))
+     (unless (re-search-forward "^[ \t]*#\\+NAME:[ \t]+baseline-records[ \t]*$" nil t)
+       (user-error "未找到基线记录表 baseline-records"))
+     (forward-line 1)
+     (unless (org-at-table-p) (user-error "基线记录表缺失或格式异常"))
+     (let ((end (org-table-end)) found)
+       (while (and (not found) (< (point) end))
+         (if (not (looking-at "^[ \t]*|"))
+             (forward-line 1)
+           (let* ((cells (split-string
+                          (buffer-substring (line-beginning-position)
+                                            (line-end-position)) "|"))
+                  (first (string-trim (or (nth 1 cells) ""))))
+             (if (equal first ver)
+                 (progn
+                   (org-table-goto-column col)
+                   (let ((b (point)))
+                     (skip-chars-forward "^|\n")
+                     (delete-region b (point))
+                     (insert value))
+                   (setq found t))
+               (forward-line 1)))))
+       (unless found (user-error "基线记录表中无版本 %s" ver))
+       (org-table-align)))))
+
+(defun my/org-project--baseline-status-set (ver status)
+  "把基线记录表版本 VER 的行状态列(第 5 列)置为 STATUS."
+  (my/org-project--baseline-cell-set ver 5 status))
+
+(defun my/org-project--stage-baseline-gap (stage)
+  "返回阶段 STAGE 的基线冻结缺口描述; 已冻结或尚未圈定时返回 nil.
+尚未圈定的阶段由「需求未入基线」检查兜底, 此处不报缺口."
+  (let ((row (my/org-project--stage-latest-baseline stage)))
+    (when (and row (not (my/org-project--baseline-frozen-p (plist-get row :status))))
+      (format "基线 %s 未冻结（状态 %s）"
+              (plist-get row :ver)
+              (if (org-string-nw-p (plist-get row :status))
+                  (plist-get row :status)
+                my/org-project--baseline-status-new)))))
+
+(defun my/org-project--stage-baseline-goto (stage)
+  "定位到阶段 STAGE 宿主小节标题, 成功返回 non-nil 且 point 在标题行.
+调用方需已进入目标项目缓冲区并 widen."
+  (goto-char (point-min))
+  (when (re-search-forward (concat "^\\*\\* " (regexp-quote stage) "[ \t]*$") nil t)
+    (org-back-to-heading t)
+    (let* ((beg (point))
+           (end (save-excursion (org-end-of-subtree t t) (point)))
+           (re (concat "^\\*\\*\\* "
+                       (regexp-quote (my/org-project--stage-baseline-host stage))
+                       "[ \t]*$")))
+      (goto-char beg)
+      (when (re-search-forward re end t)
+        (org-back-to-heading t)))))
+
+(defun my/org-project--stage-baseline-ensure (stage)
+  "确保阶段 STAGE 宿主小节含基线控制块, 缺失则整块补建; 返回 point 在小节标题.
+以「# 需求基线冻结判据」注释行为存在标记 (控制块整体创建)."
+  (unless (my/org-project--stage-baseline-goto stage)
+    (user-error "未找到阶段「%s」的小节「%s」"
+                stage (my/org-project--stage-baseline-host stage)))
+  (let ((beg (point))
+        (end (save-excursion (org-end-of-subtree t t) (point))))
+    (goto-char beg)
+    (unless (re-search-forward "^[ \t]*# 需求基线冻结判据" end t)
+      (goto-char end)
+      (unless (bolp) (insert "\n"))
+      (insert "\n"
+              (my/org-project--baseline-control-text
+               stage (my/org-project--stage-index stage) "    "))
+      (my/org-project--align-tables)
+      (message "已在「%s > %s」补建基线控制块"
+               stage (my/org-project--stage-baseline-host stage)))
+    (goto-char beg)))
+
+(defun my/org-project--stage-criteria (stage)
+  "返回阶段 STAGE 基线判据状态: (已勾 总数 未勾文本列表).
+判据区 = 宿主小节内「# 需求基线冻结判据」注释行到评审表 #+NAME 行之间."
+  (unless (my/org-project--stage-baseline-goto stage)
+    (user-error "阶段「%s」缺宿主小节「%s」, 无法读取基线判据"
+                stage (my/org-project--stage-baseline-host stage)))
+  (let ((sec-end (save-excursion (org-end-of-subtree t t) (point))))
+    (unless (re-search-forward "^[ \t]*# 需求基线冻结判据" sec-end t)
+      (user-error "阶段「%s」缺基线判据区 (用 C-c P g 冻结时会自动补建)" stage))
+    (let* ((cbeg (line-beginning-position))
+           (cend (save-excursion
+                   (if (re-search-forward
+                        "^[ \t]*#\\+NAME:[ \t]+baseline-review-" sec-end t)
+                       (line-beginning-position)
+                     sec-end)))
+           (done 0) (total 0) gaps)
+      (goto-char cbeg)
+      (while (re-search-forward
+              "^[ \t]*[-+][ \t]+\\[\\([ X-]\\)\\][ \t]+\\(.*\\)$" cend t)
+        (setq total (1+ total))
+        (if (equal (match-string 1) " ")
+            (push (string-trim (match-string 2)) gaps)
+          (setq done (1+ done))))
+      (list done total (nreverse gaps)))))
+
+(defun my/org-project--stage-review-rows (stage)
+  "返回阶段 STAGE 评审表的数据行字段列表 (每行 7 字段, 已 trim), 无则 nil."
+  (let ((raw (my/org-project--named-table-rows
+              (my/org-project--stage-review-table-name stage))))
+    (when raw
+      (delq nil
+            (mapcar (lambda (line)
+                      (when (string-match-p "^[ \t]*|" line)
+                        (mapcar #'string-trim (split-string line "|"))))
+                    (split-string raw "\n"))))))
+
+(defun my/org-project--stage-review-count (stage ver)
+  "阶段 STAGE 评审表中评审对象包含版本 VER 的数据行数."
+  (let ((n 0))
+    (dolist (cells (my/org-project--stage-review-rows stage))
+      (when (and (nth 3 cells) ver
+                 (string-match-p (regexp-quote ver) (nth 3 cells)))
+        (setq n (1+ n))))
+    n))
+
+(defun my/org-project--stage-review-conclusion (stage ver)
+  "阶段 STAGE 评审表中评审对象包含版本 VER 的最后一行结论, 无则 nil."
+  (let (concl)
+    (dolist (cells (my/org-project--stage-review-rows stage))
+      (when (and (nth 3 cells) ver
+                 (string-match-p (regexp-quote ver) (nth 3 cells))
+                 (org-string-nw-p (nth 5 cells)))
+        (setq concl (nth 5 cells))))
+    concl))
+
+(defun my/org-project--stage-review-goto (stage)
+  "定位到阶段 STAGE 宿主小节评审表 #+NAME 行 (缺控制块先补建)."
+  (my/org-project--stage-baseline-ensure stage)
+  (let* ((beg (point))
+         (end (save-excursion (org-end-of-subtree t t) (point)))
+         (re (concat "^[ \t]*#\\+NAME:[ \t]+"
+                     (regexp-quote (my/org-project--stage-review-table-name stage))
+                     "[ \t]*$")))
+    (goto-char beg)
+    (unless (re-search-forward re end t)
+      (user-error "阶段「%s」缺评审表 %s"
+                  stage (my/org-project--stage-review-table-name stage)))
+    (goto-char (line-beginning-position))))
+
+(defun my/org-project-baseline-freeze (stage &optional force)
+  "冻结阶段 STAGE 的最新基线: 列缺口并二次确认后置「已冻结」.
+FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填评审表该版本结论."
+  (widen)
+  (my/org-project--stage-baseline-ensure stage)
+  (let ((row (my/org-project--stage-latest-baseline stage)))
+    (unless row (user-error "阶段「%s」还没有基线, 请先用 C-c P b 圈定" stage))
+    (when (my/org-project--baseline-frozen-p (plist-get row :status))
+      (user-error "%s 已处于「%s」状态"
+                  (plist-get row :ver)
+                  (or (plist-get row :status) my/org-project--baseline-status-frozen)))
+    (let* ((ver (plist-get row :ver))
+           (stats (my/org-project--stage-criteria stage))
+           (gaps (copy-sequence (nth 2 stats)))
+           (reviews (my/org-project--stage-review-count stage ver))
+           (unbased (my/org-project--stage-req-unbased stage))
+           (had-gaps nil))
+      (when (> unbased 0)
+        (push (format "本阶段 %d 条需求未入基线" unbased) gaps))
+      (when (= reviews 0)
+        (push "该版本无评审记录（用 pe 落表）" gaps))
+      (setq had-gaps (not (null gaps)))
+      (unless force
+        (if (null gaps)
+            (unless (y-or-n-p (format "%s 判据与评审齐备, 冻结? " ver))
+              (user-error "已取消冻结"))
+          (unless (y-or-n-p
+                   (format "%s 存在缺口: %s; 仍要冻结? "
+                           ver (mapconcat #'identity (nreverse gaps) "；")))
+            (user-error "已取消冻结"))))
+      (my/org-project--baseline-status-set ver my/org-project--baseline-status-frozen)
+      (unless (org-string-nw-p (plist-get row :review))
+        (let ((concl (my/org-project--stage-review-conclusion stage ver)))
+          (when concl (my/org-project--baseline-cell-set ver 6 concl))))
+      (message "基线 %s 已冻结（阶段 %s）%s" ver stage
+               (if had-gaps "（缺口已确认）" "")))))
+
+(defun my/org-project-baseline-unfreeze (stage &optional force)
+  "解冻阶段 STAGE 的最新基线: 置回「待评审」. FORCE 非 nil 跳过确认."
+  (widen)
+  (let ((row (my/org-project--stage-latest-baseline stage)))
+    (unless row (user-error "阶段「%s」还没有基线" stage))
+    (unless (my/org-project--baseline-frozen-p (plist-get row :status))
+      (user-error "%s 当前不是已冻结状态" (plist-get row :ver)))
+    (unless (or force
+                (y-or-n-p (format "解冻 %s (状态置回待评审)? "
+                                  (plist-get row :ver))))
+      (user-error "已取消解冻"))
+    (my/org-project--baseline-status-set (plist-get row :ver)
+                                          my/org-project--baseline-status-new)
+    (message "基线 %s 已解冻（阶段 %s, 状态待评审）"
+             (plist-get row :ver) stage)))
 
 (defun my/org-project--baseline-record-add (file ver phase count)
   "在项目 FILE 的基线记录表追加一行: 版本 VER, 阶段 PHASE, 需求数 COUNT.
-表不存在时仅提示跳过."
+状态列填「待评审」; 表不存在时仅提示跳过."
   (set-buffer (org-capture-target-buffer file))
   (widen)
   (goto-char (point-min))
@@ -2260,8 +2477,9 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
     (forward-line 1)
     (when (org-at-table-p)
       (goto-char (org-table-end))
-      (insert (format "| %s | %s | %s | %d |  |  |\n"
-                      ver (or phase "") (format-time-string "%Y-%m-%d") count))
+      (insert (format "| %s | %s | %s | %d | %s |  |  |\n"
+                      ver (or phase "") (format-time-string "%Y-%m-%d") count
+                      my/org-project--baseline-status-new))
       (org-table-align))))
 
 (defun my/org-project--req-active-p (entry)
@@ -2276,22 +2494,19 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
     (org-back-to-heading t)))
 
 (defun my/org-project-baseline-create ()
-  "需求基线全量重圈: 选全部有效需求, 追加新版本并建/绑冻结门.
-同一阶段可建多个基线, 版本递增(RB1, RB2...), 冻结门与版本同号。
-未选中的需求保留历史 :BASELINE:, 不进入新版本; 存在未关闭的同阶段
-冻结门时先询问作废(CANCELLED), 再建新门。"
+  "需求基线全量重圈: 选全部有效需求, 追加记录表新行并按需询问冻结.
+版本号全局递增(RB1, RB2...), 行落在 baseline-records (阶段=当前阶段,
+状态=待评审); 同阶段未冻结旧行标「被取代」; 不生成任何标题.
+未选中的需求保留历史 :BASELINE:, 不进入新版本."
   (interactive)
   (let ((file (my/org-capture-project-file)))
     (set-buffer (org-capture-target-buffer file))
     (widen)
-    (let* ((code (file-name-base (buffer-file-name)))
-           (phase (my/org-project--file-stage))
+    (let* ((phase (my/org-project--file-stage))
            (entries (my/org-project--req-entries))
            (cands (seq-filter #'my/org-project--req-active-p entries))
            (defver (format "RB%d" (1+ (my/org-project--baseline-max entries))))
            (ver (read-string (format "基线版本 (默认 %s): " defver) nil nil defver))
-           (kn (and (string-match "\\`RB\\([0-9]+\\)\\'" ver)
-                    (string-to-number (match-string 1 ver))))
            (choices (mapcar (lambda (e)
                               (format "%s %s" (plist-get e :id)
                                       (plist-get e :title)))
@@ -2303,7 +2518,8 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
                   (mapcar (lambda (s) (car (split-string s " "))) sel)))
            (n 0))
       (unless cands (user-error "没有可参与基线的需求条目"))
-      (unless kn (user-error "版本号需形如 RB<n>: %s" ver))
+      (unless (string-match "\\`RB[0-9]+\\'" ver)
+        (user-error "版本号需形如 RB<n>: %s" ver))
       (unless ids (user-error "未选择任何需求"))
       ;; 1) 追加 :BASELINE: (多值, 已存在则跳过)
       (dolist (id ids)
@@ -2314,31 +2530,27 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
               (org-entry-put nil "BASELINE"
                              (string-trim (concat (or cur "") " " ver)))
               (setq n (1+ n))))))
+      ;; 2) 同阶段未冻结旧行标「被取代」
+      (dolist (row (my/org-project--baseline-records-rows))
+        (when (and (equal (plist-get row :phase) phase)
+                   (not (my/org-project--baseline-frozen-p
+                         (plist-get row :status))))
+          (my/org-project--baseline-status-set
+           (plist-get row :ver) my/org-project--baseline-status-superseded)))
+      ;; 3) 登记新行(待评审), 确保阶段控制块与快照块就位并刷新动态块
       (my/org-project--baseline-record-add file ver phase n)
-      ;; 2) 作废同阶段未关闭的旧冻结门, 再建/绑新门
-      (dolist (g (my/org-project--gate-open-freeze phase))
-        (when (and (equal (plist-get g :artifact) "需求基线")
-                   (not (equal (plist-get g :version) ver))
-                   (y-or-n-p (format "冻结门 %s（%s）尚未关闭, 作废? "
-                                     (plist-get g :suffix)
-                                     (or (plist-get g :version) "未绑版本"))))
-          (my/org-project--gate-cancel (plist-get g :id))))
-      (my/org-project--gate-ensure-freeze code kn phase ver)
+      (my/org-project--stage-baseline-ensure phase)
       (my/org-project--baseline-dblock-ensure file ver)
-      (with-current-buffer (org-capture-target-buffer file)
-        (org-update-all-dblocks))
-      ;; 3) 判据满足则提示关门, 否则提示下一步
-      (let* ((gate-id (format "%s_B%d" code kn))
-             (unbased (seq-count
-                       (lambda (e)
-                         (not (org-string-nw-p (plist-get e :baseline))))
-                       (seq-filter #'my/org-project--req-active-p entries)))
-             (reviews (my/org-project--gate-review-count gate-id)))
-        (if (and (= unbased 0) (> reviews 0))
-            (when (y-or-n-p (format "%s 判据已满足, 现在关闭冻结门? " gate-id))
-              (my/org-project--gate-close gate-id t))
-          (message "已圈定 %s: %d 条需求, 门 %s (未入基线 %d 条, 评审 %d 条; 记完用 C-c P g 关门)"
-                   ver n gate-id unbased reviews))))))
+      (org-update-all-dblocks)
+      ;; 4) 判据与评审齐备时询问直接冻结, 否则提示下一步
+      (let* ((stats (my/org-project--stage-criteria phase))
+             (reviews (my/org-project--stage-review-count phase ver))
+             (unbased (my/org-project--stage-req-unbased phase)))
+        (if (and (null (nth 2 stats)) (> reviews 0) (= unbased 0))
+            (when (y-or-n-p (format "%s 判据已齐且有评审, 现在冻结? " ver))
+              (my/org-project-baseline-freeze phase t))
+          (message "已圈定 %s: %d 条需求(阶段 %s, 状态待评审); 判据 %d/%d, 评审 %d 条, 本阶段未入基线 %d 条 —— 用 C-c P g 冻结"
+                   ver n phase (nth 0 stats) (nth 1 stats) reviews unbased))))))
 
 (defun my/org-project--baseline-dblock-ensure (file ver)
   "项目 FILE 若无 :version VER 的 req-baseline 快照块, 在基线记录表后插入一个."
@@ -2378,11 +2590,12 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
 
 ;; ---- 按键、视图与模板接入 ----------------------------------------------------
 
-;; 项目管理: `C-c P s' 切换研制阶段(门链结算/更新状态/记日志).
-;; `C-c P b' 需求基线圈定(批量标记 :BASELINE: 并登记基线记录表).
+;; 项目管理: `C-c P s' 切换研制阶段(里程碑结算/更新状态/记日志).
+;; `C-c P b' 需求基线圈定(批量标记 :BASELINE: 并登记 baseline-records, 状态=待评审).
 ;; 风险管理: `C-c P r' 评估确认(IDENT→MITIGATE), `C-c P x' 转议题,
 ;; `C-c P R' 刷新并查看风险台账; 存量文件升级用 M-x my/org-project-risk-upgrade.
-;; 门禁: `C-c P g' 关门/重开/看判据/跳评审表, 门链在 `C-c P s' 转段时结算.
+;; 里程碑/基线: `C-c P g' 先选对象(本阶段基线/里程碑)再选动作(冻结/解冻/关闭/重开/
+;; 看判据/跳评审表), 结算在 `C-c P s' 转段时进行.
 ;; C-c 大写字母为用户保留前缀, org-mode-map 未占用 C-c P.
 (global-set-key (kbd "C-c P s") #'my/org-project-stage-switch)
 (define-key org-mode-map (kbd "C-c P s") #'my/org-project-stage-switch)
@@ -2394,14 +2607,14 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
 (define-key org-mode-map (kbd "C-c P x") #'my/org-project-risk-to-issue)
 (global-set-key (kbd "C-c P R") #'my/org-project-risk-dashboard)
 (define-key org-mode-map (kbd "C-c P R") #'my/org-project-risk-dashboard)
-(global-set-key (kbd "C-c P g") #'my/org-project-gate-dispatch)
-(define-key org-mode-map (kbd "C-c P g") #'my/org-project-gate-dispatch)
+(global-set-key (kbd "C-c P g") #'my/org-project-milestone-dispatch)
+(define-key org-mode-map (kbd "C-c P g") #'my/org-project-milestone-dispatch)
 
 ;; 风险汇总里的来源缺失标记用 error face 标红。用 face 符号而非写死颜色,
 ;; 明暗主题切换后仍然有效 (与上面 face-override-spec 的处理同理)。
 (font-lock-add-keywords 'org-mode '(("⚠ 未链接" 0 'error t)))
 
-;; 风险/门禁台账视图：高等级风险（含待评估/措施中/挂账分组）
+;; 风险/里程碑台账视图：高等级风险（含待评估/措施中/挂账分组）
 (add-to-list 'org-agenda-custom-commands
              '("R" "风险台账" tags "RISK_LEVEL=\"高\""
       ((org-agenda-overriding-header "高等级风险台账")
@@ -2412,11 +2625,11 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
           (:name "◎ 已了结" :anything t)))))
              t)
 
-;; 捕获收尾：需求变更移出基线、刷新项目动态块、评审后提示关闭冻结门
+;; 捕获收尾：需求变更移出基线、刷新项目动态块、评审后提示冻结基线
 ;; 注意写全 -hook 后缀: Emacs 31 的 add-hook 不再自动补 -hook
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-req-change-finalize t)
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-refresh-dblocks t)
-(add-hook 'org-capture-after-finalize-hook #'my/org-capture-gate-review-finalize t)
+(add-hook 'org-capture-after-finalize-hook #'my/org-capture-review-finalize t)
 
 ;; 项目管理捕获模板（p 组）
 (defconst my/org-project--capture-templates
@@ -2440,7 +2653,7 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
       "%(my/org-capture--record-row)"
       :empty-lines 1)
      ("pe" "评审记录" table-line (function my/org-capture-review-target)
-      "| %u | %^{评审类型|内部评审|专家评审|用户评审} | %^{评审对象} | %^{人员} | %^{结论|通过|有条件通过|不通过} | %^{遗留问题(议题链接,可空)} | %^{待办} |"
+      "| %u | %^{评审类型|内部评审|专家评审|用户评审} | %(my/org-capture--review-object) | %^{人员} | %^{结论|通过|有条件通过|不通过} | %^{遗留问题(议题链接,可空)} | %^{待办} |"
       :empty-lines 1)
      ("pn" "需求条目" entry (function my/org-capture-req-target)
       ,(concat "* DESIGN %?\n  :PROPERTIES:\n"
@@ -2470,6 +2683,7 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关门."
       ,(concat "* DESIGN %(my/org-capture--sw-prompt)\n  :PROPERTIES:\n"
                "  :CUSTOM_ID: %(my/org-capture--sw-custom-id)\n"
                "  :PHASE: %(my/org-capture--current-stage)\n"
+               "  :BASELINE: %(my/org-capture--baseline-prompt)\n"
                "  :TRIGGER: %(my/org-capture--trigger)\n"
                "  :CREATED: %U\n  :END:\n\n"
                "  - 版本简述：%(my/org-capture--sw-desc)\n\n"
