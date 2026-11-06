@@ -48,7 +48,10 @@
   ;; 关闭随输入格式化，开启后可能出现回车后光标跳行首的情况
   (lsp-enable-on-type-formatting nil)
   ;; ---- 代码智能 ----
-  (lsp-enable-symbol-highlighting t)          ;; 高亮光标处符号的所有引用
+  ;; 符号高亮关闭：每次光标停顿都发 textDocument/documentHighlight 并给整个
+  ;; buffer 的引用打 overlay，大 C 文件引用多时 overlay 重绘是移动卡顿的
+  ;; 主要来源之一；同类高亮由 symbol-overlay 提供（M-i，见 init-program.el）
+  (lsp-enable-symbol-highlighting nil)
   (lsp-inlay-hint-enable t)                   ;; 类型/参数名内联提示（clangd、pyright 均支持）
   (lsp-signature-auto-activate t)             ;; 边输入边提示函数签名
   (lsp-signature-render-documentation t)      ;; 签名提示附带文档
@@ -67,7 +70,25 @@
   ;; lsp-mode 的候选过滤区分大小写（跟随 `completion-ignore-case'，默认 nil），
   ;; 小写输入匹配不到 Lan_Data_Handler / PRODUCT_INFO 这类标识符，候选被过滤光
   ;; 就不弹窗（现象是"输入不弹、重新输入又好了"）。设为 t 让过滤忽略大小写。
-  (add-hook 'lsp-mode-hook (lambda () (setq-local completion-ignore-case t))))
+  (add-hook 'lsp-mode-hook (lambda () (setq-local completion-ignore-case t)))
+
+  ;; C/C++ 构建产物目录不建文件监视：编译时成千上万的 .o/.d 变化事件会涌入
+  ;; 主循环（Windows 的 w32notify 尤其明显），造成移动光标时不时卡顿。
+  ;; 只监视源码目录即可，server 对产物文件的变化也不关心
+  (dolist (dir '("[/\\\\][Bb]uild\\'"
+                 "[/\\\\]cmake-build-[^/\\\\]+\\'"
+                 "[/\\\\][Dd]ebug\\'"
+                 "[/\\\\][Rr]elease\\'"
+                 "[/\\\\][Oo]bjects\\'"
+                 "[/\\\\][Ll]istings\\'"
+                 "[/\\\\][Oo]utput\\'"
+                 "[/\\\\][Oo]ut\\'"
+                 "[/\\\\][Ee]xe\\'"
+                 "[/\\\\][Oo]bj\\'"))
+    (add-to-list 'lsp-file-watch-ignored-directories dir))
+  (dolist (pat '("\\.\\(o\\|obj\\|a\\|lib\\|so\\|dll\\|d\\|map\\|lst\\)\\'"
+                 "\\.\\(exe\\|pdb\\|ilk\\|hex\\|bin\\|elf\\|axf\\|out\\)\\'"))
+    (add-to-list 'lsp-file-watch-ignored-files pat)))
 
 ;;; 2. 代码智能显示
 
@@ -116,7 +137,7 @@
   ;; ---- lsp-ui-doc：文档浮窗（childframe 卡片）----
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-position 'at-point)
-  (lsp-ui-doc-delay 0.3)
+  (lsp-ui-doc-delay 0.6)                      ;; 光标停稳后才请求 hover 并弹文档，移动过程中不打断渲染
   (lsp-ui-doc-use-childframe t)
   ;; webkit 渲染已停止维护，统一用内置 markdown 渲染
   (lsp-ui-doc-use-webkit nil)

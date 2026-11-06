@@ -22,7 +22,9 @@
          (iedit-mode . (lambda () (symbol-overlay-mode -1))))
   :config
   ;; 设置高亮延迟，防止光标移动时频繁闪烁
-  (setq symbol-overlay-idle-time 0.1))
+  ;; 0.1 太密：每次停顿都要扫描 buffer 打 overlay（大 C 文件开销明显），
+  ;; 0.3 足够跟手，扫描频率降为原来的 1/3
+  (setq symbol-overlay-idle-time 0.3))
 
 ;; Highlight indent
 (use-package highlight-indent-guides
@@ -35,8 +37,8 @@
   (highlight-indent-guides-character ?|)
   ;; 仅高亮当前光标所在的缩进层级
   (highlight-indent-guides-responsive 'stack)
-  ;; 延迟更新以提升性能
-  (highlight-indent-guides-delay 0.1)
+  ;; 延迟更新以提升性能（0.2：移动中尽量不触发缩进线重绘）
+  (highlight-indent-guides-delay 0.2)
   :config
   ;; 确保在切换主题后线条颜色能自动适配
   (setq highlight-indent-guides-auto-enabled t))
