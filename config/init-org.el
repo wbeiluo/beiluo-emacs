@@ -452,7 +452,8 @@
   (org-archive-location "%s_archive::datetree/")
 
   ;; ---- LaTeX 预览 ----
-  ;; 打开文件即预览公式（agenda 预建缓冲会跳过，见 my/org-agenda-prepare-buffers-with-preview）
+  ;; 打开文件即预览公式（agenda 预建缓冲会跳过，见 my/org-agenda-prepare-buffers-with-preview；
+  ;; 渲染走异步队列，见下文 my/org-latex-preview-async，打开文件不会被渲染阻塞）
   (org-startup-with-latex-preview t)
   ;; 预览走 xelatex -> dvisvgm：内置的 latex+dvipng 流程不含中文支持，
   ;; 依赖 texlive + texlive-langchinese（见 README.org）
@@ -485,6 +486,286 @@
   (setf (plist-get org-format-latex-options :scale) 0.8)
   (setf (plist-get org-format-latex-options :foreground) 'default)
   (setf (plist-get org-format-latex-options :background) "Transparent"))
+
+;; ---- LaTeX 预览异步渲染 ----
+;; Org 内置预览是同步逐公式渲染（`org-create-formula-image' → `org-compile-file'
+;; → `shell-command'）：每个未缓存公式各跑一次 xelatex + dvisvgm，ctex 头每条
+;; 都要重新载入（单条 1~3 秒）。公式多的文件在 `org-startup-with-latex-preview'
+;; 打开时会整段冻结主循环，Windows 上尤其明显。
+;;
+;; 这里把「整 buffer 预览」（(16) 前缀，启动预览走的正是这个分支）改造成异步
+;; 队列：缓存命中的公式立即放置 overlay；未命中的排队逐条
+;; `start-process-shell-command' 后台跑 xelatex && dvisvgm，完成后哨兵回调
+;; 放置 overlay，全程不阻塞输入，图片渐次
+;; 出现。tex 模板、内容哈希与缓存文件命名均与 org 保持一致，与手动 C-c C-x C-l
+;; 共享同一份缓存（~/Org/assets/org-latex-preview/）。光标处、选区、单节的预览
+;; 仍走原函数同步执行，保持即时反馈。
+
+(defvar my/org-latex-preview--queue nil
+  "待渲染的 LaTeX 预览任务队列，元素为任务 plist。")
+
+(defvar my/org-latex-preview--busy nil
+  "非 nil 表示已有渲染进程在后台运行（同一时刻只跑一个，避免抢占 CPU）。")
+
+(defvar my/org-latex-preview--preamble nil
+  "LaTeX 导言区缓存，避免每个公式都重新调用 `org-latex-make-preamble'。")
+
+(defun my/org-latex-preview--collect (beg end)
+  "收集 BEG..END 内的 LaTeX 片段并按缓存状态分派。
+缓存命中的片段立即放置预览 overlay；未命中的返回任务列表（含渲染与
+放置所需的全部信息）。内容哈希与缓存文件命名复制自 `org-format-latex'，
+与同步渲染共享缓存。"
+  (let ((prefix (concat org-preview-latex-image-directory "org-ltximg"))
+        (dir (let ((file (buffer-file-name (buffer-base-buffer))))
+               (if (or (not file) (file-remote-p file))
+                   temporary-file-directory
+                 default-directory)))
+        (forbuffer 'forbuffer)
+        jobs)
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward
+              "\\$\\|\\\\[([]\\|^[ \t]*\\\\begin{[A-Za-z0-9*]+}" end t)
+        (unless (eq (get-char-property (point) 'org-overlay-type)
+                    'org-latex-overlay)
+          (let ((context (org-element-context)))
+            (when (memq (org-element-type context)
+                        '(latex-environment latex-fragment))
+              (let* ((block-type (eq (org-element-type context)
+                                     'latex-environment))
+                     (value (org-element-property :value context))
+                     (frag-beg (org-element-begin context))
+                     (frag-end (save-excursion
+                                 (goto-char (org-element-end context))
+                                 (skip-chars-backward " \r\t\n")
+                                 (point)))
+                     ;; 颜色取值与 org-format-latex 的 forbuffer 分支一致：
+                     ;; 参与哈希，取值不同会落不同的缓存文件
+                     (face (face-at-point))
+                     (fg (let ((color (plist-get org-format-latex-options
+                                                 :foreground)))
+                           (cond ((eq color 'auto)
+                                  (face-attribute face :foreground nil 'default))
+                                 ((eq color 'default)
+                                  (face-attribute 'default :foreground nil 'default))
+                                 (t color))))
+                     (bg (let ((color (plist-get org-format-latex-options
+                                                 :background)))
+                           (cond ((eq color 'auto)
+                                  (face-attribute face :background nil 'default))
+                                 ((eq color 'default)
+                                  (face-attribute 'default :background nil 'default))
+                                 (t color))))
+                     (hash (sha1 (prin1-to-string
+                                  (list org-format-latex-header
+                                        org-latex-default-packages-alist
+                                        org-latex-packages-alist
+                                        org-format-latex-options
+                                        forbuffer value fg bg))))
+                     (imagetype
+                      (or (plist-get (cdr (assq org-preview-latex-default-process
+                                                org-preview-latex-process-alist))
+                                     :image-output-type)
+                          "png"))
+                     (absprefix (expand-file-name prefix dir))
+                     (linkfile (format "%s_%s.%s" prefix hash imagetype))
+                     (movefile (format "%s_%s.%s" absprefix hash imagetype))
+                     (sep (and block-type "\n\n"))
+                     (link (concat sep "[[file:" linkfile "]]" sep)))
+                (if (file-exists-p movefile)
+                    (org-place-formula-image link block-type frag-beg frag-end
+                                             value t movefile imagetype)
+                  (push (list :buffer (current-buffer)
+                              :beg (copy-marker frag-beg)
+                              :end (copy-marker frag-end t)
+                              :value value
+                              :block-type block-type
+                              :link link
+                              :movefile movefile
+                              :imagetype imagetype
+                              :fg fg
+                              :bg bg)
+                        jobs))
+                ;; 从片段之后继续扫描，避免重复命中同一片段的结尾定界符
+                (goto-char (max (point) frag-end))))))))
+    (nreverse jobs)))
+
+(defun my/org-latex-preview--color-format (color)
+  "把 COLOR 转成 LaTeX 的 r,g,b 三元组，无法解析时回退为黑色。
+`org-latex-color-format' 在颜色无法解析（如无图形显示时的
+\"unspecified-fg\"）会因 `color-values' 返回 nil 而报错。"
+  (or (ignore-errors (org-latex-color-format color)) "0,0,0"))
+
+(defun my/org-latex-preview--render (job)
+  "后台渲染 JOB 中的公式，完成后放置预览 overlay。
+JOB 由 `my/org-latex-preview--collect' 构造。tex 模板与颜色处理复制自
+`org-create-formula-image'，渲染命令由 `org-compile-file-commands' 生成，
+与同步渲染完全等价，只是改由 `start-process-shell-command' 异步执行。"
+  (let* ((processing-info (cdr (assq org-preview-latex-default-process
+                                     org-preview-latex-process-alist)))
+         (programs (plist-get processing-info :programs))
+         (error-message (or (plist-get processing-info :message) ""))
+         (image-input-type (plist-get processing-info :image-input-type))
+         (image-output-type (or (plist-get processing-info :image-output-type)
+                                "png"))
+         (post-clean (or (plist-get processing-info :post-clean)
+                         '(".dvi" ".xdv" ".pdf" ".tex" ".aux" ".log"
+                           ".svg" ".png" ".jpg" ".jpeg" ".out")))
+         (image-size-adjust (or (plist-get processing-info :image-size-adjust)
+                                '(1.0 . 1.0)))
+         (options (org-combine-plists
+                   org-format-latex-options
+                   `(:foreground ,(plist-get job :fg)
+                     :background ,(plist-get job :bg))))
+         (scale (* (car image-size-adjust)
+                   (or (plist-get options :scale) 1.0)))
+         (dpi (* scale (if (display-graphic-p) (org--get-display-dpi) 140.0)))
+         (spec `((?D . ,(shell-quote-argument (format "%s" dpi)))
+                 (?S . ,(shell-quote-argument (format "%s" (/ dpi 140.0))))))
+         (latex-compiler (plist-get processing-info :latex-compiler))
+         (image-converter (plist-get processing-info :image-converter))
+         (texfilebase (make-temp-name
+                       (expand-file-name "orgtex" temporary-file-directory)))
+         (texfile (concat texfilebase ".tex"))
+         (inputfile (concat texfilebase "." image-input-type))
+         (outputfile (concat texfilebase "." image-output-type))
+         (string (copy-sequence (plist-get job :value)))
+         (fg (plist-get job :fg))
+         (bg (plist-get job :bg))
+         (latex-header
+          (or (plist-get processing-info :latex-header)
+              my/org-latex-preview--preamble
+              (setq my/org-latex-preview--preamble
+                    (org-latex-make-preamble
+                     (org-export-get-environment (org-export-get-backend 'latex))
+                     org-format-latex-header
+                     'snippet)))))
+    (dolist (program programs)
+      (org-check-external-command program error-message))
+    ;; 颜色处理与 org-create-formula-image 相同（解析失败时兜底为黑色）
+    (setq fg (if (eq fg 'default)
+                 (my/org-latex-preview--color-format
+                  (face-attribute 'default :foreground nil 'default))
+               (my/org-latex-preview--color-format fg))
+          bg (cond ((eq bg 'default)
+                    (my/org-latex-preview--color-format
+                     (face-attribute 'default :background nil 'default)))
+                   ((string= bg "Transparent") nil)
+                   (t (my/org-latex-preview--color-format bg))))
+    ;; 去掉片段末尾 TeX \par 造成的尾随空格
+    (if (string-suffix-p string "\n")
+        (aset string (1- (length string)) ?%)
+      (setq string (concat string "%")))
+    (with-temp-file texfile
+      (insert latex-header)
+      (insert "\n\\begin{document}\n"
+              "\\definecolor{fg}{rgb}{" fg "}%\n"
+              (if bg
+                  (concat "\\definecolor{bg}{rgb}{" bg "}%\n"
+                          "\n\\pagecolor{bg}%\n")
+                "")
+              "\n{\\color{fg}\n"
+              string
+              "\n}\n"
+              "\n\\end{document}\n"))
+    (let ((commands
+           (append (org-compile-file-commands
+                    texfile latex-compiler image-input-type spec)
+                   (org-compile-file-commands
+                    inputfile image-converter image-output-type spec))))
+      (if (cl-every #'stringp commands)
+          ;; 与 org 同步路径的 shell-command 同样经 shell-file-name 执行，
+          ;; 只是异步:start-process-shell-command → 哨兵回调
+          (let ((proc (start-process-shell-command
+                       "org-latex-preview"
+                       (generate-new-buffer " *org-latex-preview*")
+                       (mapconcat #'identity commands " && "))))
+            (set-process-query-on-exit-flag proc nil)
+            (set-process-sentinel proc #'my/org-latex-preview--sentinel)
+            (process-put proc 'job
+                         (append job (list :texfilebase texfilebase
+                                           :outputfile outputfile
+                                           :post-clean post-clean))))
+        ;; 非 shell 命令型处理函数（functionp 命令）无法异步拼接，
+        ;; 退回同步渲染，功能不受影响
+        (delete-file texfile)
+        (org-create-formula-image (plist-get job :value)
+                                  (plist-get job :movefile)
+                                  options t org-preview-latex-default-process)
+        (my/org-latex-preview--place job)
+        (setq my/org-latex-preview--busy nil)
+        (my/org-latex-preview--next)))))
+
+(defun my/org-latex-preview--sentinel (proc _event)
+  "PROC 渲染结束后的收尾：放置预览 overlay 并驱动队列。"
+  (when (memq (process-status proc) '(exit signal))
+    (let* ((job (process-get proc 'job))
+           (ok (zerop (process-exit-status proc))))
+      (when (process-buffer proc)
+        (kill-buffer (process-buffer proc)))
+      (if (and ok (file-exists-p (plist-get job :outputfile)))
+          (progn
+            ;; 先复制成品再清理临时文件（post-clean 含输出扩展名）
+            (copy-file (plist-get job :outputfile)
+                       (plist-get job :movefile) 'replace)
+            (my/org-latex-preview--place job))
+        (message "LaTeX 预览渲染失败：%s" (plist-get job :value)))
+      (dolist (ext (plist-get job :post-clean))
+        (ignore-errors (delete-file (concat (plist-get job :texfilebase) ext))))
+      (setq my/org-latex-preview--busy nil)
+      (if my/org-latex-preview--queue
+          (my/org-latex-preview--next)
+        (message "LaTeX 预览：后台渲染完成")))))
+
+(defun my/org-latex-preview--place (job)
+  "为 JOB 对应的片段放置预览 overlay。"
+  (let ((buf (plist-get job :buffer))
+        (beg (plist-get job :beg))
+        (end (plist-get job :end)))
+    (when (and (buffer-live-p buf) (marker-buffer beg) (marker-buffer end))
+      (with-current-buffer buf
+        (save-excursion
+          (save-restriction
+            (widen)
+            (org-place-formula-image (plist-get job :link)
+                                     (plist-get job :block-type)
+                                     beg end (plist-get job :value) t
+                                     (plist-get job :movefile)
+                                     (plist-get job :imagetype)))))
+      (set-marker beg nil)
+      (set-marker end nil))))
+
+(defun my/org-latex-preview--next ()
+  "启动队列中的下一个渲染任务。"
+  (unless my/org-latex-preview--busy
+    (when my/org-latex-preview--queue
+      (setq my/org-latex-preview--busy t)
+      (condition-case err
+          (my/org-latex-preview--render (pop my/org-latex-preview--queue))
+        (error (setq my/org-latex-preview--busy nil)
+               (message "LaTeX 预览任务出错：%s" (error-message-string err))
+               (my/org-latex-preview--next))))))
+
+(defun my/org-latex-preview-region-async (beg end)
+  "异步生成 BEG..END 内 LaTeX 公式的预览图。
+缓存命中的公式立即显示，未命中的排队后台渲染，图片渐次出现。"
+  (let ((jobs (my/org-latex-preview--collect beg end)))
+    (when jobs
+      (setq my/org-latex-preview--queue
+            (append my/org-latex-preview--queue jobs))
+      (message "LaTeX 预览：%d 个公式排队后台渲染，图片稍后渐次出现"
+               (length jobs))
+      (my/org-latex-preview--next))))
+
+(defun my/org-latex-preview-async (old-fun arg)
+  "整 buffer 预览走异步队列，其余情形交回 OLD-FUN 同步执行。
+ARG 是 `org-latex-preview' 的原始前缀参数；(16) 前缀（整 buffer）正是
+`org-startup-with-latex-preview' 打开文件时触发的分支。"
+  (cond ((not (display-graphic-p)) nil)
+        ((equal arg '(16))
+         (my/org-latex-preview-region-async (point-min) (point-max)))
+        (t (funcall old-fun arg))))
+(advice-add 'org-latex-preview :around #'my/org-latex-preview-async)
 
 ;;; 4. 日程 Agenda -------------------------------------------------------------
 
