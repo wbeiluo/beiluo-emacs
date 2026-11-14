@@ -62,7 +62,7 @@
 (define-key org-mode-map (kbd "C-c C-x C-u") #'my/org-dblock-update)
 (define-key org-mode-map (kbd "C-c _") #'org-timestamp-inactive)
 
-;; 项目管理的按键（C-c P s/b/r/x/R/g）在 init-org-project.el 中定义。
+;; 项目管理的按键（C-c P s/b/r/x/R/g/n/t/l/v）在 init-org-project.el 中定义。
 
 ;;; 2. 外观 Appearance ---------------------------------------------------------
 

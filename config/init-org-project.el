@@ -14,7 +14,7 @@
 ;;   3. 里程碑           —— M1..M4 转段检查点、结算与 milestone-summary
 ;;   4. 需求与基线     —— 需求条目建档、全量重圈、基线记录表与快照动态块
 ;;   5. 风险与议题     —— 三态风险台账、评估/转议题/汇总、议题落点
-;;   6. 捕获与视图     —— p 组模板、评审/测试记录落点、agenda 风险与里程碑台账
+;;   6. 捕获与视图     —— p 组模板、评审/测试记录落点与按类型编号、agenda 风险与里程碑台账
 ;;
 ;; 项目数据在 ~/Org/projects/ 下，本文件只放代码；升级旧项目用
 ;; `my/org-project-risk-upgrade' / `my/org-project-milestone-upgrade'。
@@ -194,7 +194,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
      "    - 异常记录（闭环进「议题」章，记议题编号）：\n")
    "\n"
    "*** 软件状态\n\n"
-   "    版本条目用 ps 捕获, 状态流 DESIGN → DEVELOP → CONFIRMED → ARCHIVED.\n"))
+   "    版本条目用 ps 捕获, 状态流 DESIGN → DEVELOP → CONFIRMED → ARCHIVED.\n"
+   "    修改项/测试项结合研制任务与测试/试验记录自动登记(ps 捕获时选, C-c P v 补/同步).\n"))
 
 (defun my/org-project--qual-subtree (idx)
   "生成「状态鉴定」阶段子树文本 (鉴定阶段专属结构). IDX 为阶段序号."
@@ -322,7 +323,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "#   C-c P b 全量重圈打到当前阶段; 冻结判据/评审/冻结在各阶段需求类小节,\n"
    "#   冻结与解冻用 C-c P g, 评审用 pe 记入阶段评审表, 变更用 pc 捕获;\n"
    "# - 评审记录统一记在「里程碑」各条目的 review-<ID> 表内(pe 捕获);\n"
-   "# - 软件状态条目(ps)记在各阶段「软件状态」节, 状态鉴定阶段记在「状态管理」;\n"
+   "# - 软件状态条目(ps)记在各阶段「软件状态」节, 状态鉴定阶段记在「状态管理」,\n"
+   "#   修改项/测试项由 ps 捕获或 C-c P v 从研制任务/测试记录自动登记;\n"
    "# - 风险: pr 识别(IDENT) → C-c P r 评估确认(MITIGATE) → RESOLVED 了结,\n"
    "#   已发生用 C-c P x 转议题; 汇总/矩阵用 C-c P R 刷新查看.\n\n"
    "* 概述\n\n"
@@ -375,7 +377,9 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "    #+END:\n\n"
    (my/org-project--stages-text code)
    "\n* 测试与试验记录\n\n"
-   "# 各阶段测试/试验记录统一登记于此, 用 pl 捕获(阶段列自动填当前阶段);\n"
+   "# 各阶段测试/试验记录统一登记于此, 用 pl 捕获(阶段列自动填当前阶段,\n"
+   "# 编号列按类型自动编号: 代号_UT-001, 供其他地方链接和引用);\n"
+   "# 存量行补编号 C-c P n, 插入引用链接 C-c P l, 按编号跳转 C-c P t.\n"
    "# 评审前按阶段过滤核对覆盖率.\n\n"
    "** 单元测试记录\n\n"
    "    #+NAME: unit-test\n"
@@ -395,24 +399,24 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "    |------+----------+--------+----------+----------+------+------|\n\n"
    "** 系统测试记录\n\n"
    "    #+NAME: sys-test\n"
-   "    | 阶段 | 日期 | 系统测试项 | 过程数据/现象 | 结论 | 链接 |\n"
-   "    |------+------+------------+---------------+------+------|\n\n"
+   "    | 阶段 | 用例编号 | 日期 | 系统测试项 | 过程数据/现象 | 结论 | 链接 |\n"
+   "    |------+----------+------+------------+---------------+------+------|\n\n"
    "** 联调记录\n\n"
    "    #+NAME: debug-record\n"
-   "    | 阶段 | 日期 | 联调项 | 过程数据/现象 | 结论 | 链接 |\n"
-   "    |------+------+--------+---------------+------+------|\n\n"
+   "    | 阶段 | 记录编号 | 日期 | 联调项 | 过程数据/现象 | 结论 | 链接 |\n"
+   "    |------+----------+------+--------+---------------+------+------|\n\n"
    "** 环境试验记录\n\n"
    "    #+NAME: env-record\n"
-   "    | 阶段 | 日期 | 试验项目 | 试验条件 | 结果/结论 | 链接 |\n"
-   "    |------+------+----------+----------+-----------+------|\n\n"
+   "    | 阶段 | 记录编号 | 日期 | 试验项目 | 试验条件 | 结果/结论 | 链接 |\n"
+   "    |------+----------+------+----------+----------+-----------+------|\n\n"
    "** 鉴定测试记录\n\n"
    "    #+NAME: qual-test\n"
    "    | 阶段 | 用例编号 | 测试项 | 指标要求 | 实测结果 | 结论 | 链接 |\n"
    "    |------+----------+--------+----------+----------+------+------|\n\n"
    "** 试验记录\n\n"
    "    #+NAME: trial-record\n"
-   "    | 阶段 | 日期 | 试验项目 | 过程数据/现象 | 结论 | 链接 |\n"
-   "    |------+------+----------+---------------+------+------|\n\n"
+   "    | 阶段 | 记录编号 | 日期 | 试验项目 | 过程数据/现象 | 结论 | 链接 |\n"
+   "    |------+----------+------+----------+---------------+------+------|\n\n"
    "\n* 议题\n\n"
    "# 问题/议题统一台账, 状态流 REPORT → BUG → KNOWNCAUSE → FIXED → CLOSED\n"
    "# (不修 WONTFIX); 调试/试验/交付后问题都记在此, :PHASE: 区分来源.\n\n"
@@ -558,9 +562,56 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
   "返回本次捕获输入的版本简述 (供模板展开)."
   (or my/org-capture--sw-desc-value ""))
 
+(defvar my/org-capture--sw-id-value nil
+  "捕获软件状态(ps)生成的 CUSTOM_ID, 供收尾对齐「修改项」「测试项」两表.")
+
 (defun my/org-capture--sw-custom-id ()
   "生成软件状态 CUSTOM_ID: R+软件代号/版本号."
-  (format "R%s/%s" (my/org-capture--sw-code) (my/org-capture--version)))
+  (setq my/org-capture--sw-id-value
+        (format "R%s/%s" (my/org-capture--sw-code) (my/org-capture--version))))
+
+(defun my/org-capture--sw-change-rows ()
+  "生成软件状态「修改项」表数据行 (供 ps 模板展开), 未选则为空."
+  (let* ((code (my/org-capture--code))
+         (tasks (with-current-buffer (my/org-capture--project-buffer)
+                  (my/org-project--sw-pick-tasks))))
+    (mapconcat (lambda (task)
+                 (my/org-project--row-text
+                  (my/org-project--task-change-row task code)))
+               tasks "\n")))
+
+(defun my/org-capture--sw-test-rows ()
+  "生成软件状态「测试项」表数据行 (供 ps 模板展开), 未选则为空."
+  (let* ((file (buffer-file-name (my/org-capture--project-buffer)))
+         (records (with-current-buffer (my/org-capture--project-buffer)
+                    (my/org-project--sw-pick-records))))
+    (mapconcat (lambda (rec)
+                 (my/org-project--row-text
+                  (my/org-project--record-test-row rec file)))
+               records "\n")))
+
+(defun my/org-capture-sw-finalize ()
+  "ps 落点后: 对齐新条目的「修改项」「测试项」两表. 中止捕获不处理."
+  (let ((id my/org-capture--sw-id-value)
+        (buf my/org-capture--last-buffer))
+    (setq my/org-capture--sw-id-value nil)
+    (when (and id
+               (not (and (boundp 'org-note-abort) org-note-abort))
+               (buffer-live-p buf))
+      (with-current-buffer buf
+        (org-with-wide-buffer
+         (save-excursion
+          (goto-char (point-min))
+          (when (re-search-forward
+                 (concat "^[ \t]*:CUSTOM_ID:[ \t]+"
+                         (regexp-quote id) "[ \t]*$")
+                 nil t)
+            (org-back-to-heading t)
+            (let ((beg (line-beginning-position))
+                  (end (save-excursion (org-end-of-subtree t t) (point))))
+              (dolist (tbl (my/org-project--sw-table-regions beg end))
+                (goto-char (nth 1 tbl))
+                (org-table-align))))))))))
 
 (defun my/org-capture--trigger ()
   "提示选择软件状态的触发来源."
@@ -643,49 +694,63 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
     (my/org-capture--next-id (concat "REQ-" letter))))
 
 (defconst my/org-capture--record-tables
-  '(("单元测试记录" . "unit-test")
-    ("功能测试记录" . "func-test")
-    ("性能测试记录" . "perf-test")
-    ("接口测试记录" . "iface-test")
-    ("系统测试记录" . "sys-test")
-    ("联调记录" . "debug-record")
-    ("环境试验记录" . "env-record")
-    ("鉴定测试记录" . "qual-test")
-    ("试验记录" . "trial-record"))
-  "测试/试验记录表: 显示名 . #+NAME 标识.")
+  '(("单元测试记录" "unit-test" "UT" "用例编号" ("测试项" "指标要求" "实测结果" "结论"))
+    ("功能测试记录" "func-test" "FT" "用例编号" ("测试项" "指标要求" "实测结果" "结论"))
+    ("性能测试记录" "perf-test" "PT" "用例编号" ("测试项" "指标要求" "实测结果" "结论"))
+    ("接口测试记录" "iface-test" "IT" "用例编号" ("测试项" "指标要求" "实测结果" "结论"))
+    ("系统测试记录" "sys-test" "ST" "用例编号" ("系统测试项" nil "过程数据/现象" "结论"))
+    ("联调记录" "debug-record" "DBG" "记录编号" ("联调项" nil "过程数据/现象" "结论"))
+    ("环境试验记录" "env-record" "ENV" "记录编号" ("试验项目" "试验条件" "结果/结论" nil))
+    ("鉴定测试记录" "qual-test" "QT" "用例编号" ("测试项" "指标要求" "实测结果" "结论"))
+    ("试验记录" "trial-record" "TR" "记录编号" ("试验项目" nil "过程数据/现象" "结论")))
+  "测试/试验记录表: (显示名 #+NAME 标识 ID 前缀 编号列列名 测试项列映射).
+记录 ID 形如 代号_FT-001, 按类型分段编号, 供其他地方链接和引用;
+测试类表编号列叫「用例编号」, 记录类表叫「记录编号」, 都在第 2 列;
+列映射是记录列名到软件状态「测试项」表 (测试项/指标要求/实测结果/结论) 的
+对应 (nil 表示留空), 供 ps 捕获与 C-c P v 自动登记.")
+
+(defun my/org-capture--record-spec (kind)
+  "返回记录表 KIND 的条目 (显示名 KIND ID前缀 编号列列名 测试项列映射), 未知返回 nil."
+  (seq-find (lambda (spec) (equal (nth 1 spec) kind)) my/org-capture--record-tables))
 
 (defvar my/org-capture--record-kind nil
   "捕获记录表行(pl)时选择的记录表标识.")
 
+(defun my/org-capture--record-id ()
+  "生成记录 ID (供模板展开): 代号_<类型前缀>-NNN, 按类型分段递增."
+  (my/org-capture--next-id
+   (nth 2 (my/org-capture--record-spec my/org-capture--record-kind))))
+
 (defun my/org-capture--record-row ()
-  "按所选记录表生成一行表格 (首列为当前阶段, 末列为相关链接, 供模板展开)."
+  "按所选记录表生成一行表格 (首列为当前阶段, 第 2 列为自动编号, 末列为相关链接, 供模板展开)."
   (let ((stage (my/org-capture--current-stage))
-        (date (format-time-string "[%Y-%m-%d %a]")))
+        (date (format-time-string "[%Y-%m-%d %a]"))
+        (id (my/org-capture--record-id)))
     (pcase my/org-capture--record-kind
       ((or "unit-test" "func-test" "perf-test" "iface-test" "qual-test")
        (format "| %s | %s | %s | %s | %s | %s | %s |"
-               stage (read-string "用例编号: ") (read-string "测试项: ")
+               stage id (read-string "测试项: ")
                (read-string "指标要求: ") (read-string "实测结果: ")
                (read-string "结论: ")
                (string-trim (read-string "相关链接(可空): "))))
       ("sys-test"
-       (format "| %s | %s | %s | %s | %s | %s |"
-               stage date (read-string "系统测试项: ")
+       (format "| %s | %s | %s | %s | %s | %s | %s |"
+               stage id date (read-string "系统测试项: ")
                (read-string "过程数据/现象: ") (read-string "结论: ")
                (string-trim (read-string "相关链接(可空): "))))
       ("debug-record"
-       (format "| %s | %s | %s | %s | %s | %s |"
-               stage date (read-string "联调项: ")
+       (format "| %s | %s | %s | %s | %s | %s | %s |"
+               stage id date (read-string "联调项: ")
                (read-string "过程数据/现象: ") (read-string "结论: ")
                (string-trim (read-string "相关链接(可空): "))))
       ("env-record"
-       (format "| %s | %s | %s | %s | %s | %s |"
-               stage date (read-string "试验项目: ") (read-string "试验条件: ")
+       (format "| %s | %s | %s | %s | %s | %s | %s |"
+               stage id date (read-string "试验项目: ") (read-string "试验条件: ")
                (read-string "结果/结论: ")
                (string-trim (read-string "相关链接(可空): "))))
       (_
-       (format "| %s | %s | %s | %s | %s | %s |"
-               stage date (read-string "试验项目: ")
+       (format "| %s | %s | %s | %s | %s | %s | %s |"
+               stage id date (read-string "试验项目: ")
                (read-string "过程数据/现象: ") (read-string "结论: ")
                (string-trim (read-string "相关链接(可空): ")))))))
 
@@ -740,13 +805,19 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
     (my/org-capture--goto-olp file (list "研制过程" stage section))))
 
 (defun my/org-capture-record-target ()
-  "测试/试验记录(pl): 统一章「测试与试验记录」的指定表, 阶段列自动填当前阶段."
+  "测试/试验记录(pl): 统一章「测试与试验记录」的指定表, 阶段列自动填当前阶段.
+编号列(用例编号/记录编号)缺失的存量表自动补列, 记录 ID 由模板自动生成."
   (let* ((file (my/org-capture-project-file))
          (label (completing-read "记录表: "
                                  (mapcar #'car my/org-capture--record-tables) nil t)))
-    (setq my/org-capture--record-kind (cdr (assoc label my/org-capture--record-tables)))
+    (setq my/org-capture--record-kind (nth 1 (assoc label my/org-capture--record-tables)))
     (my/org-capture--goto-named-table
-     file '("测试与试验记录") my/org-capture--record-kind)))
+     file '("测试与试验记录") my/org-capture--record-kind)
+    (save-excursion
+      (forward-line 1)
+      (my/org-project--record-ensure-id-column
+       (line-beginning-position)
+       (nth 3 (my/org-capture--record-spec my/org-capture--record-kind))))))
 
 (defvar my/org-capture--review-stage nil
   "本次 pe 捕获选中的基线评审阶段 (评审对象为「本阶段基线」时非 nil),
@@ -840,6 +911,25 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
             (my/org-project--req-id-short my/org-capture--req-change-id
                                           (my/org-capture--code)))))
 
+(defun my/org-capture--test-case-prompt ()
+  "提示选择关联的测试/试验记录(可多选, 可空), 返回引用文本 (供模板展开).
+选中的记录以搜索链接写入 :TEST-CASE:, 点击可跳到「测试与试验记录」章
+对应记录行; 自由输入(如旧手工编号)按原样保留."
+  (let* ((buf (my/org-capture--project-buffer))
+         (file (and buf (buffer-file-name buf)))
+         (entries (and buf (with-current-buffer buf
+                             (my/org-project--record-entries))))
+         (choices (mapcar (lambda (e)
+                            (format "%s %s" (plist-get e :id) (plist-get e :title)))
+                          entries))
+         (sel (completing-read-multiple "关联测试记录(可空, 逗号分隔): " choices)))
+    (mapconcat
+     (lambda (s)
+       (let* ((id (car (split-string (string-trim s) " ")))
+              (e (seq-find (lambda (x) (equal (plist-get x :id) id)) entries)))
+         (if e (my/org-project--record-link id file file) s)))
+     (delete "" sel) " ")))
+
 (defun my/org-capture-req-change-target ()
   "需求变更(pc): 「需求」章「需求变更记录」的变更表."
   (my/org-capture--goto-named-table (my/org-capture-project-file)
@@ -893,6 +983,439 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 (defun my/org-capture-log-target ()
   "日志/会议(pd): 「日志」章下."
   (my/org-capture--goto-olp (my/org-capture-project-file) '("日志")))
+
+;; ---- 测试/试验记录 Test records ----
+;; 记录 ID 按类型分段编号(代号_FT-001): pl 捕获自动生成, 存量行用 C-c P n 补号
+;; (只填空编号, 手工编号保留). 其他地方引用: 需求 :TEST-CASE: 捕获时从现有
+;; 记录补全选择, 任意处 C-c P l 插入搜索链接, C-c P t 按编号跳转到记录行.
+
+(defun my/org-project--row-cells (line)
+  "拆分表格行 LINE 为单元格文本列表 (去掉首尾竖线与空白)."
+  (let ((s (string-trim line)))
+    (mapcar #'string-trim (split-string (substring s 1 -1) "|"))))
+
+(defun my/org-project--record-table-regions ()
+  "扫描「测试与试验记录」章, 返回各记录表的 (KIND BEG END) 列表.
+BEG 为表首行行首, END 为表尾行下一行行首; 该章或表不存在时相应缺省."
+  (let (regions)
+    (org-with-wide-buffer
+     (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward "^\\* 测试与试验记录[ \t]*$" nil t)
+        (let ((cbeg (line-beginning-position))
+              (end (save-excursion (org-end-of-subtree t t) (point))))
+          (dolist (spec my/org-capture--record-tables)
+            (goto-char cbeg)
+            (when (re-search-forward
+                   (concat "^[ \t]*#\\+NAME:[ \t]+"
+                           (regexp-quote (nth 1 spec)) "[ \t]*$")
+                   end t)
+              (forward-line 1)
+              (when (looking-at "[ \t]*|")
+                (let ((beg (line-beginning-position)))
+                  (while (looking-at "[ \t]*|") (forward-line 1))
+                  (push (list (nth 1 spec) beg (line-beginning-position))
+                        regions)))))))))
+    (nreverse regions)))
+
+(defun my/org-project--record-table-map (beg end)
+  "解析 BEG..END 的记录表, 返回 (HEADER . ROWS).
+HEADER 为表头单元格列表, ROWS 为 (ROW POS CELLS) 列表:
+ROW 为 org-table 行号(不含分隔行, 表头为 1), POS 为行首位置."
+  (let ((n 0) header rows)
+    (save-excursion
+      (goto-char beg)
+      (while (< (point) end)
+        (unless (looking-at org-table-hline-regexp)
+          (setq n (1+ n))
+          (let ((cells (my/org-project--row-cells
+                        (buffer-substring (line-beginning-position)
+                                          (line-end-position)))))
+            (if (= n 1)
+                (setq header cells)
+              (push (list n (line-beginning-position) cells) rows))))
+        (forward-line 1)))
+    (cons header (nreverse rows))))
+
+(defun my/org-project--record-ensure-id-column (beg column)
+  "确保 BEG 起的记录表含编号列 COLUMN, 无则插到第 2 列, 返回其列号 (1 起)."
+  (save-excursion
+    (goto-char beg)
+    (let ((idx (seq-position (my/org-project--row-cells
+                              (buffer-substring (line-beginning-position)
+                                                (line-end-position)))
+                             column)))
+      (if idx
+          (1+ idx)
+        (goto-char beg)
+        (org-table-goto-column 2)
+        (org-table-insert-column)
+        (org-table-put 1 2 column)
+        (org-table-align)
+        2))))
+
+(defun my/org-project--record-fill-ids (beg end kind)
+  "给 BEG..END 表内编号为空的记录行补记录 ID (KIND 类型), 返回补号数量.
+表缺编号列时先补列; 已有编号(含手工编号)保留."
+  (let* ((spec (my/org-capture--record-spec kind))
+         (column (my/org-project--record-ensure-id-column beg (nth 3 spec)))
+         (rows (cdr (my/org-project--record-table-map beg end)))
+         (n 0))
+    (save-excursion
+      (goto-char beg)
+      (dolist (row rows)
+        (when (string-blank-p (or (nth (1- column) (nth 2 row)) ""))
+          (org-table-put (car row) column
+                         (my/org-capture--next-id (nth 2 spec)))
+          (setq n (1+ n)))))
+    (when (> n 0)
+      (goto-char beg)
+      (org-table-align))
+    n))
+
+(defun my/org-project--record-entries ()
+  "扫描「测试与试验记录」章, 返回已编号记录的 plist 列表.
+每项含 :id :kind :title :pos :header :cells; 编号为空的行跳过.
+:title 取该类记录的「测试项」列映射首列文本, 找不到则为空."
+  (let (entries)
+    (dolist (region (my/org-project--record-table-regions))
+      (let* ((kind (nth 0 region))
+             (map (my/org-project--record-table-map (nth 1 region) (nth 2 region)))
+             (header (car map))
+             (id-col (or (seq-position header "用例编号")
+                         (seq-position header "记录编号")))
+             (title-col (let ((name (car (nth 4 (my/org-capture--record-spec kind)))))
+                          (and name (seq-position header name)))))
+        (when id-col
+          (dolist (row (cdr map))
+            (let ((cells (nth 2 row))
+                  (id (string-trim (or (nth id-col (nth 2 row)) ""))))
+              (unless (string-empty-p id)
+                (push (list :id id
+                            :kind kind
+                            :title (string-trim
+                                    (or (and title-col (nth title-col cells))
+                                        ""))
+                            :pos (nth 1 row)
+                            :header header
+                            :cells cells)
+                      entries)))))))
+    (nreverse entries)))
+
+(defun my/org-project--record-sw-fields (record)
+  "按列映射返回记录 RECORD 对应软件状态「测试项」表的 4 格文本
+(测试项 指标要求 实测结果 结论), 无对应列或缺格为空串."
+  (let ((map (nth 4 (my/org-capture--record-spec (plist-get record :kind))))
+        (header (plist-get record :header))
+        (cells (plist-get record :cells)))
+    (mapcar (lambda (name)
+              (let ((idx (and name (seq-position header name))))
+                (if idx (or (nth idx cells) "") "")))
+            map)))
+
+(defun my/org-project--record-link (id file &optional from)
+  "生成指向 FILE 中记录 ID 的搜索链接文本: [[file:相对路径::ID][短ID]].
+相对路径以 FROM 文件 (缺省当前缓冲区文件) 所在目录为基准."
+  (format "[[file:%s::%s][%s]]"
+          (file-relative-name file (file-name-directory
+                                    (or from (buffer-file-name) file)))
+          id
+          (my/org-project--id-short id (file-name-base file))))
+
+(defun my/org-project--record-candidates ()
+  "返回全部项目文件的已编号记录候选: ((LABEL . PLIST) ...).
+LABEL 形如 「400_UT-001 电压稳定度 (Test/400)」, PLIST 含 :file."
+  (let (cands)
+    (dolist (f (my/org-project--files))
+      (with-current-buffer (find-file-noselect (cdr f))
+        (dolist (e (my/org-project--record-entries))
+          (push (cons (format "%s %s (%s)" (plist-get e :id)
+                              (plist-get e :title) (car f))
+                      (append e (list :file (cdr f))))
+                cands))))
+    (nreverse cands)))
+
+(defun my/org-project--record-select ()
+  "提示选择一条测试/试验记录, 返回其 plist (:id :kind :title :pos :file)."
+  (let ((cands (my/org-project--record-candidates)))
+    (unless cands
+      (user-error "没有已编号的测试/试验记录 (pl 捕获自动编号, 存量用 C-c P n 补号)"))
+    (cdr (assoc (completing-read "测试/试验记录: " (mapcar #'car cands) nil t)
+                cands))))
+
+(defun my/org-project-record-number ()
+  "为「测试与试验记录」章的记录行按类型补编号 (幂等, C-c P n).
+编号列缺失的表补列(插到第 2 列), 编号为空的行按表类型补号;
+已有编号(含手工编号)保留. 新记录的编号由 pl 捕获自动生成."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "请在项目 org 文件中执行"))
+  (let ((total 0) (tables 0))
+    ;; 逆序处理: 处理靠后的表会移动其后内容的位置
+    (dolist (region (reverse (my/org-project--record-table-regions)))
+      (let ((n (my/org-project--record-fill-ids (nth 1 region) (nth 2 region)
+                                               (nth 0 region))))
+        (when (> n 0)
+          (setq total (+ total n)
+                tables (1+ tables)))))
+    (message (if (> total 0)
+                 (format "已补编号 %d 条 (%d 张表)" total tables)
+               "所有记录行都已有编号"))))
+
+(defun my/org-project-record-goto ()
+  "按记录编号跳转到「测试与试验记录」章对应记录行 (C-c P t)."
+  (interactive)
+  (let ((rec (my/org-project--record-select)))
+    (pop-to-buffer (find-file-noselect (plist-get rec :file)))
+    (widen)
+    (goto-char (plist-get rec :pos))
+    (org-reveal)
+    (message "记录 %s %s" (plist-get rec :id) (plist-get rec :title))))
+
+(defun my/org-project-record-link-insert ()
+  "选择测试/试验记录, 在 point 插入指向记录行的搜索链接 (C-c P l)."
+  (interactive)
+  (let ((rec (my/org-project--record-select)))
+    (insert (my/org-project--record-link (plist-get rec :id)
+                                        (plist-get rec :file)))))
+
+;; ---- 软件状态 Software state ----
+;; 版本条目(ps)的「修改项」「测试项」两表结合研制任务(pt)与测试/试验记录(pl)
+;; 自动登记. 归属即引用: 任务/记录被某版本的表行(带链接)引用即视为归属该版本,
+;; 其他版本不再提供该候选. 修改项行自动带任务链接+标题, 原因/影响范围/关联议题
+;; 留空手补; 测试项行按列映射带出记录数据. ps 捕获时选择生成, C-c P v 随时补行
+;; 并同步最新数据(修改项表手写列不动), 定版前跑一遍即得最新状态.
+
+(defun my/org-project--task-entries ()
+  "扫描研制任务 (pt 捕获的带 CUSTOM_ID 条目), 返回 plist 列表 (:id :title :todo)."
+  (let (entries)
+    (org-with-wide-buffer
+     (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\*+ " nil t)
+        (let ((id (org-entry-get (point) "CUSTOM_ID")))
+          (when (and id (string-match-p "_TASK-[0-9]+\\'" id))
+            (push (list :id id
+                        :title (org-get-heading t t t t)
+                        :todo (my/org-project--state))
+                  entries))))))
+    (nreverse entries)))
+
+(defun my/org-project--sw-entry-regions ()
+  "扫描软件状态条目, 返回 (ID TITLE BEG END) 列表 (含旧式 :VERSION: 条目).
+BEG/END 为条目标题行首与子树末尾."
+  (let (entries)
+    (org-with-wide-buffer
+     (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^\\*+ " nil t)
+        (let ((id (or (org-entry-get (point) "CUSTOM_ID") ""))
+              (legacy (org-entry-get (point) "VERSION")))
+          (when (or (and (string-prefix-p "R" id)
+                         (string-match-p "/" id))
+                    legacy)
+            (push (list id (org-get-heading t t t t)
+                        (line-beginning-position)
+                        (save-excursion (org-end-of-subtree t t) (point)))
+                  entries))))))
+    (nreverse entries)))
+
+(defun my/org-project--sw-table-regions (beg end)
+  "在 BEG..END 内按表头识别软件状态的两表, 返回 ((KIND BEG END) ...).
+KIND 为 changes(修改项表)或 tests(测试项表), BEG/END 约定同记录表区域."
+  (let (regions)
+    (save-excursion
+      (goto-char beg)
+      (while (re-search-forward "^[ \t]*|" end t)
+        (goto-char (line-beginning-position))
+        (let* ((tbeg (point))
+               (header (my/org-project--row-cells
+                        (buffer-substring (line-beginning-position)
+                                          (line-end-position)))))
+          (while (and (< (point) end) (looking-at "[ \t]*|")) (forward-line 1))
+          (let ((tend (line-beginning-position)))
+            (cond
+             ((equal (car header) "修改项")
+              (push (list 'changes tbeg tend) regions))
+             ((equal (car header) "测试项")
+              (push (list 'tests tbeg tend) regions)))))))
+    (nreverse regions)))
+
+(defun my/org-project--link-target (cell)
+  "返回单元格文本 CELL 中第一个 org 链接的跳转目标 (去掉 # 前缀), 无链接返回 nil.
+只识别 [[#id][..]] 与 [[file:..::id][..]] 两种带跳转目标的链接."
+  (when (string-match
+         "\\[\\[\\(?:#\\|[^][]+::\\)\\([^][]+\\)\\]\\[[^][]*\\]\\]" cell)
+    (match-string 1 cell)))
+
+(defun my/org-project--sw-referenced-ids ()
+  "返回软件状态条目两表已引用的 ID 列表 (行内链接目标).
+归属判定用: 任务/记录被某版本的表引用即视为归属该版本."
+  (let (ids)
+    (dolist (entry (my/org-project--sw-entry-regions))
+      (dolist (tbl (my/org-project--sw-table-regions (nth 2 entry) (nth 3 entry)))
+        (dolist (row (cdr (my/org-project--record-table-map (nth 1 tbl) (nth 2 tbl))))
+          (dolist (cell (nth 2 row))
+            (let ((target (my/org-project--link-target cell)))
+              (when target (push target ids)))))))
+    (delete-dups ids)))
+
+(defun my/org-project--task-change-row (task code)
+  "生成软件状态「修改项」表一行的单元格列表: 任务链接+标题, 人工列留空."
+  (list (format "[[#%s][%s]] %s"
+                (plist-get task :id)
+                (my/org-project--id-short (plist-get task :id) code)
+                (plist-get task :title))
+        "" "" ""))
+
+(defun my/org-project--record-test-row (record file)
+  "生成软件状态「测试项」表一行的单元格列表: 记录链接+测试项, 其余取记录数据."
+  (let ((fields (my/org-project--record-sw-fields record)))
+    (cons (format "%s %s"
+                  (my/org-project--record-link (plist-get record :id) file file)
+                  (nth 0 fields))
+          (cdr fields))))
+
+(defun my/org-project--row-text (cells)
+  "把单元格列表 CELLS 组装成表格行文本 (2 空格缩进)."
+  (concat "  | " (mapconcat #'identity cells " | ") " |"))
+
+(defun my/org-project--sw-pick-tasks ()
+  "多选未归属的研制任务 (逗号分隔多选, 空=不选), 返回任务 plist 列表."
+  (let* ((taken (my/org-project--sw-referenced-ids))
+         (cands (seq-filter (lambda (e) (not (member (plist-get e :id) taken)))
+                            (my/org-project--task-entries)))
+         (label (lambda (e)
+                  (format "%s %s [%s]" (plist-get e :id) (plist-get e :title)
+                          (or (plist-get e :todo) ""))))
+         (sel (completing-read-multiple "修改项-研制任务(可空, 逗号分隔多选): "
+                                        (mapcar label cands))))
+    (delq nil (mapcar (lambda (s)
+                        (seq-find (lambda (e) (string= s (funcall label e)))
+                                  cands))
+                      sel))))
+
+(defun my/org-project--sw-pick-records ()
+  "多选未归属的测试/试验记录 (逗号分隔多选, 空=不选), 返回记录 plist 列表."
+  (let* ((taken (my/org-project--sw-referenced-ids))
+         (cands (seq-filter (lambda (e) (not (member (plist-get e :id) taken)))
+                            (my/org-project--record-entries)))
+         (label (lambda (e)
+                  (format "%s %s (%s)" (plist-get e :id) (plist-get e :title)
+                          (car (my/org-capture--record-spec (plist-get e :kind))))))
+         (sel (completing-read-multiple "测试项-测试/试验记录(可空, 逗号分隔多选): "
+                                        (mapcar label cands))))
+    (delq nil (mapcar (lambda (s)
+                        (seq-find (lambda (e) (string= s (funcall label e)))
+                                  cands))
+                      sel))))
+
+(defun my/org-project--rewrite-row (pos cells)
+  "把 POS 处表格行替换为 CELLS 组成的行 (保留缩进); 调用方负责表格对齐."
+  (goto-char pos)
+  (let ((indent (if (looking-at "[ \t]*") (match-string 0) "")))
+    (delete-region (line-beginning-position) (line-end-position))
+    (insert indent "| " (mapconcat #'identity cells " | ") " |")))
+
+(defun my/org-project--sw-sync-rows (beg end id-rows keep)
+  "用 ID-ROWS 同步 BEG..END 表内引用了 ID 的行, 返回同步行数.
+ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil 时只重写
+首格 (修改项表的原因/影响范围/关联议题是手写列, 不被同步覆盖).
+从后往前改写, 避免行位置漂移."
+  (let ((n 0))
+    (dolist (row (reverse (cdr (my/org-project--record-table-map beg end))))
+      (let* ((cells (nth 2 row))
+             (id (my/org-project--link-target (car cells)))
+             (new (cdr (assoc id id-rows))))
+        (when new
+          (my/org-project--rewrite-row
+           (nth 1 row) (if keep (cons (car new) (cdr cells)) new))
+          (setq n (1+ n)))))
+    n))
+
+(defun my/org-project--sw-append-rows (beg end rows)
+  "在 BEG..END 表末追加 ROWS (单元格列表), 返回追加行数."
+  (if (null rows)
+      0
+    (save-excursion
+      (goto-char end)
+      (forward-line -1)
+      (end-of-line)
+      (dolist (cells rows)
+        (insert "\n" (my/org-project--row-text cells)))
+      (length rows))))
+
+(defun my/org-project--sw-entry-at-point ()
+  "返回 point 所在软件状态条目 (ID TITLE BEG END), 非软件状态条目返回 nil."
+  (save-excursion
+    (when (ignore-errors (progn (org-back-to-heading t) t))
+      (let ((id (or (org-entry-get (point) "CUSTOM_ID") ""))
+            (legacy (org-entry-get (point) "VERSION")))
+        (when (or (and (string-prefix-p "R" id) (string-match-p "/" id))
+                  legacy)
+          (list id (org-get-heading t t t t)
+                (line-beginning-position)
+                (save-excursion (org-end-of-subtree t t) (point))))))))
+
+(defun my/org-project--sw-entry-select ()
+  "提示选择软件状态条目, 返回 (ID TITLE BEG END)."
+  (let* ((entries (my/org-project--sw-entry-regions))
+         (label (lambda (e) (format "%s %s" (nth 0 e) (nth 1 e))))
+         (choice (completing-read "软件状态条目: "
+                                  (mapcar label entries) nil t)))
+    (seq-find (lambda (e) (string= choice (funcall label e))) entries)))
+
+(defun my/org-project-version-register ()
+  "为软件状态条目登记修改项/测试项 (C-c P v).
+多选研制任务与测试/试验记录生成两表行(行内链接引用); 已归属其他版本的
+不再候选, 表内已有行同步最新数据(修改项表的原因/影响范围/关联议题留空
+手补, 不被覆盖). ps 捕获时也走同一套选择, 未选的随时在这里补."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "请在项目 org 文件中执行"))
+  (let* ((entry (or (my/org-project--sw-entry-at-point)
+                    (my/org-project--sw-entry-select)))
+         (mbeg (copy-marker (nth 2 entry)))
+         (mend (copy-marker (nth 3 entry)))
+         (file (buffer-file-name))
+         (code (file-name-base file))
+         (tasks (my/org-project--sw-pick-tasks))
+         (records (my/org-project--sw-pick-records))
+         (task-rows (mapcar (lambda (task)
+                              (cons (plist-get task :id)
+                                    (my/org-project--task-change-row task code)))
+                            (my/org-project--task-entries)))
+         (rec-rows (mapcar (lambda (rec)
+                             (cons (plist-get rec :id)
+                                   (my/org-project--record-test-row rec file)))
+                           (my/org-project--record-entries)))
+         (new-tasks (mapcar (lambda (task)
+                              (cdr (assoc (plist-get task :id) task-rows)))
+                            tasks))
+         (new-records (mapcar (lambda (rec)
+                                (cdr (assoc (plist-get rec :id) rec-rows)))
+                              records))
+         (synced 0) (added 0))
+    (dolist (kind '(changes tests))
+      (let* ((all-rows (if (eq kind 'changes) task-rows rec-rows))
+             (new-rows (if (eq kind 'changes) new-tasks new-records))
+             (tbl (seq-find (lambda (r) (eq (nth 0 r) kind))
+                            (my/org-project--sw-table-regions mbeg mend))))
+        (unless tbl
+          (user-error "软件状态条目缺「修改项」或「测试项」表"))
+        (setq synced (+ synced (my/org-project--sw-sync-rows
+                                (nth 1 tbl) (nth 2 tbl) all-rows
+                                (eq kind 'changes))))
+        ;; 同步改写会移动表末位置, 重新定位后再追加
+        (setq tbl (seq-find (lambda (r) (eq (nth 0 r) kind))
+                            (my/org-project--sw-table-regions mbeg mend)))
+        (setq added (+ added (my/org-project--sw-append-rows
+                              (nth 1 tbl) (nth 2 tbl) new-rows)))))
+    (dolist (tbl (my/org-project--sw-table-regions mbeg mend))
+      (save-excursion
+        (goto-char (nth 1 tbl))
+        (org-table-align)))
+    (message "软件状态登记: 新增 %d 行, 同步 %d 行" added synced)))
 
 ;; ---- 阶段切换 Stage switching ----
 (defun my/org-project--pending-items (stage)
@@ -2613,6 +3136,10 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 ;; `C-c P R' 刷新并查看风险台账; 存量文件升级用 M-x my/org-project-risk-upgrade.
 ;; 里程碑/基线: `C-c P g' 先选对象(本阶段基线/里程碑)再选动作(冻结/解冻/关闭/重开/
 ;; 看判据/跳评审表), 结算在 `C-c P s' 转段时进行.
+;; 测试/试验记录: 新记录由 pl 捕获按类型自动编号(代号_FT-001), `C-c P n' 给
+;; 存量行补编号, `C-c P l' 插入记录引用链接, `C-c P t' 按编号跳转记录行.
+;; 软件状态: `C-c P v' 登记修改项/测试项(从研制任务与测试记录多选, 补行+同步
+;; 最新数据, 归属即引用); ps 捕获时也走同一套选择.
 ;; C-c 大写字母为用户保留前缀, org-mode-map 未占用 C-c P.
 (global-set-key (kbd "C-c P s") #'my/org-project-stage-switch)
 (define-key org-mode-map (kbd "C-c P s") #'my/org-project-stage-switch)
@@ -2626,6 +3153,14 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 (define-key org-mode-map (kbd "C-c P R") #'my/org-project-risk-dashboard)
 (global-set-key (kbd "C-c P g") #'my/org-project-milestone-dispatch)
 (define-key org-mode-map (kbd "C-c P g") #'my/org-project-milestone-dispatch)
+(global-set-key (kbd "C-c P n") #'my/org-project-record-number)
+(define-key org-mode-map (kbd "C-c P n") #'my/org-project-record-number)
+(global-set-key (kbd "C-c P t") #'my/org-project-record-goto)
+(define-key org-mode-map (kbd "C-c P t") #'my/org-project-record-goto)
+(global-set-key (kbd "C-c P l") #'my/org-project-record-link-insert)
+(define-key org-mode-map (kbd "C-c P l") #'my/org-project-record-link-insert)
+(global-set-key (kbd "C-c P v") #'my/org-project-version-register)
+(define-key org-mode-map (kbd "C-c P v") #'my/org-project-version-register)
 
 ;; 风险汇总里的来源缺失标记用 error face 标红。用 face 符号而非写死颜色,
 ;; 明暗主题切换后仍然有效 (与上面 face-override-spec 的处理同理)。
@@ -2648,6 +3183,7 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-req-change-finalize t)
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-refresh-dblocks t)
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-review-finalize t)
+(add-hook 'org-capture-after-finalize-hook #'my/org-capture-sw-finalize t)
 
 ;; 项目管理捕获模板（p 组）
 (defconst my/org-project--capture-templates
@@ -2682,7 +3218,7 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
                "  :BASELINE:\n"
                "  :DESIGN: %^{设计章节(可空)}\n"
                "  :MODULE: %^{实现模块(可空)}\n"
-               "  :TEST-CASE: %^{测试用例(可空)}\n"
+               "  :TEST-CASE: %(my/org-capture--test-case-prompt)\n"
                "  :CREATED: %U\n  :END:\n")
       :empty-lines 1)
      ("pc" "需求变更" table-line (function my/org-capture-req-change-target)
@@ -2706,9 +3242,11 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
                "  :CREATED: %U\n  :END:\n\n"
                "  - 版本简述：%(my/org-capture--sw-desc)\n\n"
                "  | 修改项 | 原因 | 影响范围 | 关联议题 |\n"
-               "  |--------+------+----------+----------|\n\n"
+               "  |--------+------+----------+----------|\n"
+               "%(my/org-capture--sw-change-rows)\n"
                "  | 测试项 | 指标要求 | 实测结果 | 结论 |\n"
-               "  |--------+----------+----------+------|\n")
+               "  |--------+----------+----------+------|\n"
+               "%(my/org-capture--sw-test-rows)\n")
       :empty-lines 1)
      ("pr" "风险" entry (function my/org-capture-risk-target)
       ,(concat "* IDENT %?\n  :PROPERTIES:\n"
