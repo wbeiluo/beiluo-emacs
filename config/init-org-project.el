@@ -505,8 +505,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 (defvar my/org-capture--trigger-value nil
   "捕获软件状态(ps)时选择的触发来源.")
 
-(defun my/org-project--config-name ()
-  "返回概述信息表中的产品名称 (软件状态标题默认值)."
+(defun my/org-project--overview-field (label)
+  "返回概述信息表中 LABEL 行的内容 (找不到或为空返回 nil)."
   (let ((buf (my/org-capture--project-buffer)))
     (when buf
       (with-current-buffer buf
@@ -515,16 +515,28 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
          (when (re-search-forward "^\\* 概述[ \t]*$" nil t)
            (let ((end (save-excursion (org-end-of-subtree t t) (point))))
              (when (re-search-forward
-                    "^[ \t]*|[ \t]*产品名称[ \t]*|[ \t]*\\([^|\n]+?\\)[ \t]*|" end t)
+                    (concat "^[ \t]*|[ \t]*" (regexp-quote label)
+                            "[ \t]*|[ \t]*\\([^|\n]+?\\)[ \t]*|")
+                    end t)
                (let ((v (string-trim (match-string 1))))
                  (unless (string= v "") v))))))))))
 
+(defun my/org-project--config-name ()
+  "返回概述信息表中的产品名称 (软件状态标题默认值)."
+  (my/org-project--overview-field "产品名称"))
+
+(defun my/org-project--product-code ()
+  "返回概述信息表中的产品代号 (软件状态软件代号默认值)."
+  (my/org-project--overview-field "产品代号"))
+
 (defun my/org-capture--sw-prompt ()
-  "提示 软件代号(默认配置项代号) → 版本号 → 标题 → 版本简述.
-标题默认 配置项名称+软件/版本号; 返回标题文本作为条目标题,
+  "提示 软件代号(默认产品代号) → 版本号 → 标题 → 版本简述.
+标题默认 产品名称+软件/版本号; 返回标题文本作为条目标题,
 其余值暂存供 CUSTOM_ID / 正文复用, 只问一次."
   (setq my/org-capture--sw-code-value
-        (read-string "软件代号: " (my/org-capture--code)))
+        (read-string "软件代号: "
+                     (or (my/org-project--product-code)
+                         (my/org-capture--code))))
   (setq my/org-capture--version-value (read-string "版本号: "))
   (setq my/org-capture--sw-title-value
         (read-string "标题: "
@@ -554,7 +566,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
   "提示选择软件状态的触发来源."
   (setq my/org-capture--trigger-value
         (completing-read "触发来源: "
-                         '("阶段任务" "需求变更" "设计改进" "问题归零" "硬件适配" "其他")
+                         '("阶段任务" "新研" "需求变更" "设计改进"
+                           "问题归零" "硬件适配" "其他")
                          nil nil nil nil "阶段任务")))
 
 (defun my/org-capture--baseline-prompt ()
@@ -1535,11 +1548,15 @@ PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
     (user-error "请在项目 org 文件中执行"))
   (org-with-wide-buffer (org-update-all-dblocks))
   (let ((entries (my/org-project--risk-entries))
+        ;; 项目名/文件名须在切到 *项目风险* 缓冲区前取, 否则 buffer-file-name 为 nil
+        (proj (or (my/org-project--config-name)
+                  (file-name-base (buffer-file-name))))
+        (file (buffer-file-name))
         (buf (get-buffer-create "*项目风险*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
-        (insert (format "项目: %s\n\n" (buffer-file-name)))
+        (insert (format "项目: %s (%s)\n\n" proj file))
         (insert (my/org-project--risk-summary-line) "\n\n")
         (let ((open (seq-filter #'my/org-project--risk-open-p entries)))
           (if (null open)
@@ -2614,15 +2631,16 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 ;; 明暗主题切换后仍然有效 (与上面 face-override-spec 的处理同理)。
 (font-lock-add-keywords 'org-mode '(("⚠ 未链接" 0 'error t)))
 
-;; 风险/里程碑台账视图：高等级风险（含待评估/措施中/挂账分组）
+;; 风险台账视图：未闭环风险（待评估/措施中分组）。
+;; RISK_LEVEL={.} 圈全部带等级的风险条目, /-RESOLVED 排除已了结,
+;; 未状态化的存量条目视为未闭环(同 my/org-project--risk-open-p 的口径).
 (add-to-list 'org-agenda-custom-commands
-             '("R" "风险台账" tags "RISK_LEVEL=\"高\""
-      ((org-agenda-overriding-header "高等级风险台账")
+             '("R" "风险台账" tags "RISK_LEVEL={.}/-RESOLVED"
+      ((org-agenda-overriding-header "风险台账（未闭环）")
        (org-super-agenda-groups
         '((:name "◎ 待评估" :todo "IDENT")
           (:name "◎ 措施中" :todo "MITIGATE")
-          (:name "◎ 挂账" :property ("CONCLUSION" "挂账"))
-          (:name "◎ 已了结" :anything t)))))
+          (:name "◎ 未状态化" :anything t)))))
              t)
 
 ;; 捕获收尾：需求变更移出基线、刷新项目动态块、评审后提示冻结基线
