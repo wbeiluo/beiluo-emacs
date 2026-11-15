@@ -102,7 +102,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 (defun my/org-capture--project-buffer ()
   "返回本次捕获的目标项目缓冲区.
 优先取当前缓冲区(直接在项目文件中调用时), 否则用目标函数记录的缓冲区.
-注意 buffer-base-buffer 对非 indirect 缓冲区返回 nil, 需回落到缓冲区本身."
+注意 `buffer-base-buffer 对非 indirect 缓冲区返回 nil, 需回落到缓冲区本身."
   (let ((cur (current-buffer)))
     (cond
      ((and (buffer-file-name cur) (derived-mode-p 'org-mode))
@@ -118,7 +118,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
       (user-error "无法确定项目代号: 未找到目标项目文件"))))
 
 (defun my/org-capture--next-id (prefix)
-  "生成项目内递增 ID: 代号_PREFIX-NNN.
+  "生成项目内递增 ID: PREFIX 为类型前缀, 编号形如 代号_PREFIX-NNN.
 在目标项目文件中扫描既有编号取最大值加一 (模板展开在临时缓冲区, 需回退到项目文件)."
   (let* ((buf (my/org-capture--project-buffer))
          (code (my/org-capture--code))
@@ -134,7 +134,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
     (format "%s_%s-%03d" code prefix (1+ max))))
 
 (defun my/org-project--plan-subtree (idx)
-  "生成「方案设计」阶段子树文本 (方案阶段专属结构). IDX 为阶段序号."
+  "生成「方案设计」阶段子树文本 (方案阶段专属结构), IDX 为阶段序号."
   (concat
    "*** 需求分析\n\n"
    "    #+BEGIN: req-by-phase :phase 方案设计\n"
@@ -198,7 +198,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "    修改项/测试项结合研制任务与测试/试验记录自动登记(ps 捕获时选, C-c P v 补/同步).\n"))
 
 (defun my/org-project--qual-subtree (idx)
-  "生成「状态鉴定」阶段子树文本 (鉴定阶段专属结构). IDX 为阶段序号."
+  "生成「状态鉴定」阶段子树文本 (鉴定阶段专属结构), IDX 为阶段序号."
   (concat
    "*** 鉴定策划\n\n"
    "    - 鉴定依据（研制任务书/技术要求）：\n"
@@ -254,7 +254,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
     '("策划与需求" "设计与实现" "测试与验证" "软件状态"))))
 
 (defun my/org-project--stages-text (code)
-  "生成全部阶段子树文本 (按 my/org-project--stages 顺序)."
+  "生成全部阶段子树文本: CODE 为项目代号, 阶段顺序同 my/org-project--stages."
   (let ((i 0) parts)
     (dolist (stage my/org-project--stages)
       (setq i (1+ i))
@@ -599,7 +599,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
                records "\n")))
 
 (defun my/org-capture-sw-finalize ()
-  "ps 落点后: 对齐新条目的「修改项」「测试项」两表. 中止捕获不处理."
+  "捕获 ps 落点后: 对齐新条目的「修改项」「测试项」两表, 中止捕获不处理."
   (let ((id my/org-capture--sw-id-value)
         (buf my/org-capture--last-buffer))
     (setq my/org-capture--sw-id-value nil)
@@ -714,7 +714,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 记录 ID 形如 代号_FT-001, 按类型分段编号, 供其他地方链接和引用;
 测试类表编号列叫「用例编号」, 记录类表叫「记录编号」, 都在第 2 列;
 列映射是记录列名到软件状态「测试项」表 (测试项/指标要求/实测结果/结论) 的
-对应 (nil 表示留空), 供 ps 捕获与 C-c P v 自动登记.")
+对应 (nil 表示留空), 供 ps 捕获与登记命令 (C-c P v) 自动登记.")
 
 (defun my/org-capture--record-spec (kind)
   "返回记录表 KIND 的条目 (显示名 KIND ID前缀 编号列列名 测试项列映射), 未知返回 nil."
@@ -731,7 +731,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 (defun my/org-capture--record-req-links ()
   "提示多选本记录验证的需求条目(可空), 返回「验证需求」列文本 (供模板展开).
 选中的需求写成 [[#ID][短ID]] 链接, 自由输入(如旧手工编号)按原样保留.
-需求↔测试关联以此列的数据源, C-c P c 勾稽时反向回填需求 :TEST-CASE:."
+需求↔测试关联以此列为数据源, 勾稽命令 (C-c P c) 反向回填需求 :TEST-CASE:."
   (let* ((buf (my/org-capture--project-buffer))
          (entries (and buf (with-current-buffer buf
                              (seq-filter (lambda (e) (plist-get e :phase))
@@ -848,7 +848,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
        (nth 3 (my/org-capture--record-spec my/org-capture--record-kind))))))
 
 (defvar my/org-capture--review-stage nil
-  "本次 pe 捕获选中的基线评审阶段 (评审对象为「本阶段基线」时非 nil),
+  "本次 pe 捕获选中的基线评审阶段 (评审对象为「本阶段基线」时非 nil, 否则为 nil).
 供模板展开选版本与落表后提示冻结.")
 
 (defun my/org-capture--review-object ()
@@ -892,7 +892,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
           (my/org-project--milestone-review-table-goto (plist-get milestone :id)))))))
 
 (defun my/org-capture-review-finalize ()
-  "pe 落表后: 基线评审且最新基线判据已满足时, 询问是否冻结."
+  "捕获 pe 落表后: 基线评审且最新基线判据已满足时, 询问是否冻结."
   (let ((stage my/org-capture--review-stage))
     (setq my/org-capture--review-stage nil)
     (when (and stage
@@ -945,10 +945,13 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
                                     '("研制过程" "需求" "需求变更记录")
                                     "req-changes"))
 
+(defconst my/org-project--test-reverify-mark "⚠ 待重新验证"
+  "需求变更后前置到 :TEST-CASE: 的待重新验证标记 (勾稽报告提示, 复验通过后手工删除).")
+
 (defun my/org-capture-req-change-finalize ()
   "需求变更(pc)落表后联动: 将对应需求移出基线并置回 DESIGN.
 已有测试证据的在 :TEST-CASE: 前置 ⚠ 待重新验证 标记(勾稽提示,
-复验通过后手工删除). 中止捕获(org-note-abort)或未选择需求时不联动."
+复验通过后手工删除), 中止捕获(org-note-abort)或未选择需求时不联动."
   (let ((id my/org-capture--req-change-id)
         (buf my/org-capture--last-buffer))
     (setq my/org-capture--req-change-id nil)
@@ -1124,8 +1127,8 @@ ROW 为 org-table 行号(不含分隔行, 表头为 1), POS 为行首位置."
     (nreverse entries)))
 
 (defun my/org-project--record-sw-fields (record)
-  "按列映射返回记录 RECORD 对应软件状态「测试项」表的 4 格文本
-(测试项 指标要求 实测结果 结论), 无对应列或缺格为空串."
+  "按列映射返回记录 RECORD 对应软件状态「测试项」表的 4 格文本.
+4 格依次为测试项/指标要求/实测结果/结论, 无对应列或缺格为空串."
   (let ((map (nth 4 (my/org-capture--record-spec (plist-get record :kind))))
         (header (plist-get record :header))
         (cells (plist-get record :cells)))
@@ -1165,9 +1168,9 @@ LABEL 形如 「400_UT-001 电压稳定度 (Test/400)」, PLIST 含 :file."
                 cands))))
 
 (defun my/org-project-record-number ()
-  "为「测试与试验记录」章的记录行按类型补编号 (幂等, C-c P n).
+  "为「测试与试验记录」章的记录行按类型补编号 (C-c P n), 幂等.
 编号列缺失的表补列(插到第 2 列), 编号为空的行按表类型补号;
-已有编号(含手工编号)保留. 新记录的编号由 pl 捕获自动生成."
+已有编号(含手工编号)保留, 新记录的编号由 pl 捕获自动生成."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "请在项目 org 文件中执行"))
@@ -1201,7 +1204,7 @@ LABEL 形如 「400_UT-001 电压稳定度 (Test/400)」, PLIST 含 :file."
                                         (plist-get rec :file)))))
 
 (defun my/org-project--record-link-search (search)
-  "org-execute-file-search-functions 处理器: 按记录编号 SEARCH 直达记录行.
+  "处理器 (org-execute-file-search-functions): 按记录编号 SEARCH 直达记录行.
 软件状态「测试项」表的记录链接([[file:..::编号][..]])常与目标同文件且链接
 在前(记录章在文件后部), org 文本搜索会先命中链接自身的路径部分而落回原地;
 这里按编号精确匹配「测试与试验记录」章的记录行, 命中即跳转并返回非 nil.
@@ -1299,7 +1302,7 @@ KIND 为 changes(修改项表)或 tests(测试项表), BEG/END 约定同记录�
     (delete-dups ids)))
 
 (defun my/org-project--task-change-row (task code)
-  "生成软件状态「修改项」表一行的单元格列表: 任务链接+标题, 人工列留空."
+  "生成软件状态「修改项」表一行的单元格列表: TASK 为研制任务条目, CODE 为项目代号; 首格为任务链接+标题, 人工列留空."
   (list (format "[[#%s][%s]] %s"
                 (plist-get task :id)
                 (my/org-project--id-short (plist-get task :id) code)
@@ -1307,7 +1310,7 @@ KIND 为 changes(修改项表)或 tests(测试项表), BEG/END 约定同记录�
         "" "" ""))
 
 (defun my/org-project--record-test-row (record file)
-  "生成软件状态「测试项」表一行的单元格列表: 记录链接+测试项, 其余取记录数据."
+  "生成软件状态「测试项」表一行的单元格列表: RECORD 为记录条目, FILE 为项目文件; 首格为记录链接+测试项, 其余取记录数据."
   (let ((fields (my/org-project--record-sw-fields record)))
     (cons (format "%s %s"
                   (my/org-project--record-link (plist-get record :id) file file)
@@ -1371,8 +1374,8 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
           (setq n (1+ n)))))
     n))
 
-(defun my/org-project--sw-append-rows (beg end rows)
-  "在 BEG..END 表末追加 ROWS (单元格列表), 返回追加行数."
+(defun my/org-project--sw-append-rows (end rows)
+  "在 END 处的表末追加 ROWS (单元格列表), 返回追加行数."
   (if (null rows)
       0
     (save-excursion
@@ -1406,7 +1409,7 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
   "为软件状态条目登记修改项/测试项 (C-c P v).
 多选研制任务与测试/试验记录生成两表行(行内链接引用); 已归属其他版本的
 不再候选, 表内已有行同步最新数据(修改项表的原因/影响范围/关联议题留空
-手补, 不被覆盖). ps 捕获时也走同一套选择, 未选的随时在这里补."
+手补, 不被覆盖), ps 捕获时也走同一套选择, 未选的随时在这里补."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "请在项目 org 文件中执行"))
@@ -1446,8 +1449,7 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
         ;; 同步改写会移动表末位置, 重新定位后再追加
         (setq tbl (seq-find (lambda (r) (eq (nth 0 r) kind))
                             (my/org-project--sw-table-regions mbeg mend)))
-        (setq added (+ added (my/org-project--sw-append-rows
-                              (nth 1 tbl) (nth 2 tbl) new-rows)))))
+        (setq added (+ added (my/org-project--sw-append-rows (nth 2 tbl) new-rows)))))
     (dolist (tbl (my/org-project--sw-table-regions mbeg mend))
       (save-excursion
         (goto-char (nth 1 tbl))
@@ -1519,7 +1521,7 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
                          (my/org-project--req-entries))))
 
 (defun my/org-project--milestone-chain-summary (from to)
-  "返回里程碑结算概况与本阶段基线冻结状态 (供切换日志)."
+  "返回 FROM→TO 转段的里程碑结算概况与本阶段基线冻结状态 (供切换日志)."
   (let* ((milestone (my/org-project--milestone-for from to))
          (row (my/org-project--stage-latest-baseline from))
          (bl (cond
@@ -1535,7 +1537,7 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
             bl)))
 
 (defun my/org-project--insert-switch-log (from to reason result &optional forced)
-  "在「日志」章插入阶段切换记录; FORCED 非 nil 表示强制转段."
+  "在「日志」章插入 FROM→TO 阶段切换记录, REASON 为转段原因, RESULT 为转段结论; FORCED 非 nil 表示强制转段."
   (goto-char (point-min))
   (re-search-forward "^\* 日志[ \t]*$")
   (org-end-of-subtree t t)
@@ -1623,7 +1625,7 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
 (defun my/org-project--req-entries ()
   "扫描「需求」章, 返回需求条目的 plist 列表.
 每项含 :pos :id :title :type :phase :baseline :design :module :test-case
-:inherited :todo. 只收同时带 CUSTOM_ID 与 :PHASE: 的条目 (pn 捕获的需求;
+:inherited :todo; 只收同时带 CUSTOM_ID 与 :PHASE: 的条目 (pn 捕获的需求;
 小节标题无 CUSTOM_ID, 里程碑条目在「里程碑」章, 均自动排除)."
   (let (entries)
     (org-with-wide-buffer
@@ -1763,9 +1765,6 @@ PARAMS 的 :phase 指定阶段名; 数据源自「需求」章 baseline-records,
 ;; 非链接文本保留, 并集去重). pc 需求变更会给已有证据前置 ⚠ 待重新验证 标记,
 ;; 复验通过后手工删除; 单向关联(需求侧链接了记录但记录行未回指)由勾稽提示.
 
-(defconst my/org-project--test-reverify-mark "⚠ 待重新验证"
-  "需求变更后前置到 :TEST-CASE: 的待重新验证标记 (勾稽报告提示, 复验通过后手工删除).")
-
 (defun my/org-project--hash-link-targets (text)
   "返回 TEXT 中 [[#ID][..]] 形式链接的目标 ID 列表 (保持顺序)."
   (let ((re "\\[\\[#\\([^][]+\\)\\]\\[[^][]*\\]\\]") ids)
@@ -1802,7 +1801,7 @@ PARAMS 的 :phase 指定阶段名; 数据源自「需求」章 baseline-records,
 (defun my/org-project-req-test-sync ()
   "勾稽需求↔测试/试验记录并回填 :TEST-CASE: (C-c P c).
 从记录行「验证需求」列反向汇总每条需求被哪些记录验证, 回填其 :TEST-CASE:
-(并集去重, 逆序改写避免条目位置漂移), 并在 *需求测试勾稽* 列出缺口:
+ (并集去重, 逆序改写避免条目位置漂移), 并在 *需求测试勾稽* 列出缺口:
 未覆盖需求、变更后待重新验证、单向关联、未关联需求的记录."
   (interactive)
   (unless (and (derived-mode-p 'org-mode) (buffer-file-name))
@@ -1949,10 +1948,10 @@ TEXT 标题行以单个 * 开头, 插入时调整为小节下一层级 (骨架�
 
 (defun my/org-project-req-import ()
   "从源项目已冻结基线导入需求条目, 复制建档并留 :INHERITED: 溯源链接 (C-c P i).
-借源项目「已冻结」的需求基线(默认最新), 不是某研制阶段的实时状态. 条目用本项目
+借源项目「已冻结」的需求基线(默认最新), 不是某研制阶段的实时状态; 条目用本项目
 编号重新建档: :SOURCE: 继承复用, :PHASE: 保留源值, :BASELINE:/:DESIGN:/:MODULE:/
 :TEST-CASE: 清空待本项目重新圈定与验证, 正文原样复制; 源条目链接记入 :INHERITED:
-([[file:相对路径::#源ID][源ID]], 点击直达源条目)."
+ ([[file:相对路径::#源ID][源ID]], 点击直达源条目)."
   (interactive)
   (unless (and (derived-mode-p 'org-mode) (buffer-file-name))
     (user-error "请在项目 org 文件中执行"))
@@ -2062,7 +2061,7 @@ TEXT 标题行以单个 * 开头, 插入时调整为小节下一层级 (骨架�
       "中"))
 
 (defun my/org-capture--risk-prompt (kind label default)
-  "提示风险评估项 KIND (probability/impact), 记录取值供模板展开."
+  "提示风险评估项 KIND (probability/impact), LABEL 为提示名, DEFAULT 为默认值; 记录取值供模板展开."
   (let ((value (completing-read (format "%s: " label)
                                 '("高" "中" "低") nil t nil nil default)))
     (if (eq kind 'probability)
@@ -2233,7 +2232,7 @@ TEXT 标题行以单个 * 开头, 插入时调整为小节下一层级 (骨架�
     (nreverse items)))
 
 (defun my/org-project--issue-new (title phase)
-  "在「议题」章新建 REPORT 条目, 返回其 CUSTOM_ID.
+  "在「议题」章新建 REPORT 条目, 标题为 TITLE, 来源为 PHASE, 返回其 CUSTOM_ID.
 插入过程不移动调用方的 point (风险条目写完属性还要用)."
   (let ((id (my/org-capture--next-id "ISSUE")))
     (save-excursion
@@ -2548,7 +2547,7 @@ PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
     ("M4" "鉴定测试与试验闭环"
          "软件状态已固化归档"
          "遗留风险已挂账"))
-  "里程碑的判据清单: 里程碑编号. (基线冻结判据见 my/org-project--baseline-criteria)")
+  "里程碑的判据清单(按编号列出), 基线冻结判据见 my/org-project--baseline-criteria.")
 
 (defun my/org-project--milestone-criteria-text (key indent)
   "生成判据 checkbox 文本, KEY 为里程碑编号, INDENT 为缩进."
@@ -2557,7 +2556,7 @@ PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
              ""))
 
 (defun my/org-project--milestone-review-table-text (suffix indent)
-  "生成名为 review-SUFFIX 的空评审表文本, INDENT 为缩进."
+  "生成 review-SUFFIX 名称的空评审表文本, SUFFIX 为表名后缀, INDENT 为缩进."
   (concat indent "#+NAME: review-" suffix "\n"
           indent "| 日期 | 评审类型 | 评审对象 | 人员 | 结论 | 遗留问题 | 待办 |\n"
           indent "|------+----------+----------+------+------+----------+------|\n"))
@@ -2589,7 +2588,7 @@ LEVEL 为「里程碑」章层级, 里程碑标题取其下一级 (默认 2)."
   "「里程碑」章的说明文字.")
 
 (defun my/org-project--milestones-text (code &optional level)
-  "生成「里程碑」章完整子树文本: 汇总块 + 四个转段里程碑.
+  "生成「里程碑」章完整子树文本: CODE 为项目代号, 汇总块 + 四个转段里程碑.
 LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
   (let ((level (or level 2)))
     (concat
@@ -2640,7 +2639,7 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
             (my/org-project--milestone-entries)))
 
 (defun my/org-project--milestone-open-p (milestone)
-  "里程碑是否未完成 (TODO 或未状态化)."
+  "MILESTONE 是否未完成 (TODO 或未状态化)."
   (not (member (plist-get milestone :todo) '("DONE" "CANCELLED"))))
 
 (defun my/org-project--milestone-goto (id)
@@ -2666,7 +2665,7 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
     (list done total (nreverse gaps))))
 
 (defun my/org-project--milestone-requires-unmet (milestone)
-  "返回里程碑 :REQUIRES: 中未完成的前置里程碑 ID 列表."
+  "返回 MILESTONE 的 :REQUIRES: 中未完成的前置里程碑 ID 列表."
   (let (unmet)
     (dolist (id (split-string (or (plist-get milestone :requires) "") "[ ,]+" t))
       (let ((g (my/org-project--milestone-get id)))
@@ -2675,7 +2674,7 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
     (nreverse unmet)))
 
 (defun my/org-project--milestone-gaps (milestone)
-  "返回里程碑的缺口描述列表 (判据未勾 + 前置里程碑未完成)."
+  "返回 MILESTONE 的缺口描述列表 (判据未勾 + 前置里程碑未完成)."
   (let* ((id (plist-get milestone :id))
          (stats (my/org-project--milestone-criteria-stats id))
          (done (nth 0 stats))
@@ -2689,7 +2688,7 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
      (mapcar (lambda (req) (format "前置里程碑未关闭: %s" req)) unmet))))
 
 (defun my/org-project--milestone-review-count (id)
-  "返回里程碑评审表的数据行数."
+  "返回 ID 对应里程碑的评审表数据行数."
   (unless (my/org-project--milestone-goto id)
     (user-error "未找到里程碑 %s" id))
   (let ((end (save-excursion (org-end-of-subtree t t) (point)))
@@ -2710,7 +2709,7 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
     n))
 
 (defun my/org-project--milestone-review-table-ensure (id)
-  "确保里程碑下有 review-<后缀> 表, 缺失则在里程碑子树末尾补一张."
+  "确保 ID 对应里程碑下有 review-<后缀> 表, 缺失则在里程碑子树末尾补一张."
   (unless (my/org-project--milestone-goto id)
     (user-error "未找到里程碑 %s" id))
   (let* ((beg (point))
@@ -2726,7 +2725,7 @@ LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
       (my/org-project--align-tables))))
 
 (defun my/org-project--milestone-review-table-goto (id)
-  "定位到里程碑的评审表 #+NAME 行, 缺表则补建."
+  "定位到 ID 对应里程碑的评审表 #+NAME 行, 缺表则补建."
   (my/org-project--milestone-review-table-ensure id)
   (my/org-project--milestone-goto id)
   (let ((end (save-excursion (org-end-of-subtree t t) (point)))
@@ -2772,14 +2771,14 @@ FORCE 非 nil 时跳过确认, 并绕过 checkbox 依赖强制关闭."
             (my/org-project--milestone-entries)))
 
 (defun my/org-project--milestone-label (milestone)
-  "里程碑的补全显示文本."
+  "MILESTONE 的补全显示文本."
   (format "%s %s [%s]"
           (plist-get milestone :suffix)
           (or (plist-get milestone :title) "")
           (or (plist-get milestone :todo) "无状态")))
 
 (defun my/org-project--milestone-sort-key (milestone)
-  "里程碑的排序键: 按编号数字排序 (M1 < M2 ...)."
+  "MILESTONE 的排序键: 按编号数字排序 (M1 < M2 ...)."
   (let ((suffix (plist-get milestone :suffix)))
     (if (and suffix (string-match "\\([0-9]+\\)\\'" suffix))
         (string-to-number (match-string 1 suffix))
@@ -2925,7 +2924,7 @@ M4 终点里程碑只能从这里关闭."
         (org-table-align)))))
 
 (defun my/org-project--rb-number (ver)
-  "从 RB<n> 提取 n; 非法版本返回 0."
+  "从 VER 的 RB<n> 形式提取 n; 非法版本返回 0."
   (if (and ver (string-match "\\`RB\\([0-9]+\\)\\'" ver))
       (string-to-number (match-string 1 ver))
     0))
@@ -3269,7 +3268,7 @@ IDX 为阶段序号(评审表名 baseline-review-IDX 后缀), INDENT 为缩进;
 
 (defun my/org-project-baseline-freeze (stage &optional force)
   "冻结阶段 STAGE 的最新基线: 列缺口并二次确认后置「已冻结」.
-FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填评审表该版本结论."
+FORCE 非 nil 跳过确认 (pe/圈定收尾联动), 评审结论为空时回填评审表该版本结论."
   (widen)
   (my/org-project--stage-baseline-ensure stage)
   (let ((row (my/org-project--stage-latest-baseline stage)))
@@ -3305,7 +3304,7 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
                (if had-gaps "（缺口已确认）" "")))))
 
 (defun my/org-project-baseline-unfreeze (stage &optional force)
-  "解冻阶段 STAGE 的最新基线: 置回「待评审」. FORCE 非 nil 跳过确认."
+  "解冻阶段 STAGE 的最新基线: 置回「待评审」, FORCE 非 nil 跳过确认."
   (widen)
   (let ((row (my/org-project--stage-latest-baseline stage)))
     (unless row (user-error "阶段「%s」还没有基线" stage))
@@ -3604,7 +3603,7 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
                "%(my/org-capture--log-fields)\n")
       :empty-lines 1)
     )
-  "项目管理捕获模板（p 组），加载时插入 org-capture-templates。")
+  "项目管理捕获模板（p 组），加载时插入 org-capture-templates.")
 
 ;; 插到「参考」组之前，保持 c → j → p → r → x 的菜单顺序
 (let ((before (seq-take-while (lambda (tpl) (not (equal (car tpl) "r")))
