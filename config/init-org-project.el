@@ -566,19 +566,22 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
   "捕获软件状态(ps)生成的 CUSTOM_ID, 供收尾对齐「修改项」「测试项」两表.")
 
 (defun my/org-capture--sw-custom-id ()
-  "生成软件状态 CUSTOM_ID: R+软件代号/版本号."
+  "生成软件状态 CUSTOM_ID: 软件代号/版本号."
   (setq my/org-capture--sw-id-value
-        (format "R%s/%s" (my/org-capture--sw-code) (my/org-capture--version))))
+        (format "%s/%s" (my/org-capture--sw-code) (my/org-capture--version))))
 
 (defun my/org-capture--sw-change-rows ()
-  "生成软件状态「修改项」表数据行 (供 ps 模板展开), 未选则为空."
+  "生成软件状态「修改项」表数据行 (供 ps 模板展开), 未选则为空.
+非空时末尾多带一个换行: ps 模板里「测试项」表紧跟其后, org 把连续
+以 | 开头的行当同一张表, 必须空行隔开才会分成两张表."
   (let* ((code (my/org-capture--code))
          (tasks (with-current-buffer (my/org-capture--project-buffer)
-                  (my/org-project--sw-pick-tasks))))
-    (mapconcat (lambda (task)
-                 (my/org-project--row-text
-                  (my/org-project--task-change-row task code)))
-               tasks "\n")))
+                  (my/org-project--sw-pick-tasks)))
+         (rows (mapconcat (lambda (task)
+                            (my/org-project--row-text
+                             (my/org-project--task-change-row task code)))
+                          tasks "\n")))
+    (if (string-empty-p rows) rows (concat rows "\n"))))
 
 (defun my/org-capture--sw-test-rows ()
   "生成软件状态「测试项」表数据行 (供 ps 模板展开), 未选则为空."
@@ -638,7 +641,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
 
 (defun my/org-project--version-entries ()
   "返回项目内软件状态条目列表: ((CUSTOM_ID 标题) ...).
-以 CUSTOM_ID 前缀 R_ 识别, 兼容旧条目的 :VERSION: 属性."
+以 CUSTOM_ID 含 / 识别 (旧式带 R 前缀与新式不带的都算), 兼容旧条目的
+:VERSION: 属性."
   (let ((buf (my/org-capture--project-buffer))
         entries)
     (when buf
@@ -648,9 +652,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
          (while (re-search-forward "^\\*+ " nil t)
            (let ((id (or (org-entry-get (point) "CUSTOM_ID") ""))
                  (legacy (org-entry-get (point) "VERSION")))
-             (when (or (and (string-prefix-p "R" id)
-                            (string-match-p "/" id))
-                       legacy)
+             (when (or (string-match-p "/" id) legacy)
                (push (list id (org-get-heading t t t t)) entries)))))))
     (nreverse entries)))
 
@@ -1179,6 +1181,25 @@ LABEL 形如 「400_UT-001 电压稳定度 (Test/400)」, PLIST 含 :file."
     (insert (my/org-project--record-link (plist-get rec :id)
                                         (plist-get rec :file)))))
 
+(defun my/org-project--record-link-search (search)
+  "org-execute-file-search-functions 处理器: 按记录编号 SEARCH 直达记录行.
+软件状态「测试项」表的记录链接([[file:..::编号][..]])常与目标同文件且链接
+在前(记录章在文件后部), org 文本搜索会先命中链接自身的路径部分而落回原地;
+这里按编号精确匹配「测试与试验记录」章的记录行, 命中即跳转并返回非 nil.
+无匹配(含非项目文件)返回 nil, 交给 org 常规搜索."
+  (when (derived-mode-p 'org-mode)
+    (let* ((id (string-trim search))
+           (pos (org-with-wide-buffer
+                 (save-excursion
+                   (plist-get (seq-find (lambda (e) (string= (plist-get e :id) id))
+                                        (my/org-project--record-entries))
+                              :pos)))))
+      (when pos
+        (unless (and (<= (point-min) pos) (>= (point-max) pos))
+          (widen))
+        (goto-char pos)
+        t))))
+
 ;; ---- 软件状态 Software state ----
 ;; 版本条目(ps)的「修改项」「测试项」两表结合研制任务(pt)与测试/试验记录(pl)
 ;; 自动登记. 归属即引用: 任务/记录被某版本的表行(带链接)引用即视为归属该版本,
@@ -1211,9 +1232,7 @@ BEG/END 为条目标题行首与子树末尾."
       (while (re-search-forward "^\\*+ " nil t)
         (let ((id (or (org-entry-get (point) "CUSTOM_ID") ""))
               (legacy (org-entry-get (point) "VERSION")))
-          (when (or (and (string-prefix-p "R" id)
-                         (string-match-p "/" id))
-                    legacy)
+          (when (or (string-match-p "/" id) legacy)
             (push (list id (org-get-heading t t t t)
                         (line-beginning-position)
                         (save-excursion (org-end-of-subtree t t) (point)))
@@ -1351,8 +1370,7 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
     (when (ignore-errors (progn (org-back-to-heading t) t))
       (let ((id (or (org-entry-get (point) "CUSTOM_ID") ""))
             (legacy (org-entry-get (point) "VERSION")))
-        (when (or (and (string-prefix-p "R" id) (string-match-p "/" id))
-                  legacy)
+        (when (or (string-match-p "/" id) legacy)
           (list id (org-get-heading t t t t)
                 (line-beginning-position)
                 (save-excursion (org-end-of-subtree t t) (point))))))))
@@ -3184,6 +3202,11 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-refresh-dblocks t)
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-review-finalize t)
 (add-hook 'org-capture-after-finalize-hook #'my/org-capture-sw-finalize t)
+
+;; 记录链接按编号精确跳转: 软件状态「测试项」表的 [[file:..::编号][..]] 链接
+;; 与记录行同文件且链接在前, org 文本搜索先命中链接自身落回原地;
+;; 注册后 file 链接的 ::编号 搜索先按记录行编号匹配, 命中直达.
+(add-hook 'org-execute-file-search-functions #'my/org-project--record-link-search)
 
 ;; 项目管理捕获模板（p 组）
 (defconst my/org-project--capture-templates
