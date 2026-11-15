@@ -12,7 +12,7 @@
 ;;   1. 项目文件与编号 —— projects/<工程代号>/<配置项>.org 布局、CUSTOM_ID 生成
 ;;   2. 研制阶段       —— :CURRENT-STATE: 唯一阶段、阶段子树模板与阶段切换
 ;;   3. 里程碑           —— M1..M4 转段检查点、结算与 milestone-summary
-;;   4. 需求与基线     —— 需求条目建档、全量重圈、基线记录表与快照动态块
+;;   4. 需求与基线     —— 需求条目建档、全量重圈、基线记录表与快照动态块、继承导入
 ;;   5. 风险与议题     —— 三态风险台账、评估/转议题/汇总、议题落点
 ;;   6. 捕获与视图     —— p 组模板、评审/测试记录落点与按类型编号、需求-测试勾稽、agenda 风险与里程碑台账
 ;;
@@ -340,7 +340,7 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "   | 运行环境   |      | 裸机/OS 及版本 |\n"
    "   | 语言工具链 |      | 编译器、调试器 |\n\n"
    "# 本标题为项目引用锚点(CUSTOM_ID=产品代号), 其他项目引用写法:\n"
-   "# [[file:projects/工程代号/配置项代号.org#" product "][" name "]]\n\n"
+   "# [[file:projects/工程代号/配置项代号.org::#" product "][" name "]]\n\n"
    "* 研制过程\n"
    "   :PROPERTIES:\n"
    "   :CURRENT-STATE: 方案设计\n"
@@ -352,7 +352,9 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "# 需求条目在此统一建档（唯一编辑处）, 用 pn 捕获; :PHASE: 取值 = 阶段名\n"
    "# (方案设计/样机研制/工程研制/状态鉴定, 可多值) 或 通用; 各阶段的动态块\n"
    "# 自动引用, 刷新用 C-c C-x C-u. 追踪矩阵在评审前逐条勾稽: C-c P c 从\n"
-    "# 测试记录「验证需求」列回填 :TEST-CASE: 并列缺口(测试证据随 pl 登记).\n\n"
+    "# 测试记录「验证需求」列回填 :TEST-CASE: 并列缺口(测试证据随 pl 登记).\n"
+    "# 继承旧项目需求用 C-c P i 从源项目已冻结基线导入(:SOURCE: 继承复用,\n"
+    "# :INHERITED: 溯源链接直达源条目).\n\n"
    "*** 功能需求\n\n"
    "*** 性能需求\n\n"
    "*** 接口需求\n\n"
@@ -1620,9 +1622,9 @@ ID-ROWS 为 ((ID CELLS) ...), 按行首格的链接目标匹配; KEEP 非 nil �
 ;; ---- 需求动态块 Requirement dynamic block ----
 (defun my/org-project--req-entries ()
   "扫描「需求」章, 返回需求条目的 plist 列表.
-每项含 :pos :id :title :type :phase :baseline :design :module :test-case :todo.
-只收同时带 CUSTOM_ID 与 :PHASE: 的条目 (pn 捕获的需求; 小节标题无
-CUSTOM_ID, 里程碑条目在「里程碑」章, 均自动排除)."
+每项含 :pos :id :title :type :phase :baseline :design :module :test-case
+:inherited :todo. 只收同时带 CUSTOM_ID 与 :PHASE: 的条目 (pn 捕获的需求;
+小节标题无 CUSTOM_ID, 里程碑条目在「里程碑」章, 均自动排除)."
   (let (entries)
     (org-with-wide-buffer
      (save-excursion
@@ -1642,6 +1644,7 @@ CUSTOM_ID, 里程碑条目在「里程碑」章, 均自动排除)."
                              :design (org-entry-get (point) "DESIGN")
                              :module (org-entry-get (point) "MODULE")
                              :test-case (org-entry-get (point) "TEST-CASE")
+                             :inherited (org-entry-get (point) "INHERITED")
                              :todo (my/org-project--state))
                        entries))))))))
     (nreverse entries)))
@@ -1812,6 +1815,8 @@ PARAMS 的 :phase 指定阶段名; 数据源自「需求」章 baseline-records,
          (rec-ids (mapcar (lambda (e) (plist-get e :id)) records))
          (rec-refs (make-hash-table :test #'equal))   ; 记录ID -> 它引用的需求ID
          (ref-map (make-hash-table :test #'equal))    ; 需求ID -> 引用它的记录
+         (inherited (seq-filter (lambda (e) (org-string-nw-p (plist-get e :inherited)))
+                                reqs))
          (unlinked nil) (missing nil) (reverify nil) (oneway nil)
          (filled 0))
     (dolist (rec records)
@@ -1854,10 +1859,11 @@ PARAMS 的 :phase 指定阶段名; 数据源自「需求」章 baseline-records,
           (erase-buffer)
           (insert (format "项目: %s (%s)\n\n" proj file))
           (insert (format (concat "勾稽统计: 需求 %d 条 · 有测试证据 %d · 未覆盖 %d"
-                                  " · 待重新验证 %d · 单向关联 %d · 记录 %d 条"
-                                  " · 未关联 %d · 回填 %d 条\n\n")
+                                  " · 待重新验证 %d · 单向关联 %d · 继承 %d"
+                                  " · 记录 %d 条 · 未关联 %d · 回填 %d 条\n\n")
                           (length reqs) (- (length reqs) (length missing))
                           (length missing) (length reverify) (length oneway)
+                          (length inherited)
                           (length records) (length unlinked) filled))
           (if (and (null missing) (null reverify) (null oneway) (null unlinked))
               (insert "勾稽缺口: (无)\n")
@@ -1881,12 +1887,150 @@ PARAMS 的 :phase 指定阶段名; 数据源自「需求」章 baseline-records,
                 (insert (format "  - %s %s (%s)\n"
                                 (plist-get r :id) (plist-get r :title)
                                 (car (my/org-capture--record-spec (plist-get r :kind))))))))
+          (when inherited
+            (insert "\n继承自其他项目(核对源项目基线是否变更, :INHERITED: 链接直达源条目):\n")
+            (dolist (e (reverse inherited))
+              (insert (format "  - %s %s <- %s\n"
+                              (plist-get e :id) (plist-get e :title)
+                              (plist-get e :inherited)))))
           (let ((org-inhibit-startup t)) (org-mode))
           (goto-char (point-min))
           (setq buffer-read-only t)))
       (display-buffer buf))
     (message "需求-测试勾稽: 回填 %d 条, 未覆盖 %d, 待重新验证 %d, 单向关联 %d, 未关联记录 %d"
              filled (length missing) (length reverify) (length oneway) (length unlinked))))
+
+
+;; ---- 需求继承 Requirement inheritance ----
+;; 新项目借用旧项目时, 借的是源项目「已冻结的需求基线」而不是某个研制阶段:
+;; 需求统一建档在「需求」章, :PHASE: 只是适用阶段标记. 继承在新项目方案设计
+;; 阶段完成, 与新研需求一起圈进本项目基线; 测试证据不继承(源测试记录是源项目
+;; 的证据), 导入条目 :TEST-CASE: 留空, 由 C-c P c 勾稽出缺口.
+
+(defun my/org-project--req-entry-body (pos)
+  "返回 POS 处需求条目正文 (属性抽屉之后到子树末尾, 去首尾空白)."
+  (org-with-wide-buffer
+   (save-excursion
+     (goto-char pos)
+     (org-back-to-heading t)
+     (let ((beg (progn (org-end-of-meta-data) (point)))
+           (end (save-excursion (org-end-of-subtree t t) (point))))
+       (string-trim (buffer-substring-no-properties beg end))))))
+
+(defun my/org-project--req-insert-entry (type text)
+  "把需求条目文本 TEXT 插入「需求」章 TYPE 需求小节末尾 (无小节先创建).
+TEXT 标题行以单个 * 开头, 插入时调整为小节下一层级 (骨架为 ****)."
+  (goto-char (point-min))
+  (unless (re-search-forward "^\\*\\* 需求[ \t]*$" nil t)
+    (user-error "本文件无「需求」章"))
+  (let* ((chapter-end (save-excursion (org-end-of-subtree t t) (point)))
+         (section (concat (if (org-string-nw-p type) type "其他") "需求"))
+         (sec-beg (save-excursion
+                    (goto-char (point-min))
+                    (when (re-search-forward
+                           (concat "^\\*\\*\\* " (regexp-quote section) "[ \t]*$")
+                           chapter-end t)
+                      (line-beginning-position))))
+         (sec-level (if sec-beg
+                        (save-excursion (goto-char sec-beg) (org-outline-level))
+                      3)))
+    (if sec-beg
+        (goto-char (save-excursion
+                     (goto-char sec-beg)
+                     (org-end-of-subtree t t)
+                     (point)))
+      (goto-char chapter-end)
+      (insert "*** " section "\n"))
+    (skip-chars-backward " \t\n")
+    (insert "\n\n"
+            (replace-regexp-in-string
+             "\\`\\* " (concat (make-string (1+ sec-level) ?*) " ")
+             text t t))))
+
+(defun my/org-project-req-import ()
+  "从源项目已冻结基线导入需求条目, 复制建档并留 :INHERITED: 溯源链接 (C-c P i).
+借源项目「已冻结」的需求基线(默认最新), 不是某研制阶段的实时状态. 条目用本项目
+编号重新建档: :SOURCE: 继承复用, :PHASE: 保留源值, :BASELINE:/:DESIGN:/:MODULE:/
+:TEST-CASE: 清空待本项目重新圈定与验证, 正文原样复制; 源条目链接记入 :INHERITED:
+([[file:相对路径::#源ID][源ID]], 点击直达源条目)."
+  (interactive)
+  (unless (and (derived-mode-p 'org-mode) (buffer-file-name))
+    (user-error "请在项目 org 文件中执行"))
+  (let* ((files (seq-filter (lambda (f) (not (string= (cdr f) (buffer-file-name))))
+                            (my/org-project--files)))
+         (choice (completing-read "源项目(配置项): " (mapcar #'car files) nil t))
+         (src (cdr (assoc choice files)))
+         (rows (with-current-buffer (find-file-noselect src)
+                 (my/org-project--baseline-records-rows)))
+         (frozen (seq-filter
+                  (lambda (r) (string= (plist-get r :status)
+                                       my/org-project--baseline-status-frozen))
+                  rows))
+         (cands (or frozen rows))
+         (labels (mapcar (lambda (r)
+                           (format "%s %s %s" (plist-get r :ver)
+                                   (if (string= (plist-get r :status)
+                                                my/org-project--baseline-status-frozen)
+                                       "已冻结"
+                                     (if (org-string-nw-p (plist-get r :status))
+                                         (plist-get r :status) "无状态"))
+                                   (plist-get r :date)))
+                         cands)))
+    (unless cands
+      (user-error "源项目无 baseline-records 基线记录"))
+    (let* ((default (car (last labels)))
+           (vchoice (completing-read (format "基线版本(默认 %s): " default)
+                                     labels nil t nil nil default))
+           (ver (car (split-string vchoice " ")))
+           (src-reqs (with-current-buffer (find-file-noselect src)
+                       (seq-filter
+                        (lambda (e)
+                          (member ver (split-string (or (plist-get e :baseline) ""))))
+                        (my/org-project--req-entries))))
+           (rlab (lambda (e) (format "%s %s" (plist-get e :id) (plist-get e :title))))
+           (sel (completing-read-multiple
+                 (format "导入需求(%s, 空=取消, 逗号分隔多选): " ver)
+                 (mapcar rlab src-reqs)))
+           (picked (delq nil (mapcar (lambda (s)
+                                       (seq-find (lambda (e)
+                                                   (string= s (funcall rlab e)))
+                                                 src-reqs))
+                                     sel))))
+      (unless picked
+        (user-error "未选择需求, 取消导入"))
+      (let ((created (format-time-string "[%Y-%m-%d %a]"))
+            (rel (file-relative-name src (file-name-directory (buffer-file-name))))
+            (src-code (file-name-base src))
+            (n 0))
+        (dolist (e picked)
+          (let* ((type (if (org-string-nw-p (plist-get e :type))
+                           (plist-get e :type) "其他"))
+                 (letter (or (cdr (assoc type my/org-capture--req-id-letters)) "O"))
+                 (new-id (my/org-capture--next-id (concat "REQ-" letter)))
+                 (link (format "[[file:%s::#%s][%s]]" rel (plist-get e :id)
+                               (my/org-project--id-short (plist-get e :id)
+                                                         src-code)))
+                 (body (with-current-buffer (find-file-noselect src)
+                         (my/org-project--req-entry-body (plist-get e :pos))))
+                 (text (concat "* DESIGN " (plist-get e :title) "\n"
+                               "  :PROPERTIES:\n"
+                               "  :CUSTOM_ID: " new-id "\n"
+                               "  :TYPE: " type "\n"
+                               "  :SOURCE: 继承复用\n"
+                               "  :INHERITED: " link "\n"
+                               "  :PHASE: " (or (plist-get e :phase) "") "\n"
+                               "  :BASELINE:\n"
+                               "  :DESIGN:\n"
+                               "  :MODULE:\n"
+                               "  :TEST-CASE:\n"
+                               "  :CREATED: " created "\n"
+                               "  :END:\n"
+                               (if (org-string-nw-p body)
+                                   (concat "\n" body "\n") ""))))
+            (my/org-project--req-insert-entry type text)
+            (setq n (1+ n))))
+        (message "已从「%s」基线 %s 导入需求 %d 条 (:INHERITED: 溯源, 测试证据待重验证)"
+                 choice ver n)))))
 
 
 ;; ---- 风险 Risk ----
@@ -3310,6 +3454,8 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 ;; 存量行补编号, `C-c P l' 插入记录引用链接, `C-c P t' 按编号跳转记录行.
 ;; 需求-测试勾稽: `C-c P c' 从记录行「验证需求」列回填 :TEST-CASE: 并列缺口
 ;; (未覆盖/待重新验证/单向关联/未关联记录).
+;; 需求继承: `C-c P i' 从源项目已冻结基线导入需求(复制建档+:INHERITED: 溯源,
+;; 测试证据不继承, :TEST-CASE: 留空待重验证).
 ;; 软件状态: `C-c P v' 登记修改项/测试项(从研制任务与测试记录多选, 补行+同步
 ;; 最新数据, 归属即引用); ps 捕获时也走同一套选择.
 ;; C-c 大写字母为用户保留前缀, org-mode-map 未占用 C-c P.
@@ -3333,6 +3479,8 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动). 评审结论为空时回填�
 (define-key org-mode-map (kbd "C-c P l") #'my/org-project-record-link-insert)
 (global-set-key (kbd "C-c P c") #'my/org-project-req-test-sync)
 (define-key org-mode-map (kbd "C-c P c") #'my/org-project-req-test-sync)
+(global-set-key (kbd "C-c P i") #'my/org-project-req-import)
+(define-key org-mode-map (kbd "C-c P i") #'my/org-project-req-import)
 (global-set-key (kbd "C-c P v") #'my/org-project-version-register)
 (define-key org-mode-map (kbd "C-c P v") #'my/org-project-version-register)
 
