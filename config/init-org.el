@@ -11,7 +11,7 @@
 ;;
 ;;   1. 按键 Keybindings —— 全局 / Agenda / Org 按键绑定
 ;;   2. 外观 Appearance  —— 字体、标题层级、符号美化（org-modern）、强调显示（org-appear）
-;;   3. 核心 Core        —— 目录文件、显示折叠、列表图片、TODO 关键字、标签、日志、refile、LaTeX 预览
+;;   3. 核心 Core        —— 目录文件、显示折叠、列表图片、表格自动对齐、TODO 关键字、标签、日志、refile、LaTeX 预览
 ;;   4. 日程 Agenda      —— 时间线、视图定制（org-super-agenda）、appt 提醒
 ;;   5. 捕获 Capture     —— 通用模板、目标定位、收尾钩子
 ;;   6. 扩展 Extensions  —— org-id、org-super-links
@@ -224,10 +224,26 @@
 
 ;;; 3. 核心 Core ---------------------------------------------------------------
 
+;; 打开 Org 文件时自动对齐全部表格（等价于对每张表执行 C-c C-c）。
+;; `org-table-map-tables' 经 org-element 判定表格边界：只处理 Org 表格，
+;; table.el 表格与源码块中以 `|' 开头的行都不会被误改。对齐仅改动空白：
+;; 不记 undo、不改 modified 标志，单纯浏览不会把文件标脏；之后正常编辑
+;; 保存时，对齐结果随内容一起写入文件。
+(defun my/org-table-align-all ()
+  "对齐当前缓冲区中的所有 Org 表格."
+  (unless buffer-read-only
+    (save-match-data
+      (let ((buffer-undo-list t)
+            (modified (buffer-modified-p)))
+        (org-with-wide-buffer
+         (org-table-map-tables #'org-table-align t 'org))
+        (set-buffer-modified-p modified)))))
+
 (use-package org
   :ensure nil
   :mode ("\\.org\\'" . org-mode)
-  :hook (org-mode . visual-line-mode)
+  :hook ((org-mode . visual-line-mode)
+         (org-mode . my/org-table-align-all))
   :custom
   ;; ---- 显示与折叠 ----
   ;; 标题行折叠符号
