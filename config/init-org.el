@@ -346,7 +346,7 @@
      ;; CONFIRMED : 已确认(完成测试及验证)
      ;; DEPRECATED: 已废弃，不再维护
      ;; ARCHIVED  : 已归档
-     (sequence "DESIGN(s)" "DEVELOP(p!)" "CONFIRMED(e!)" "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
+     (sequence "DESIGN(s)" "DEVELOP(p!)" "|" "CONFIRMED(e!)" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
 
      ;; --- 风险跟踪状态 ---
      ;; 风险 = 未发生的不确定事件; 已发生的转议题, 不双轨跟踪.
