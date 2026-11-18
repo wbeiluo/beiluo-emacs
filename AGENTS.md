@@ -52,7 +52,22 @@ emacs --batch -Q --eval '(require (quote package))' --eval '(package-activate-al
 - Git tracks only `init.el`, `config/*.el`, `agents/*.md`, `README.org`, `logo.txt`, `.gitignore`,
   `LICENSE`.  Everything else at top level (`custom.el`, `recentf`, `places`, `history`, `elpa/`,
   `transient/`, …) is machine state and gitignored — never commit it.
-- Commit messages are in Chinese (see `git log`); work happens on the `develop` branch.
+- Commit messages follow Conventional Commits and are written in Chinese.  Do not cram a whole
+  change into one long line:
+  - Subject: `type(scope): 摘要`, ≤ 50 字符，不加句号。`type` 取 `feat`、`fix`、`refactor`、
+    `docs`、`chore`、`test`、`style`、`perf`；`scope` 用模块名（`org`、`org-project`、`ai`、
+    `fonts` …）。
+  - Body: 主题后空一行，用 `-` 列表分点说明“改了什么、为什么”，每行 ≤ 72 字符。
+  - 一个提交只做一件事；不要把多处改动塞进一行主题，必要时拆分提交。
+  - 示例：
+
+    ```
+    feat(org-project): 需求域关键字独立
+
+    - 需求新增独立 sequence，完成态为 REQ-VERIFIED。
+    - 手写 closed-todos 改为 settled-p。
+    ```
+- Work happens on the `develop` branch.
 
 ## Runtime data and external dependencies
 
