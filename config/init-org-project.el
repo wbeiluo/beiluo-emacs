@@ -58,9 +58,13 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
   (let ((state (org-get-todo-state)))
     (and state (substring-no-properties state))))
 
-(defconst my/org-project--closed-todos
-  '("DONE" "CANCELLED" "ARCHIVED" "DEPRECATED" "CONFIRMED" "CLOSED" "WONTFIX")
-  "视为已收尾的 TODO 终态 (收尾检查与基线圈定共用).")
+(defun my/org-project--settled-p (todo)
+  "TODO 状态是否视为已收尾 (阶段收尾检查用).
+以 `org-done-keywords' 为单一事实来源; 此外已定版版本(CONFIRMED)也算收尾:
+CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段切换不应把
+当前有效版本当成待办."
+  (or (member todo org-done-keywords)
+      (equal todo "CONFIRMED")))
 
 (defun my/org-project--codes ()
   "返回 projects/ 下的工程代号 (子目录名) 列表."
@@ -341,7 +345,8 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
    "#   状态鉴定(鉴定策划/状态管理/鉴定测试/鉴定材料),\n"
    "#   交付维护(更改控制/维护与保障);\n"
    "# - 状态流: 日常 TODO→NEXT→WAIT→DONE, 议题 REPORT→…→CLOSED,\n"
-   "#   软件状态 DESIGN→DEVELOP→CONFIRMED→ARCHIVED;\n"
+   "#   软件状态 DESIGN→DEVELOP→CONFIRMED→ARCHIVED(当前有效版本停在 CONFIRMED),\n"
+   "#   需求 REQ-DRAFT→REQ-IMPL→REQ-VERIFIED(完成态, 仍参与基线);\n"
    "# - 需求条目在「需求」章统一建档(:PHASE: 可多值), 各阶段的动态块\n"
    "#   由 C-c P c 关联时一并刷新(只刷块可用 C-c C-x C-u);\n"
    "# - 里程碑在「研制过程」>「里程碑」章: 转段里程碑 M1..M4 由 C-c P s 结算;\n"
@@ -384,7 +389,9 @@ org-get-todo-state 带 face 属性, 直接与字符串比较会失败."
     "# 只刷块不关联仍可用 C-c C-x C-u. 存量 DESIGN+MODULE:\n"
     "# M-x my/org-project-trace-merge-upgrade.\n"
     "# 继承旧项目需求用 C-c P i 从源项目已冻结基线导入(:SOURCE: 继承复用,\n"
-    "# :INHERITED: 溯源链接直达源条目).\n\n"
+    "# :INHERITED: 溯源链接直达源条目).\n"
+    "# 需求状态: REQ-DRAFT → REQ-IMPL → REQ-VERIFIED(完成态, 仍参与基线);\n"
+    "# 废弃/归档用 REQ-OBSOLETE/REQ-ARCHIVED(不参与基线).\n\n"
    "*** 功能需求\n\n"
    "*** 性能需求\n\n"
    "*** 接口需求\n\n"
@@ -1022,7 +1029,7 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
   "需求变更后前置到 :TEST-CASE:/:IMPL: 的待重新验证标记 (关联报告提示, 复验通过后手工删除).")
 
 (defun my/org-capture-req-change-finalize ()
-  "需求变更(pc)落表后联动: 将对应需求移出基线并置回 DESIGN.
+  "需求变更(pc)落表后联动: 将对应需求移出基线并置回 REQ-DRAFT.
 已有 :TEST-CASE:/:IMPL: 的前置 ⚠ 待重新验证 标记(关联提示,
 复验通过后手工删除), 中止捕获(org-note-abort)或未选择需求时不联动."
   (let ((id my/org-capture--req-change-id)
@@ -1050,9 +1057,10 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
                          (setq any-marked t)
                          (org-entry-put (point) prop
                                         (concat my/org-project--test-reverify-mark " " val)))))
-                   (when (and st (not (string= st "DESIGN"))) (org-todo "DESIGN"))
+                   (when (and st (not (string= st "REQ-DRAFT")))
+                     (org-todo "REQ-DRAFT"))
                    (ignore-errors (org-update-all-dblocks))
-                   (message "需求 %s 已移出基线, 状态置回 DESIGN%s" id
+                   (message "需求 %s 已移出基线, 状态置回 REQ-DRAFT%s" id
                             (if any-marked " (追踪属性标记待重新验证)" ""))))))))))))
 
 (defun my/org-capture-issue-target ()
@@ -1089,9 +1097,12 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
 ;; 任意处 C-c P l 插入搜索链接, C-c P t 按编号跳转到记录行.
 
 (defun my/org-project--row-cells (line)
-  "拆分表格行 LINE 为单元格文本列表 (去掉首尾竖线与空白)."
+  "拆分表格行 LINE 为单元格文本列表 (去掉首尾竖线与空白).
+LINE 不是以 | 开头的表格行 (空行/普通文本) 时返回 nil."
   (let ((s (string-trim line)))
-    (mapcar #'string-trim (split-string (substring s 1 -1) "|"))))
+    (when (and (>= (length s) 2)
+               (string-prefix-p "|" s))
+      (mapcar #'string-trim (split-string (substring s 1 -1) "|")))))
 
 (defun my/org-project--record-table-regions ()
   "扫描「测试与试验记录」章, 返回各记录表的 (KIND BEG END) 列表.
@@ -1616,7 +1627,7 @@ ps 捕获时也走同一套选择, 未选的随时在这里补."
           (while (re-search-forward "^\\*+ " end t)
             (let ((todo (my/org-project--state))
                   (title (org-get-heading t t t t)))
-              (when (and todo (not (member todo my/org-project--closed-todos)))
+              (when (and todo (not (my/org-project--settled-p todo)))
                 (push (format "[%s] %s" todo title) items)))))))
     (save-excursion
       (goto-char (point-min))
@@ -1652,7 +1663,7 @@ ps 捕获时也走同一套选择, 未选的随时在这里补."
                     (lambda (e)
                       (and (not (org-string-nw-p (plist-get e :baseline)))
                            (member stage (split-string (or (plist-get e :phase) "")))
-                           (not (member (plist-get e :todo) my/org-project--closed-todos))))
+                           (my/org-project--req-active-p e)))
                     (my/org-project--req-entries))))
       (dolist (e unbased)
         (push (format "[需求未入基线] %s %s" (plist-get e :id) (plist-get e :title))
@@ -2267,7 +2278,7 @@ TEXT 标题行以单个 * 开头, 插入时调整为小节下一层级 (骨架�
                                                          src-code)))
                  (body (with-current-buffer (find-file-noselect src)
                          (my/org-project--req-entry-body (plist-get e :pos))))
-                 (text (concat "* DESIGN " (plist-get e :title) "\n"
+                 (text (concat "* REQ-DRAFT " (plist-get e :title) "\n"
                                "  :PROPERTIES:\n"
                                "  :CUSTOM_ID: " new-id "\n"
                                "  :TYPE: " type "\n"
@@ -3750,8 +3761,13 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动), 评审结论为空时回填�
       (org-table-align))))
 
 (defun my/org-project--req-active-p (entry)
-  "需求 ENTRY 是否参与基线 (已归档/废弃/取消的不参与)."
-  (not (member (plist-get entry :todo) '("ARCHIVED" "DEPRECATED" "CANCELLED"))))
+  "需求 ENTRY 是否参与基线 (已归档/废弃/取消的不参与).
+REQ-VERIFIED 是需求的完成态, 但仍参与基线: 「完成」与「是否有效需求」
+是两回事.  旧关键字 ARCHIVED/DEPRECATED 保留兼容未迁移的存量需求."
+  (not (member (plist-get entry :todo)
+               '("REQ-OBSOLETE" "REQ-ARCHIVED" "CANCELLED"
+                 ;; 未迁移的存量需求仍使用版本域关键字
+                 "ARCHIVED" "DEPRECATED"))))
 
 (defun my/org-project--req-goto (id)
   "按 CUSTOM_ID 定位需求条目, 成功返回 non-nil 且 point 在标题行."
@@ -3959,7 +3975,7 @@ FORCE 非 nil 跳过确认 (pe/圈定收尾联动), 评审结论为空时回填�
       "| %u | %^{评审类型|内部评审|专家评审|用户评审} | %(my/org-capture--review-object) | %^{人员} | %^{结论|通过|有条件通过|不通过} | %^{遗留问题(议题链接,可空)} | %^{待办} |"
       :empty-lines 1)
      ("pn" "需求条目" entry (function my/org-capture-req-target)
-      ,(concat "* DESIGN %?\n  :PROPERTIES:\n"
+      ,(concat "* REQ-DRAFT %?\n  :PROPERTIES:\n"
                "  :CUSTOM_ID: %(my/org-capture--req-id)\n"
                "  :TYPE: %(my/org-capture--req-type)\n"
                "  :SOURCE: %^{来源|任务书/合同|用户要求|系统需求分解|标准规范|设计输入|继承复用|其他}\n"

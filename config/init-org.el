@@ -194,7 +194,13 @@
      ("DEVELOP"    . (:inherit success :weight regular :inverse-video t))
      ("CONFIRMED"  . (:inherit success :weight regular :inverse-video t))
      ("DEPRECATED" . (:inherit shadow  :weight regular :inverse-video t))
-     ("ARCHIVED"   . (:inherit shadow  :weight regular :inverse-video t))))
+     ("ARCHIVED"   . (:inherit shadow  :weight regular :inverse-video t))
+     ;; --- 需求 Keyword ---
+     ("REQ-DRAFT"    . (:inherit link    :weight regular :inverse-video t))
+     ("REQ-IMPL"     . (:inherit success :weight regular :inverse-video t))
+     ("REQ-VERIFIED" . (:inherit success :weight regular :inverse-video t))
+     ("REQ-OBSOLETE" . (:inherit shadow  :weight regular :inverse-video t))
+     ("REQ-ARCHIVED" . (:inherit shadow  :weight regular :inverse-video t))))
   :config
   ;; 时间戳色块字号调为 0.9 倍正文（org-modern 默认继承
   ;; org-modern-label 的 0.8 倍，偏小）。浮点 :height 是相对底层
@@ -340,13 +346,29 @@
      ;; WONTFIX    : 不修复
      (sequence "REPORT(r)" "BUG(b!)" "KNOWNCAUSE(k!)" "FIXED(f!)" "|" "CLOSED(c@/!)" "WONTFIX(x@/!)")
 
-     ;; --- 代码控制状态 ---
+     ;; --- 代码控制状态(软件版本) ---
      ;; DESIGN    : 设计中
      ;; DEVELOP   : 开发中（新增/修改用 :TYPE: 属性或标签区分）
-     ;; CONFIRMED : 已确认(完成测试及验证)
+     ;; CONFIRMED : 已定版(完成测试及验证), 当前有效版本; 留在未完成侧以便
+     ;;             继续出现在 workflow 视图, 阶段收尾由 --settled-p 兜底
      ;; DEPRECATED: 已废弃，不再维护
      ;; ARCHIVED  : 已归档
-     (sequence "DESIGN(s)" "DEVELOP(p!)" "|" "CONFIRMED(e!)" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
+     (sequence "DESIGN(s)" "DEVELOP(p!)" "CONFIRMED(e!)"
+               "|" "DEPRECATED(y@/!)" "ARCHIVED(a@/!)")
+
+     ;; --- 需求状态 ---
+     ;; 需求与软件版本生命周期不同, 单独一条 sequence, 各有自己的完成分界:
+     ;; 版本的完成是归档(DEPRECATED/ARCHIVED), 需求的完成是验证通过,
+     ;; 且已验证需求仍参与基线(见 my/org-project--req-active-p).
+     ;; REQ-DRAFT    : 需求起草/分析中(新建与变更后回到此态)
+     ;; REQ-IMPL     : 已实现，待验证
+     ;; REQ-VERIFIED : 已验证 (完成态; 仍参与基线); @ 表示进态时弹出说明输入,
+     ;;                写入 LOGBOOK (与 @/! 的离开时间戳配合)
+     ;; REQ-OBSOLETE : 已废弃 (不参与基线)
+     ;; REQ-ARCHIVED : 已归档 (不参与基线)
+     ;; 键位用大写: 与小写键位池不冲突, C-c C-t 中显示为 [D]/[I]/[V]/[O]/[A].
+     (sequence "REQ-DRAFT(D)" "REQ-IMPL(I!)"
+               "|" "REQ-VERIFIED(V@/!)" "REQ-OBSOLETE(O@/!)" "REQ-ARCHIVED(A@/!)")
 
      ;; --- 风险跟踪状态 ---
      ;; 风险 = 未发生的不确定事件; 已发生的转议题, 不双轨跟踪.
@@ -373,6 +395,13 @@
      ("CONFIRMED" ("confirmed" . t) ("design") ("develop"))
      ("DEPRECATED" ("deprecated" . t) ("design") ("develop") ("confirmed"))
      ("ARCHIVED" ("archived" . t) ("design") ("develop") ("confirmed"))
+
+     ;; 需求域不发放标签, 只清掉旧代码控制态残留在需求条目上的标签
+     ("REQ-DRAFT" ("design") ("develop") ("confirmed") ("deprecated") ("archived"))
+     ("REQ-IMPL" ("design") ("develop") ("confirmed") ("deprecated") ("archived"))
+     ("REQ-VERIFIED" ("design") ("develop") ("confirmed") ("deprecated") ("archived"))
+     ("REQ-OBSOLETE" ("design") ("develop") ("confirmed") ("deprecated") ("archived"))
+     ("REQ-ARCHIVED" ("design") ("develop") ("confirmed") ("deprecated") ("archived"))
 
      ("IDENT" ("risk" . t) ("mitigate") ("resolved"))
      ("MITIGATE" ("risk" . t) ("resolved"))
@@ -898,6 +927,42 @@ ARG 是 `org-latex-preview' 的原始前缀参数；(16) 前缀（整 buffer）�
 (advice-add 'org-agenda-prepare-buffers :around
             #'my/org-agenda-prepare-buffers-with-preview)
 
+;; Workflow 视图共用的 super-agenda 分组:
+;; - 需求与软件版本分域显示, done 语义各自独立;
+;; - 空分组不会渲染, w/W 共用一份即可;
+;; - 末尾 discard 兜底, 未列出的状态(含其他 done 态)一律不显示.
+(defconst my/org-workflow-groups
+  '(;; 今日完成: 只算真正关闭的条目; CONFIRMED 已定版不算关闭
+    (:name "◎ 今日完成" :log close)
+
+    ;; 需求(REQ-VERIFIED 是 done, 只有 W 的第二个块能取到)
+    (:name "◎ 需求 ➜ 待处理🄓" :todo "REQ-DRAFT")
+    (:name "◎ 需求 ➜ 待验证🄘" :todo "REQ-IMPL")
+    (:name "◎ 需求 ➜ 已验证🄥" :todo "REQ-VERIFIED")
+
+    ;; 日程任务
+    (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
+    (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
+    (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
+
+    ;; 问题处理
+    (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
+    (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
+    (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
+    (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
+
+    ;; 软件版本
+    (:name "◎ 软件版本 ➜ 设计🄢" :todo "DESIGN")
+    (:name "◎ 软件版本 ➜ 开发🄓" :todo "DEVELOP")
+    (:name "◎ 软件版本 ➜ 已定版🄒" :todo "CONFIRMED")
+
+    ;; 风险跟踪
+    (:name "◎ 风险 ➜ 待评估" :todo "IDENT")
+    (:name "◎ 风险 ➜ 措施中" :todo "MITIGATE")
+
+    ;; 其他
+    (:discard (:anything t))))
+
 ;; 自定义视图
 (use-package org-super-agenda
   :ensure t
@@ -912,58 +977,14 @@ ARG 是 `org-latex-preview' 的原始前缀参数；(16) 前缀（整 buffer）�
    '(("w" "Workflow Agenda"
       ((agenda ""
                ((org-agenda-span 'day)
-                (org-super-agenda-groups
-                 '((;; 今日完成任务
-                    :name "◎ 今日完成" :log t)
-
-                   ;; 日程任务
-                   (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
-                   (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
-                   (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
-
-                   ;; 问题处理
-                   (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
-                   (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
-                   (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
-                   (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
-
-                   ;; 代码控制
-                   (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
-                   (:name "◎ 代码控制 ➜ 开发🄓" :todo "DEVELOP")
-                   (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
-
-                   ;; 其他
-                   (:discard (:anything t))))))))
-
+                (org-super-agenda-groups my/org-workflow-groups)))))
      ("W" "Workflow All Todo"
+      ;; alltodo 只收未完成关键字; REQ-VERIFIED 是 done, 单列一块台账
       ((alltodo ""
                 ((org-agenda-span 'day)
-                 (org-super-agenda-groups
-                  '(;; 门禁: 门也是 TODO, 必须排在通用 TODO 组之前
-                    (:name "◎ 门禁 ➜ 待关闭" :tag "gate")
-
-                    ;; 日程任务
-                    (:name "◎ 日程任务 ➜ 可执行🄝" :todo "NEXT")
-                    (:name "◎ 日程任务 ➜ 待规划🄣" :todo "TODO")
-                    (:name "◎ 日程任务 ➜ 等待中🄦" :todo "WAIT")
-
-                    ;; 问题处理
-                    (:name "◎ 问题处理 ➜ 新报告🄡" :todo "REPORT")
-                    (:name "◎ 问题处理 ➜ 缺陷问题🄑" :todo "BUG")
-                    (:name "◎ 问题处理 ➜ 已知问题🄚" :todo "KNOWNCAUSE")
-                    (:name "◎ 问题处理 ➜ 待关闭🄕" :todo "FIXED")
-
-                    ;; 代码控制
-                    (:name "◎ 代码控制 ➜ 设计🄢" :todo "DESIGN")
-                    (:name "◎ 代码控制 ➜ 开发🄓" :todo "DEVELOP")
-                    (:name "◎ 代码控制 ➜ 已确认🄒" :todo "CONFIRMED")
-
-                    ;; 风险跟踪
-                    (:name "◎ 风险 ➜ 待评估" :todo "IDENT")
-                    (:name "◎ 风险 ➜ 措施中" :todo "MITIGATE")
-
-                    ;; 其他
-                    (:discard (:anything t)))))))))))
+                 (org-super-agenda-groups my/org-workflow-groups)))
+       (todo "REQ-VERIFIED"
+             ((org-super-agenda-groups my/org-workflow-groups))))))))
 
 ;; ---- appt 通知提醒 ----
 (defun appt-display-with-notification (min-to-app new-time appt-msg)
