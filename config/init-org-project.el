@@ -30,16 +30,94 @@
 ;; ---- 项目管理 Project ------------------------------------------------------
 ;; 软件配置项项目文件布局: projects/<工程代号>/<配置项代号>.org, 工程代号即
 ;; projects/ 子目录名(pp 创建时可选现有或新建), 骨架由 pp 模板生成。
-;; 研制阶段(方案设计/样机研制/工程研制/状态鉴定/交付维护)任一时刻唯一, 记录在「研制过程」标题的
-;; :CURRENT-STATE: 属性; 阶段任务、测试/试验记录、软件状态都创建在当前阶段
-;; 子树下。里程碑即检查点: 「里程碑」章的 M1..M4 用 :FROM:/:TO: 承载阶段
-;; 转换记录并由阶段切换自动结算, 没有独立的门概念。需求基线数据(记录表
-;; 状态列 + 快照)集中在「需求」章「需求基线」节; 冻结判据、评审表与冻结
-;; 操作挂在各阶段的需求类小节(宿主小节映射), 阶段引用块 baseline-by-phase、
-;; 转段检查、milestone-summary 与切换日志都读记录表本阶段最新行的状态,
-;; 单一数据源。
-(defconst my/org-project--stages '("方案设计" "样机研制" "工程研制" "状态鉴定" "交付维护")
-  "研制阶段固定划分. 交付维护为鉴定通过后的开放阶段(批产后更改/外场保障), 无出口里程碑.")
+;; 阶段(方案设计/样机研制/工程研制/状态鉴定/交付维护)任一时刻唯一, 记录在
+;; 「研制与维护」标题的 :CURRENT-STATE: 属性; 阶段任务、测试/试验记录、软件
+;; 状态都创建在当前阶段子树下。前四个为受控研制阶段, 各有出口里程碑;
+;; 交付维护为鉴定通过后的开放阶段(批产后更改/外场保障), 无出口里程碑。
+;; 里程碑即检查点: 「里程碑」章的 M1..M4 用 :FROM:/:TO: 承载阶段转换记录并由
+;; 阶段切换自动结算, 没有独立的门概念。需求基线数据(记录表状态列 + 快照)
+;; 集中在「需求」章「需求基线」节; 冻结判据、评审表与冻结操作挂在各阶段的
+;; 需求类小节(宿主小节映射), 阶段引用块 baseline-by-phase、转段检查、
+;; milestone-summary 与切换日志都读记录表本阶段最新行的状态, 单一数据源。
+;;
+;; 阶段特征集中在 `my/org-project--stage-defs' 一张表: 类型(gated 受控/
+;; open 开放)、子树生成器、出口里程碑、是否要求基线冻结、捕获落点小节、
+;; 基线/软件状态宿主小节、风险出口要求。新增阶段只改表, 派生逻辑自动跟上。
+(defconst my/org-project--stage-defs
+  `((:name "方案设计" :kind gated :builder plan
+     :milestone ("M1" "方案评审通过")
+     :baseline t
+     :sections ("需求分析" "总体方案设计" "通用质量特性与约束" "技术成熟度分析与验证")
+     :host "需求分析" :state-section "软件状态"
+     :risk-exit "IDENT 清零; 高风险须 MITIGATE 且带验证计划")
+    (:name "样机研制" :kind gated :builder generic
+     :milestone ("M2" "样机研制完成")
+     :baseline t
+     :sections ("策划与需求" "设计与实现" "样机调试" "测试与验证" "软件状态")
+     :host "策划与需求" :state-section "软件状态"
+     :extra ,(concat "*** 样机调试\n\n"
+                     "    - 调试环境（硬件/仪器/工具链）：\n"
+                     "    - 板级支持与接口适配：\n"
+                     "    - 联调记录（登记于「测试与试验记录」章）：\n"
+                     "    - 异常记录（闭环进「议题」章，记议题编号）：\n\n")
+     :risk-exit "高风险 RESOLVED(闭环/挂账); 中风险措施在执行")
+    (:name "工程研制" :kind gated :builder generic
+     :milestone ("M3" "工程研制完成")
+     :baseline t
+     :sections ("策划与需求" "设计与实现" "环境与可靠性验证" "测试与验证" "软件状态")
+     :host "策划与需求" :state-section "软件状态"
+     :extra ,(concat "*** 环境与可靠性验证\n\n"
+                     "    - 环境条件要求（高低温/振动/冲击/EMC）：\n"
+                     "    - 可靠性/安全性验证安排：\n"
+                     "    - 环境试验记录（登记于「测试与试验记录」章）：\n"
+                     "    - 问题闭环（闭环进「议题」章，记议题编号）：\n\n")
+     :risk-exit "高/中风险 RESOLVED; 新风险须有 OWNER 与 TRIGGER")
+    (:name "状态鉴定" :kind gated :builder qual
+     :milestone ("M4" "状态鉴定通过")
+     :baseline t
+     :sections ("鉴定策划" "状态管理" "鉴定测试与试验" "鉴定材料")
+     :host "状态管理" :state-section "状态管理"
+     :risk-exit "全部终态; 挂账风险转入交付遗留清单")
+    (:name "交付维护" :kind open :builder maint
+     :baseline nil
+     :sections ("更改控制" "维护与保障" "软件状态")
+     :host "更改控制" :state-section "软件状态"
+     :risk-exit "更改引入风险须有 OWNER 与 TRIGGER; 外场问题有结论"))
+  "阶段定义表 (单一数据源), 每项字段:
+:name 阶段名; :kind 类型 (gated 受控研制阶段 / open 开放阶段);
+:builder 阶段子树生成器 (plan/qual/maint/generic); :milestone 出口里程碑
+(编号 名称), 开放阶段为 nil; :baseline 转段是否要求基线已冻结;
+:sections 捕获落点小节; :host 基线控制块宿主小节; :state-section 软件状态
+落点小节; :extra 通用阶段额外的特征小节文本; :risk-exit 风险出口要求.")
+
+(defconst my/org-project--stages
+  (mapcar (lambda (def) (plist-get def :name)) my/org-project--stage-defs)
+  "阶段名称列表 (顺序即阶段顺序), 由 `my/org-project--stage-defs' 派生.")
+
+(defun my/org-project--stage-def (stage)
+  "返回阶段 STAGE 的定义 plist, 未知阶段返回 nil."
+  (seq-find (lambda (def) (equal (plist-get def :name) stage))
+            my/org-project--stage-defs))
+
+(defun my/org-project--stage-gated-p (stage)
+  "阶段 STAGE 是否为受控研制阶段 (有出口里程碑, 转段须过检查点).
+未知阶段按受控处理, 避免漏报检查点."
+  (let ((def (my/org-project--stage-def stage)))
+    (if def (eq (plist-get def :kind) 'gated) t)))
+
+(defun my/org-project--stage-baseline-required-p (stage)
+  "阶段 STAGE 转段时是否要求基线已冻结 (开放阶段不强制, 未知阶段按强制)."
+  (let ((def (my/org-project--stage-def stage)))
+    (if def (not (null (plist-get def :baseline))) t)))
+
+;; 「研制与维护」章承载全部阶段; 章名固定, 读取/定位统一走
+;; `my/org-project--process-chapter' 与对应正则。
+(defconst my/org-project--process-chapter "研制与维护"
+  "承载全部阶段的章标题名.")
+
+(defconst my/org-project--process-chapter-re
+  (concat "^\\* " (regexp-quote my/org-project--process-chapter) "[ \t]*$")
+  "「研制与维护」章标题匹配.")
 
 ;; 需求基线记录表(baseline-records)的行状态词汇: 圈定=待评审, 冻结确认=
 ;; 已冻结, 同阶段重新圈定且未冻结的旧行=被取代。存量空状态按已冻结处理。
@@ -163,45 +241,35 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
    "    |------+--------+--------+------+----------+----------|\n\n"))
 
 (defun my/org-project--generic-subtree (stage idx)
-  "生成通用阶段子树文本: STAGE 阶段名, IDX 阶段序号 (控制块评审表名后缀)."
-  (concat
-   "*** 策划与需求\n\n"
-   "    #+BEGIN: req-by-phase :phase " stage "\n"
-   "    #+END:\n\n"
-   "    - 入口条件：\n"
-   "    - 阶段计划：\n"
-   "    - 本阶段需求变更（pc 捕获，落在「需求」章「需求变更记录」表）：\n"
-   (my/org-project--baseline-control-text stage idx "    ") "\n"
-   "*** 设计与实现\n\n"
-   "    - 落点任务用 pt 捕获: 标题=设计/模块落点, :REQS: 多选覆盖需求;\n"
-   "      回填需求 :IMPL: 用 C-c P c.\n"
-   "    - 代码走查/静态检查：\n"
-   "    - 单元测试记录（登记于「测试与试验记录」章）：\n\n"
-   (when (string= stage "样机研制")
-     (concat
-      "*** 样机调试\n\n"
-      "    - 调试环境（硬件/仪器/工具链）：\n"
-      "    - 板级支持与接口适配：\n"
-      "    - 联调记录（登记于「测试与试验记录」章）：\n"
-      "    - 异常记录（闭环进「议题」章，记议题编号）：\n\n"))
-   (when (string= stage "工程研制")
-     (concat
-      "*** 环境与可靠性验证\n\n"
-      "    - 环境条件要求（高低温/振动/冲击/EMC）：\n"
-      "    - 可靠性/安全性验证安排：\n"
-      "    - 环境试验记录（登记于「测试与试验记录」章）：\n"
-      "    - 问题闭环（闭环进「议题」章，记议题编号）：\n\n"))
-   "*** 测试与验证\n\n"
-   (unless (member stage '("样机研制" "工程研制")) "    - 对接环境：\n")
-   "    - 回归测试说明：\n"
-   "    - 测试/试验记录（登记于「测试与试验记录」章）：\n"
-   (unless (member stage '("样机研制" "工程研制"))
-     "    - 异常记录（闭环进「议题」章，记议题编号）：\n")
-   "\n"
-   "*** 软件状态\n\n"
-   "    版本条目用 ps 捕获, 状态流 DESIGN → DEVELOP → CONFIRMED → ARCHIVED.\n"
-   "    修改项/测试项自动登记(ps 捕获时选, C-c P v 补/同步): 只存链接+手填列,\n"
-   "    修改项的关联议题从任务、测试项的相关链接从记录自动带出(C-c P a 补/改).\n"))
+  "生成通用阶段子树文本: STAGE 阶段名, IDX 阶段序号 (控制块评审表名后缀).
+阶段特征小节(STAGE 的 :extra)由 `my/org-project--stage-defs' 提供;
+带特征小节的两个阶段(样机研制/工程研制)不重复 对接环境/异常记录 两行."
+  (let ((extra (plist-get (my/org-project--stage-def stage) :extra)))
+    (concat
+     "*** 策划与需求\n\n"
+     "    #+BEGIN: req-by-phase :phase " stage "\n"
+     "    #+END:\n\n"
+     "    - 入口条件：\n"
+     "    - 阶段计划：\n"
+     "    - 本阶段需求变更（pc 捕获，落在「需求」章「需求变更记录」表）：\n"
+     (my/org-project--baseline-control-text stage idx "    ") "\n"
+     "*** 设计与实现\n\n"
+     "    - 落点任务用 pt 捕获: 标题=设计/模块落点, :REQS: 多选覆盖需求;\n"
+     "      回填需求 :IMPL: 用 C-c P c.\n"
+     "    - 代码走查/静态检查：\n"
+     "    - 单元测试记录（登记于「测试与试验记录」章）：\n\n"
+     (or extra "")
+     "*** 测试与验证\n\n"
+     (unless extra "    - 对接环境：\n")
+     "    - 回归测试说明：\n"
+     "    - 测试/试验记录（登记于「测试与试验记录」章）：\n"
+     (unless extra
+       "    - 异常记录（闭环进「议题」章，记议题编号）：\n")
+     "\n"
+     "*** 软件状态\n\n"
+     "    版本条目用 ps 捕获, 状态流 DESIGN → DEVELOP → CONFIRMED → ARCHIVED.\n"
+     "    修改项/测试项自动登记(ps 捕获时选, C-c P v 补/同步): 只存链接+手填列,\n"
+     "    修改项的关联议题从任务、测试项的相关链接从记录自动带出(C-c P a 补/改).\n")))
 
 (defun my/org-project--qual-subtree (idx)
   "生成「状态鉴定」阶段子树文本 (鉴定阶段专属结构), IDX 为阶段序号."
@@ -253,33 +321,22 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
 
 (defun my/org-project--stage-subtree (code idx stage)
   "生成阶段子树文本: CODE 项目代号, IDX 阶段序号, STAGE 阶段名.
-方案设计/状态鉴定/交付维护用专属子结构, 样机研制/工程研制用通用四节+特征小节."
+子树生成器由 `my/org-project--stage-defs' 的 :builder 决定."
   (concat
    "** " stage "\n"
    "   :PROPERTIES:\n"
    "   :CUSTOM_ID: " code "_STAGE-" (number-to-string idx) "\n"
    "   :END:\n\n"
-   (cond
-    ((string= stage "方案设计") (my/org-project--plan-subtree idx))
-    ((string= stage "状态鉴定") (my/org-project--qual-subtree idx))
-    ((string= stage "交付维护") (my/org-project--maint-subtree idx))
-    (t (my/org-project--generic-subtree stage idx)))))
+   (pcase (plist-get (my/org-project--stage-def stage) :builder)
+     ('plan (my/org-project--plan-subtree idx))
+     ('qual (my/org-project--qual-subtree idx))
+     ('maint (my/org-project--maint-subtree idx))
+     (_ (my/org-project--generic-subtree stage idx)))))
 
 (defun my/org-project--stage-sections (stage)
   "返回阶段 STAGE 的小节名列表 (pt 捕获落点候选)."
-  (cond
-   ((string= stage "方案设计")
-    '("需求分析" "总体方案设计" "通用质量特性与约束" "技术成熟度分析与验证"))
-   ((string= stage "样机研制")
-    '("策划与需求" "设计与实现" "样机调试" "测试与验证" "软件状态"))
-   ((string= stage "工程研制")
-    '("策划与需求" "设计与实现" "环境与可靠性验证" "测试与验证" "软件状态"))
-   ((string= stage "状态鉴定")
-    '("鉴定策划" "状态管理" "鉴定测试与试验" "鉴定材料"))
-   ((string= stage "交付维护")
-    '("更改控制" "维护与保障" "软件状态"))
-   (t
-    '("策划与需求" "设计与实现" "测试与验证" "软件状态"))))
+  (or (plist-get (my/org-project--stage-def stage) :sections)
+      '("策划与需求" "设计与实现" "测试与验证" "软件状态")))
 
 (defun my/org-project--stages-text (code)
   "生成全部阶段子树文本: CODE 为项目代号, 阶段顺序同 my/org-project--stages."
@@ -292,6 +349,16 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
 ;; 风险章正文 (不含标题行): 骨架生成与存量升级共用同一份文本, 避免模板分叉。
 ;; 章节结构 = 台账视图(矩阵/本阶段/汇总) + 评审记录 + 阶段出口准则;
 ;; 条目只在「风险」章建档, 阶段子树与评审处只放动态块引用。
+(defun my/org-project--stage-risk-exit-table-text ()
+  "按 `my/org-project--stage-defs' 生成阶段出口准则表文本."
+  (concat "    | 阶段     | 风险出口要求 |\n"
+          "    |----------+--------------|\n"
+          (mapconcat (lambda (def)
+                       (format "    | %s | %s |\n"
+                               (plist-get def :name)
+                               (plist-get def :risk-exit)))
+                     my/org-project--stage-defs "")))
+
 (defconst my/org-project--risk-body
   (concat
    "# 风险 = 未发生的不确定事件; 已发生的转议题, 不双轨跟踪.\n"
@@ -314,13 +381,7 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
    "    | 日期 | 风险ID | 原等级 | 新等级 | 结论 | 评审人 |\n"
    "    |------+--------+--------+--------+------+--------|\n\n"
    "** 阶段出口准则\n\n"
-   "    | 阶段     | 风险出口要求 |\n"
-   "    |----------+--------------|\n"
-   "    | 方案设计 | IDENT 清零; 高风险须 MITIGATE 且带验证计划 |\n"
-   "    | 样机研制 | 高风险 RESOLVED(闭环/挂账); 中风险措施在执行 |\n"
-   "    | 工程研制 | 高/中风险 RESOLVED; 新风险须有 OWNER 与 TRIGGER |\n"
-   "    | 状态鉴定 | 全部终态; 挂账风险转入交付遗留清单 |\n"
-   "    | 交付维护 | 更改引入风险须有 OWNER 与 TRIGGER; 外场问题有结论 |\n")
+   (my/org-project--stage-risk-exit-table-text))
   "风险章正文 (骨架与存量升级共用).")
 
 (defun my/org-project--risk-chapter ()
@@ -338,18 +399,18 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
    "#+filetags: :project:\n\n"
    "# 使用说明:\n"
    "# - 本文件由 capture 模板 pp 生成, 日常信息通过 C-c c 的 p 组模板录入;\n"
-   "# - 当前研制阶段唯一, 记录在「研制过程」的 :CURRENT-STATE: 属性;\n"
+   "# - 当前阶段唯一, 记录在「研制与维护」的 :CURRENT-STATE: 属性;\n"
    "#   转段用 C-c P s: 结算里程碑(基线冻结状态 + 转段里程碑) → 更新属性 → 记日志;\n"
    "# - 阶段结构按阶段特征定制: 方案设计(需求/总体/质量特性/成熟度),\n"
    "#   样机研制(+样机调试), 工程研制(+环境与可靠性验证),\n"
    "#   状态鉴定(鉴定策划/状态管理/鉴定测试/鉴定材料),\n"
-   "#   交付维护(更改控制/维护与保障);\n"
+   "#   交付维护(更改控制/维护与保障); 前四阶段为受控研制阶段, 交付维护为开放阶段;\n"
    "# - 状态流: 日常 TODO→NEXT→WAIT→DONE, 议题 REPORT→…→CLOSED,\n"
    "#   软件状态 DESIGN→DEVELOP→CONFIRMED→ARCHIVED(当前有效版本停在 CONFIRMED),\n"
    "#   需求 REQ-DRAFT→REQ-IMPL→REQ-VERIFIED(完成态, 仍参与基线);\n"
    "# - 需求条目在「需求」章统一建档(:PHASE: 可多值), 各阶段的动态块\n"
    "#   由 C-c P c 关联时一并刷新(只刷块可用 C-c C-x C-u);\n"
-   "# - 里程碑在「研制过程」>「里程碑」章: 转段里程碑 M1..M4 由 C-c P s 结算;\n"
+   "# - 里程碑在「研制与维护」>「里程碑」章: 转段里程碑 M1..M4 由 C-c P s 结算;\n"
    "# - 需求基线数据在「需求」章「需求基线」节(记录表状态: 待评审→已冻结),\n"
    "#   C-c P b 全量重圈打到当前阶段; 冻结判据/评审/冻结在各阶段需求类小节,\n"
    "#   冻结与解冻用 C-c P g, 评审用 pe 记入阶段评审表, 变更用 pc 捕获;\n"
@@ -374,7 +435,7 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
    "   | 语言工具链 |      | 编译器、调试器 |\n\n"
    "# 本标题为项目引用锚点(CUSTOM_ID=产品代号), 其他项目引用写法:\n"
    "# [[file:projects/工程代号/配置项代号.org::#" product "][" name "]]\n\n"
-   "* 研制过程\n"
+   "* 研制与维护\n"
    "   :PROPERTIES:\n"
    "   :CURRENT-STATE: 方案设计\n"
    "   :END:\n\n"
@@ -527,7 +588,7 @@ CONFIRMED 留在未完成侧是为了继续出现在 workflow 视图, 但阶段�
       (with-current-buffer buf
         (org-with-wide-buffer
          (goto-char (point-min))
-         (if (re-search-forward "^\\* 研制过程[ \t]*$" nil t)
+         (if (re-search-forward my/org-project--process-chapter-re nil t)
              (or (org-entry-get (point) "CURRENT-STATE")
                  (car my/org-project--stages))
            (car my/org-project--stages)))))))
@@ -908,7 +969,8 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
          (section (completing-read
                    (format "阶段 %s 的小节: " stage)
                    sections nil t nil nil (car sections))))
-    (my/org-capture--goto-olp file (list "研制过程" stage section))))
+    (my/org-capture--goto-olp
+     file (list my/org-project--process-chapter stage section))))
 
 (defun my/org-capture-record-target ()
   "测试/试验记录(pl): 统一章「测试与试验记录」的指定表, 阶段列自动填当前阶段.
@@ -999,7 +1061,8 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
   (let* ((file (my/org-capture-project-file))
          (type (completing-read "需求类型: " '("功能" "性能" "接口" "其他") nil t)))
     (setq my/org-capture--req-type type)
-    (my/org-capture--goto-olp file (list "研制过程" "需求" (concat type "需求")))))
+    (my/org-capture--goto-olp
+     file (list my/org-project--process-chapter "需求" (concat type "需求")))))
 
 (defvar my/org-capture--req-change-id nil
   "需求变更(pc)选中的需求 CUSTOM_ID, 供落表后联动移出基线.")
@@ -1021,9 +1084,10 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
 
 (defun my/org-capture-req-change-target ()
   "需求变更(pc): 「需求」章「需求变更记录」的变更表."
-  (my/org-capture--goto-named-table (my/org-capture-project-file)
-                                    '("研制过程" "需求" "需求变更记录")
-                                    "req-changes"))
+  (my/org-capture--goto-named-table
+   (my/org-capture-project-file)
+   (list my/org-project--process-chapter "需求" "需求变更记录")
+   "req-changes"))
 
 (defconst my/org-project--test-reverify-mark "⚠ 待重新验证"
   "需求变更后前置到 :TEST-CASE:/:IMPL: 的待重新验证标记 (关联报告提示, 复验通过后手工删除).")
@@ -1069,11 +1133,14 @@ PROMPT 缺省为「关联议题」提示(任务 :ISSUES:、需求变更列); 「
 
 (defun my/org-capture-state-target ()
   "软件状态版本(ps): 当前阶段的软件状态小节下.
-状态鉴定阶段的状态条目登记在「状态管理」节."
+落点小节由 `my/org-project--stage-defs' 的 :state-section 决定
+(状态鉴定阶段为「状态管理」)."
   (let* ((file (my/org-capture-project-file))
          (stage (my/org-capture--current-stage))
-         (section (if (string= stage "状态鉴定") "状态管理" "软件状态")))
-    (my/org-capture--goto-olp file (list "研制过程" stage section))))
+         (section (or (plist-get (my/org-project--stage-def stage) :state-section)
+                      "软件状态")))
+    (my/org-capture--goto-olp
+     file (list my/org-project--process-chapter stage section))))
 
 (defun my/org-capture-risk-target ()
   "风险(pr): 「风险」章下; 旧结构文件先就地升级该章(幂等)."
@@ -1714,11 +1781,13 @@ ps 捕获时也走同一套选择, 未选的随时在这里补."
   (insert (format "   - 后续任务、测试/试验记录、软件状态均在「%s」下创建\n" to)))
 
 (defun my/org-project--switch-gaps (cur stage)
-  "返回从阶段 CUR 转到 STAGE 的里程碑缺口列表 (转段里程碑 + 基线冻结状态)."
+  "返回从阶段 CUR 转到 STAGE 的里程碑缺口列表 (转段里程碑 + 基线冻结状态).
+受控阶段才检查出口里程碑与基线冻结; 开放阶段(交付维护)没有出口检查点."
   (let ((milestone (my/org-project--milestone-for cur stage))
-        (bl-gap (my/org-project--stage-baseline-gap cur)))
+        (bl-gap (and (my/org-project--stage-baseline-required-p cur)
+                     (my/org-project--stage-baseline-gap cur))))
     (append
-     (when (null milestone)
+     (when (and (null milestone) (my/org-project--stage-gated-p cur))
        (list (format "未定义 %s → %s 的转段里程碑" cur stage)))
      (when bl-gap (list bl-gap))
      (when milestone
@@ -1726,8 +1795,9 @@ ps 捕获时也走同一套选择, 未选的随时在这里补."
                (my/org-project--milestone-gaps milestone))))))
 
 (defun my/org-project-stage-switch ()
-  "切换项目当前研制阶段: 里程碑结算 → 更新 :CURRENT-STATE: → 记日志.
-检查点 = 本阶段需求基线(须已冻结) + FROM 为当前阶段的里程碑(判据/前置里程碑).
+  "切换项目当前阶段: 里程碑结算 → 更新 :CURRENT-STATE: → 记日志.
+受控阶段的检查点 = 本阶段需求基线(须已冻结) + FROM 为当前阶段的里程碑
+(判据/前置里程碑); 开放阶段(交付维护)没有出口检查点, 只检查未收尾条目.
 有缺口时列出并二次确认; 强制转段写 :OVERRIDE: 并记入日志."
   (interactive)
   (let ((file (my/org-capture-project-file)))
@@ -1775,7 +1845,7 @@ ps 捕获时也走同一套选择, 未选的随时在这里补."
           (org-entry-put nil "OVERRIDE" (format-time-string "[%Y-%m-%d %A %H:%M]")))
         (my/org-project--milestone-close (plist-get milestone :id) forced))
       (goto-char (point-min))
-      (re-search-forward "^\* 研制过程[ \t]*$")
+      (re-search-forward my/org-project--process-chapter-re)
       (org-entry-put nil "CURRENT-STATE" stage)
       (my/org-project--insert-switch-log cur stage reason result forced)
       (save-buffer)
@@ -2393,11 +2463,11 @@ TEXT 标题行以单个 * 开头, 插入时调整为小节下一层级 (骨架�
     id))
 
 (defun my/org-project--file-stage ()
-  "返回当前文件「研制过程」章的 :CURRENT-STATE:, 无则取第一阶段."
+  "返回当前文件「研制与维护」章的 :CURRENT-STATE:, 无则取第一阶段."
   (org-with-wide-buffer
    (save-excursion
      (goto-char (point-min))
-     (if (re-search-forward "^\\* 研制过程[ \t]*$" nil t)
+     (if (re-search-forward my/org-project--process-chapter-re nil t)
          (or (org-entry-get nil "CURRENT-STATE") (car my/org-project--stages))
        (car my/org-project--stages)))))
 
@@ -2945,11 +3015,20 @@ PARAMS 的 :phase 为阶段名, 或 current 表示取文件 :CURRENT-STATE:."
       (org-current-level))))
 
 (defconst my/org-project--milestone-defs
-  '(("M1" "方案评审通过" "方案设计" "样机研制")
-    ("M2" "样机研制完成" "样机研制" "工程研制")
-    ("M3" "工程研制完成" "工程研制" "状态鉴定")
-    ("M4" "状态鉴定通过" "状态鉴定" "交付维护"))
-  "里程碑定义: (编号 名称 来源阶段 目标阶段); 交付维护为开放阶段, 无出口里程碑.")
+  (let ((defs my/org-project--stage-defs) out)
+    (while defs
+      (let* ((def (car defs))
+             (next (cadr defs))
+             (milestone (plist-get def :milestone)))
+        (when milestone
+          (push (list (nth 0 milestone) (nth 1 milestone)
+                      (plist-get def :name)
+                      (and next (plist-get next :name)))
+                out)))
+      (setq defs (cdr defs)))
+    (nreverse out))
+  "里程碑定义: (编号 名称 来源阶段 目标阶段), 由 `my/org-project--stage-defs' 派生.
+目标阶段取表中下一阶段; 交付维护为开放阶段, 无出口里程碑, 故没有 M5.")
 
 (defconst my/org-project--milestone-criteria
   '(("M1" "本阶段需求基线已冻结（最新基线状态为已冻结）"
@@ -3006,7 +3085,7 @@ LEVEL 为「里程碑」章层级, 里程碑标题取其下一级 (默认 2)."
 
 (defun my/org-project--milestones-text (code &optional level)
   "生成「里程碑」章完整子树文本: CODE 为项目代号, 汇总块 + 四个转段里程碑.
-LEVEL 为章的层级 (默认 2, 即「研制过程」下的二级章)."
+LEVEL 为章的层级 (默认 2, 即「研制与维护」下的二级章)."
   (let ((level (or level 2)))
     (concat
      (make-string level ?*) " 里程碑\n\n"
@@ -3390,7 +3469,7 @@ M4 终点里程碑只能从这里关闭."
        (my/org-project--legacy-m2-remove)
        (goto-char (point-min))
        (if (not (re-search-forward my/org-project--milestone-chapter-re nil t))
-           (user-error "未找到「里程碑」章, 请先在「研制过程」下补建")
+           (user-error "未找到「里程碑」章, 请先在「研制与维护」下补建")
          (let* ((level (org-current-level))
                 (beg (line-beginning-position))
                 (end (save-excursion (org-end-of-subtree t t) (point))))
@@ -3439,7 +3518,7 @@ M4 终点里程碑只能从这里关闭."
 ;; ---- 需求基线 Requirement baseline ----
 ;; 数据唯一存放处: 「需求」章 baseline-records 记录表(状态 待评审→已冻结)
 ;; + 按版本的 req-baseline 快照。阶段子树只挂控制块(判据 checkbox + 引用块 +
-;; 评审表, 宿主小节见 `my/org-project--stage-baseline-hosts'); 转段检查、
+;; 评审表, 宿主小节见 `my/org-project--stage-defs' 的 :host); 转段检查、
 ;; milestone-summary、切换日志都读记录表本阶段最新行状态。全量重圈 C-c P b 只写
 ;; :BASELINE: 与记录表行, 不生成任何标题。
 (defconst my/org-project--baseline-criteria
@@ -3448,17 +3527,9 @@ M4 终点里程碑只能从这里关闭."
     "变更请求已处置或挂账")
   "需求基线冻结判据清单 (与阶段控制块 checkbox 一致).")
 
-(defconst my/org-project--stage-baseline-hosts
-  '(("方案设计" . "需求分析")
-    ("样机研制" . "策划与需求")
-    ("工程研制" . "策划与需求")
-    ("状态鉴定" . "状态管理")
-    ("交付维护" . "更改控制"))
-  "阶段到基线控制块宿主小节的映射 (阶段子树不设独立基线节).")
-
 (defun my/org-project--stage-baseline-host (stage)
   "返回阶段 STAGE 基线控制块所在宿主小节名, 未知阶段默认「策划与需求」."
-  (or (cdr (assoc stage my/org-project--stage-baseline-hosts)) "策划与需求"))
+  (or (plist-get (my/org-project--stage-def stage) :host) "策划与需求"))
 
 (defun my/org-project--stage-index (stage)
   "返回阶段 STAGE 在 my/org-project--stages 中的序号 (1 起), 未知返回 0."
@@ -3951,7 +4022,7 @@ REQ-VERIFIED 是需求的完成态, 但仍参与基线: 「完成」与「是否
 (defconst my/org-project--capture-templates
   `(
      ;; ---- 项目管理 Project ----
-     ;; 落点由目标函数解析: 选软件配置项文件后按「研制过程」的
+     ;; 落点由目标函数解析: 选软件配置项文件后按「研制与维护」的
      ;; :CURRENT-STATE: 定位到当前阶段; 新建项目用 pp 生成骨架
      ("p" "项目管理 Project")
      ("pp" "新建项目" entry (function my/org-capture-project-new-target)
