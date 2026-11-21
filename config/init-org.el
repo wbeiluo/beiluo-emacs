@@ -237,6 +237,7 @@
 ;; 保存时，对齐结果随内容一起写入文件。
 (defun my/org-table-align-all ()
   "对齐当前缓冲区中的所有 Org 表格."
+  (interactive)
   (unless buffer-read-only
     (save-match-data
       (let ((buffer-undo-list t)
